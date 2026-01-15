@@ -1,0 +1,126 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EduSphere - Student Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            },
+            colors: {
+              // Primary Brand Color: Glacier Lake
+              'glacier-lake': '#80B1D3', 
+              'glacier-light': '#A7CBE2',
+              'glacier-dark': '#5D8BAE', // Deeper shade for gradients/hover
+              
+              // Backgrounds
+              'ice-white': '#F6F9FC', // Cool, clean background
+              
+              // Semantic Colors (Harmonized Pastels)
+              'soft-mint': '#88D8B0',   // Success/Growth
+              'muted-coral': '#FF8E85', // Warning/Attention/Active
+              'lavender-mist': '#B5B9D9', // Secondary/Wisdom
+              
+              // Map 'primary' to Glacier Lake for consistency if used elsewhere
+              primary: {
+                50: '#F2F8FC',
+                100: '#E0EEF7',
+                200: '#BFDBEE',
+                300: '#9AC6E4',
+                400: '#80B1D3', // Main
+                500: '#6FA3C7',
+                600: '#5D8BAE',
+                700: '#4A7290',
+                900: '#2E4A60',
+              },
+              // Soft overrides for standard colors to match the pastel theme
+              indigo: {
+                50: '#F2F8FC',
+                100: '#E0EEF7',
+                500: '#80B1D3', // Glacier Lake acting as primary indigo
+                600: '#5D8BAE',
+                700: '#4A7290',
+              }
+            },
+            boxShadow: {
+              'soft': '0 4px 20px -2px rgba(128, 177, 211, 0.15)', // Glacier shadow
+              'glow': '0 0 15px rgba(128, 177, 211, 0.4)',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        background-color: #F6F9FC; /* Ice White */
+        color: #334155;
+      }
+      
+      /* Custom Scrollbar to match Glacier Lake */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #A7CBE2; /* Glacier Light */
+        border-radius: 10px;
+        transition: background 0.3s;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #80B1D3; /* Glacier Lake */
+      }
+
+      /* Text Selection */
+      ::selection {
+        background-color: #80B1D3;
+        color: white;
+      }
+
+      /* Animation Utilities */
+      .animate-fade-in-up {
+        animation: fadeInUp 0.5s ease-out forwards;
+      }
+      
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "recharts": "https://esm.sh/recharts@^3.6.0",
+    "react-dom": "https://esm.sh/react-dom@^19.2.3"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-ice-white text-slate-700 antialiased overflow-hidden">
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
