@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-  Bell, Menu, Search, UserCircle, Globe, 
+  Bell, Menu, Search, UserCircle, 
   CheckCircle, AlertTriangle, Info, Check, BellRing 
 } from 'lucide-react';
 import { User, Notification } from '../types';
@@ -26,7 +26,7 @@ export const Header: React.FC<HeaderProps> = ({
   onMarkAsRead,
   onNavigate
 }) => {
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
 
@@ -79,19 +79,7 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="flex items-center space-x-2 md:space-x-4">
-        {/* Language Switcher */}
-        <div className="flex items-center mr-2">
-           <Globe className="h-4 w-4 text-gray-500 mr-2 hidden sm:block" />
-           <select 
-             value={language} 
-             onChange={(e) => setLanguage(e.target.value as 'en' | 'vi')}
-             className="bg-transparent text-sm text-gray-700 font-medium focus:outline-none cursor-pointer border-none"
-           >
-             <option value="en">English</option>
-             <option value="vi">Tiếng Việt</option>
-           </select>
-        </div>
-
+        
         <div className="relative hidden md:block">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-4 w-4 text-gray-400" />

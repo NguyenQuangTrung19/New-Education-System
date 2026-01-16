@@ -15,7 +15,20 @@ export const translations = {
     'menu.leaderboard': 'Leaderboard',
     'menu.tuition': 'Tuition & Services',
     'menu.adminTuition': 'Tuition Management',
+    'menu.settings': 'Settings',
     'app.name': 'EduSphere',
+
+    // Settings
+    'settings.title': 'Application Settings',
+    'settings.subtitle': 'Customize your experience and appearance.',
+    'settings.theme': 'Color Theme',
+    'settings.themeDesc': 'Choose a color scheme that suits your preference.',
+    'settings.theme.glacier': 'Glacier Lake (Default)',
+    'settings.theme.rose': 'Rose Violet',
+    'settings.theme.sky': 'Sky Blue',
+    'settings.theme.midnight': 'Midnight Slate (Dark)',
+    'settings.language': 'Language',
+    'settings.languageDesc': 'Select your preferred language interface.',
 
     // Welcome Page
     'welcome.portalAccess': 'Portal Access',
@@ -348,7 +361,20 @@ export const translations = {
     'menu.leaderboard': 'Bảng xếp hạng',
     'menu.tuition': 'Học phí & Dịch vụ',
     'menu.adminTuition': 'Quản lý Học phí',
+    'menu.settings': 'Cài đặt',
     'app.name': 'EduSphere',
+
+    // Settings
+    'settings.title': 'Cài đặt Hệ thống',
+    'settings.subtitle': 'Tùy chỉnh giao diện và trải nghiệm người dùng.',
+    'settings.theme': 'Giao diện màu sắc',
+    'settings.themeDesc': 'Chọn bảng màu phù hợp với sở thích của bạn.',
+    'settings.theme.glacier': 'Hồ Băng (Mặc định)',
+    'settings.theme.rose': 'Hồng Tím',
+    'settings.theme.sky': 'Bầu Trời',
+    'settings.theme.midnight': 'Xanh Than Chì (Tối)',
+    'settings.language': 'Ngôn ngữ',
+    'settings.languageDesc': 'Chọn ngôn ngữ hiển thị của ứng dụng.',
 
     // Welcome Page
     'welcome.portalAccess': 'Cổng Truy Cập',
