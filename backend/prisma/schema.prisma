@@ -1,0 +1,241 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+enum Gender {
+  Male
+  Female
+  Other
+}
+
+enum AttendanceStatus {
+  present
+  absent
+  late
+  excused
+}
+
+enum AssignmentStatus {
+  pending
+  submitted
+  late
+  graded
+}
+
+enum TuitionStatus {
+  paid
+  partial
+  unpaid
+}
+
+enum TuitionSemesterStatus {
+  complete
+  incomplete
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  email     String   @unique
+  name      String
+  role      UserRole
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  teacher   Teacher?
+  student   Student?
+}
+
+model Teacher {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
+  phone           String?
+  address         String?
+  citizenId       String?
+  gender          Gender?
+  dateOfBirth     DateTime?
+  joinYear        Int?
+  subjects        String[]
+  classesAssigned Int      @default(0)
+  
+  classes         ClassGroup[]
+  assignments     TeachingAssignment[]
+  scheduleItems   ScheduleItem[]
+}
+
+model Student {
+  id                  String   @id @default(uuid())
+  userId              String   @unique
+  user                User     @relation(fields: [userId], references: [id])
+  
+  dateOfBirth         DateTime?
+  enrollmentYear      Int
+  classId             String?
+  class               ClassGroup? @relation(fields: [classId], references: [id])
+  
+  gpa                 Float    @default(0.0)
+  address             String?
+  
+  guardianName        String?
+  guardianCitizenId   String?
+  guardianYearOfBirth Int?
+  guardianJob         String?
+  guardianPhone       String?
+  
+  academicHistory     AcademicRecord[]
+  grades              StudentGrade[]
+  attendance          AttendanceRecord[]
+  tuitions            SemesterTuition[]
+  
+  semesterEvaluation  String?
+  notes               String[]
+}
+
+model ClassGroup {
+  id                 String   @id @default(uuid())
+  name               String   @unique
+  gradeLevel         Int
+  room               String?
+  academicYear       String
+  
+  teacherId          String?
+  teacher            Teacher? @relation(fields: [teacherId], references: [id])
+  
+  students           Student[]
+  scheduleItems      ScheduleItem[]
+  teachingAssignments TeachingAssignment[]
+  
+  description        String?
+  averageGpa         Float @default(0.0)
+  currentWeeklyScore Float @default(100.0)
+}
+
+model Subject {
+  id          String   @id @default(uuid())
+  name        String
+  code        String   @unique
+  department  String?
+  description String?
+  
+  scheduleItems ScheduleItem[]
+  assignments   TeachingAssignment[]
+  grades        StudentGrade[]
+}
+
+model ScheduleItem {
+  id        String   @id @default(uuid())
+  day       String
+  period    Int
+  session   String
+  room      String?
+  
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id])
+  
+  classId   String
+  class     ClassGroup @relation(fields: [classId], references: [id])
+  
+  teacherId String?
+  teacher   Teacher? @relation(fields: [teacherId], references: [id])
+}
+
+model TeachingAssignment {
+  id              String   @id @default(uuid())
+  
+  teacherId       String
+  teacher         Teacher @relation(fields: [teacherId], references: [id])
+  
+  subjectId       String
+  subject         Subject @relation(fields: [subjectId], references: [id])
+  
+  classId         String
+  class           ClassGroup @relation(fields: [classId], references: [id])
+  
+  sessionsPerWeek Int @default(1)
+}
+
+model AcademicRecord {
+  id        String   @id @default(uuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id])
+  year      String
+  className String
+  gpa       Float
+}
+
+model StudentGrade {
+  id               String   @id @default(uuid())
+  studentId        String
+  student          Student  @relation(fields: [studentId], references: [id])
+  
+  subjectId        String
+  subject          Subject  @relation(fields: [subjectId], references: [id])
+  
+  semester         String   
+  academicYear     String
+  
+  oralScore        Float?
+  fifteenMinScores Float[]
+  midTermScore     Float?
+  finalScore       Float?
+  average          Float?
+  
+  feedback         String?
+}
+
+model AttendanceRecord {
+  id         String           @id @default(uuid())
+  studentId  String
+  student    Student          @relation(fields: [studentId], references: [id])
+  
+  scheduleId String?
+  date       DateTime
+  status     AttendanceStatus
+  note       String?
+}
+
+model SemesterTuition {
+  id           String                @id @default(uuid())
+  studentId    String
+  student      Student               @relation(fields: [studentId], references: [id])
+  academicYear String
+  semester     String
+  
+  totalAmount  Float
+  totalPaid    Float
+  status       TuitionSemesterStatus
+  
+  items        TuitionItem[]
+}
+
+model TuitionItem {
+  id          String         @id @default(uuid())
+  tuitionId   String
+  tuition     SemesterTuition @relation(fields: [tuitionId], references: [id])
+  
+  name        String
+  amount      Float
+  paidAmount  Float
+  dueDate     DateTime?
+  status      TuitionStatus
+}

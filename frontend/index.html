@@ -86,6 +86,7 @@
         /* Utility mapping */
         --bg-indigo-50: #F0F9FF;
         --bg-indigo-100: #E0F2FE;
+        --bg-amber-50: #FFFBEB; /* Default Amber 50 */
       }
 
       /* --- MIDNIGHT THEME OVERRIDES --- */
@@ -110,6 +111,7 @@
         /* 3. Utility Overrides */
         --bg-indigo-50: rgba(56, 189, 248, 0.15);
         --bg-indigo-100: rgba(56, 189, 248, 0.25);
+        --bg-amber-50: rgba(251, 191, 36, 0.15); /* Amber translucent */
       }
 
       /* --- BASE STYLES --- */
@@ -169,21 +171,54 @@
       }
 
       /* Semantic Text Colors in Dark Mode */
+      /* Indigo (Afternoon Session, Links) */
       [data-theme='midnight'] .text-indigo-600,
-      [data-theme='midnight'] .text-indigo-700 {
-        color: #818CF8 !important;
+      [data-theme='midnight'] .text-indigo-700,
+      [data-theme='midnight'] .text-indigo-800,
+      [data-theme='midnight'] .text-indigo-900 {
+        color: #A5B4FC !important; /* Indigo 300 - Light Purple */
       }
+
+      /* Amber (Morning Session, Warnings) */
+      [data-theme='midnight'] .text-amber-600,
+      [data-theme='midnight'] .text-amber-700,
+      [data-theme='midnight'] .text-amber-800,
+      [data-theme='midnight'] .text-amber-900 {
+        color: #FCD34D !important; /* Amber 300 - Bright Yellow */
+      }
+
       [data-theme='midnight'] .text-emerald-600,
-      [data-theme='midnight'] .text-emerald-700 {
-        color: #34D399 !important;
+      [data-theme='midnight'] .text-emerald-700,
+      [data-theme='midnight'] .text-emerald-800 {
+        color: #6EE7B7 !important; /* Emerald 300 */
       }
       [data-theme='midnight'] .text-blue-600,
       [data-theme='midnight'] .text-blue-700 {
-        color: #60A5FA !important;
+        color: #93C5FD !important; /* Blue 300 */
       }
       [data-theme='midnight'] .text-rose-600,
       [data-theme='midnight'] .text-rose-700 {
-        color: #FB7185 !important;
+        color: #FDA4AF !important; /* Rose 300 */
+      }
+
+      /* Background Overrides for Timetable */
+      [data-theme='midnight'] .bg-amber-50 {
+        background-color: var(--bg-amber-50) !important;
+      }
+      [data-theme='midnight'] .bg-indigo-50 {
+        background-color: var(--bg-indigo-50) !important;
+      }
+      
+      /* Fix Borders in Timetable */
+      [data-theme='midnight'] .border-gray-200,
+      [data-theme='midnight'] .border-gray-100 {
+        border-color: rgba(148, 163, 184, 0.2) !important;
+      }
+      [data-theme='midnight'] .border-amber-100 {
+        border-color: rgba(251, 191, 36, 0.2) !important;
+      }
+      [data-theme='midnight'] .border-indigo-100 {
+        border-color: rgba(99, 102, 241, 0.2) !important;
       }
 
       /* Inputs / Selects */

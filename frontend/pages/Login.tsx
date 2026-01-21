@@ -273,9 +273,10 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden font-sans p-4">
       {/* Background Image - Students and Teachers */}
       <div className="absolute inset-0 z-0">
+        {/* Changed Image to a more High School friendly environment */}
         <img 
-            src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=2070&auto=format&fit=crop" 
-            alt="School Classroom Interaction" 
+            src="https://images.unsplash.com/photo-1588072432836-e10032774350?q=80&w=2072&auto=format&fit=crop" 
+            alt="School Campus" 
             className="w-full h-full object-cover"
         />
         {/* Overlay - Glacier Lake (#80B1D3) Dominant */}
@@ -329,11 +330,11 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <div className="space-y-2">
               <label className="text-xs font-bold text-white/80 uppercase tracking-wider ml-1">{t('login.label.email')}</label>
               <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/60 group-focus-within:text-white transition-colors" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors z-10" />
                 <input
                   type="email"
                   required
-                  className="block w-full pl-12 pr-4 py-3.5 bg-black/20 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:bg-black/30 focus:border-white/30 transition-all font-medium"
+                  className="block w-full pl-12 pr-4 py-3.5 bg-white border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-lg transition-all font-medium"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -343,18 +344,18 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <div className="space-y-2">
               <label className="text-xs font-bold text-white/80 uppercase tracking-wider ml-1">{t('login.label.password')}</label>
               <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/60 group-focus-within:text-white transition-colors" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors z-10" />
                 <input
                   type={showPassword ? "text" : "password"}
                   required
-                  className="block w-full pl-12 pr-12 py-3.5 bg-black/20 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:bg-black/30 focus:border-white/30 transition-all font-medium"
+                  className="block w-full pl-12 pr-12 py-3.5 bg-white border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-lg transition-all font-medium"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-white/60 hover:text-white focus:outline-none"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-indigo-600 focus:outline-none z-10"
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
