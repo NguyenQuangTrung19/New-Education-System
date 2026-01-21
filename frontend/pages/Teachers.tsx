@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { MOCK_TEACHERS, MOCK_CLASSES, MOCK_SUBJECTS } from '../constants';
 import { Teacher, User, UserRole } from '../types';
@@ -15,9 +15,191 @@ interface TeachersProps {
   currentUser: User | null;
 }
 
+import api from '../src/api/client';
+
+
+// ...
+
+interface SlideOverFormProps {
+  isOpen: boolean;
+  onClose: () => void;
+  isEditing: boolean;
+  editingId?: string;
+  formTeacher: Partial<Teacher>;
+  setFormTeacher: (val: Partial<Teacher>) => void;
+  onSave: (e: React.FormEvent) => void;
+  formErrors: string[];
+  availableSubjects: string[];
+}
+
+const SlideOverForm: React.FC<SlideOverFormProps> = ({
+  isOpen, onClose, isEditing, editingId,
+  formTeacher, setFormTeacher, onSave, formErrors, availableSubjects
+}) => {
+  const { t } = useLanguage();
+
+  if (!isOpen) return null;
+
+  const handleAddSubject = (subject: string) => {
+    if (subject && !formTeacher.subjects?.includes(subject)) {
+      setFormTeacher({ ...formTeacher, subjects: [...(formTeacher.subjects || []), subject] });
+    }
+  };
+
+  const handleRemoveSubject = (sub: string) => {
+      setFormTeacher({...formTeacher, subjects: formTeacher.subjects?.filter(s => s !== sub)});
+  };
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] overflow-hidden w-screen h-screen">
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={onClose} />
+      <div className="fixed inset-y-0 right-0 max-w-full flex pointer-events-none">
+        <div className="w-full sm:max-w-md pointer-events-auto">
+          <div className="h-full flex flex-col bg-white shadow-2xl animate-slide-in-right">
+            {/* Header */}
+            <div className="px-6 py-6 bg-indigo-600 text-white shrink-0 shadow-md">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-xl font-bold">{isEditing ? t('teachers.form.edit') : t('teachers.form.new')}</h2>
+                  <p className="text-indigo-100 text-sm mt-1">{isEditing ? `Updating ${editingId}` : 'Fill in the details below'}</p>
+                </div>
+                <button onClick={onClose} className="text-indigo-100 hover:text-white transition-colors">
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* Form Content */}
+            <form onSubmit={onSave} className="flex-1 overflow-y-auto bg-gray-50">
+               <div className="p-6 space-y-8">
+                  {/* Validation Errors */}
+                  {formErrors.length > 0 && (
+                      <div className="bg-red-50 border border-red-200 rounded-xl p-4 animate-shake">
+                          <h4 className="flex items-center text-red-700 font-bold text-sm mb-2">
+                              <AlertTriangle className="h-4 w-4 mr-2" /> Vui lòng kiểm tra lại:
+                          </h4>
+                          <ul className="list-disc list-inside text-xs text-red-600 space-y-1">
+                              {formErrors.map((err, idx) => <li key={idx}>{err}</li>)}
+                          </ul>
+                      </div>
+                  )}
+
+                  {/* Section 1 */}
+                  <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
+                     <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100">
+                        <Lock className="h-4 w-4 text-indigo-500"/>
+                        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide">{t('teachers.form.account')}</h3>
+                     </div>
+                     <div className="space-y-4">
+                        <div>
+                           <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Full Name <span className="text-red-500">*</span></label>
+                           <input type="text" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" placeholder="e.g. Sarah Connor" value={formTeacher.name} onChange={e => setFormTeacher({...formTeacher, name: e.target.value})} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                             <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Username <span className="text-red-500">*</span></label>
+                                <input type="text" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.username} onChange={e => setFormTeacher({...formTeacher, username: e.target.value})} />
+                             </div>
+                             <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Join Year</label>
+                                <input type="number" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.joinYear} onChange={e => setFormTeacher({...formTeacher, joinYear: parseInt(e.target.value) || new Date().getFullYear()})} />
+                             </div>
+                        </div>
+                        <div>
+                             <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Password {isEditing ? '' : <span className="text-red-500">*</span>}</label>
+                             <input type="password" placeholder={isEditing ? 'Unchanged' : '••••••'} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.password} onChange={e => setFormTeacher({...formTeacher, password: e.target.value})} />
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* Section 2 */}
+                  <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
+                     <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100">
+                        <UserIcon className="h-4 w-4 text-indigo-500"/>
+                        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide">{t('teachers.form.personal')}</h3>
+                     </div>
+                     <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                             <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Date of Birth <span className="text-red-500">*</span></label>
+                                <input type="date" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.dateOfBirth} onChange={e => setFormTeacher({...formTeacher, dateOfBirth: e.target.value})} />
+                             </div>
+                             <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Gender</label>
+                                <select className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.gender} onChange={e => setFormTeacher({...formTeacher, gender: e.target.value as any})}>
+                                   <option value="Male">Male</option>
+                                   <option value="Female">Female</option>
+                                   <option value="Other">Other</option>
+                                </select>
+                             </div>
+                        </div>
+                        <div>
+                           <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Citizen ID (12 số) <span className="text-red-500">*</span></label>
+                           <input type="text" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.citizenId} onChange={e => setFormTeacher({...formTeacher, citizenId: e.target.value})} />
+                        </div>
+                        <div>
+                           <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Email <span className="text-red-500">*</span></label>
+                           <input type="email" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.email} onChange={e => setFormTeacher({...formTeacher, email: e.target.value})} />
+                        </div>
+                        <div>
+                           <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Phone <span className="text-red-500">*</span></label>
+                           <input type="tel" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" placeholder="0xxxxxxxxx" value={formTeacher.phone} onChange={e => setFormTeacher({...formTeacher, phone: e.target.value})} />
+                        </div>
+                        <div>
+                           <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Address</label>
+                           <input type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.address} onChange={e => setFormTeacher({...formTeacher, address: e.target.value})} />
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* Section 3 */}
+                  <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
+                     <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100">
+                        <BookOpen className="h-4 w-4 text-indigo-500"/>
+                        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide">{t('teachers.form.expertise')}</h3>
+                     </div>
+                     <div>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Subjects</label>
+                        <select 
+                           className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none mb-3"
+                           onChange={(e) => { handleAddSubject(e.target.value); e.target.value = ''; }}
+                        >
+                           <option value="">+ Add Subject</option>
+                           {availableSubjects.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                        <div className="flex flex-wrap gap-2">
+                           {formTeacher.subjects?.map(sub => (
+                              <span key={sub} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700">
+                                 {sub}
+                                 <button type="button" onClick={() => handleRemoveSubject(sub)} className="ml-2 hover:text-indigo-900"><X className="h-3 w-3"/></button>
+                              </span>
+                           ))}
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </form>
+
+            {/* Footer */}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 shrink-0 flex justify-end gap-3">
+               <button type="button" onClick={onClose} className="px-5 py-2.5 text-gray-700 font-medium hover:bg-gray-200 rounded-lg transition-colors text-sm">{t('common.cancel')}</button>
+               <button onClick={onSave} type="button" className="px-5 py-2.5 bg-indigo-600 text-white font-medium hover:bg-indigo-700 rounded-lg shadow-lg shadow-indigo-500/30 transition-all transform active:scale-95 text-sm flex items-center">
+                  <Check className="h-4 w-4 mr-2" /> {t('common.save')}
+               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+};
+
+
 export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
   const { t } = useLanguage();
-  const [teachers, setTeachers] = useState<Teacher[]>(MOCK_TEACHERS);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -44,6 +226,26 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
 
   const calculateExperience = (joinYear: number) => Math.max(0, new Date().getFullYear() - joinYear);
   const availableSubjects = Array.from(new Set(MOCK_SUBJECTS.map(s => s.name)));
+
+  // Fetch Teachers
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      try {
+        const res = await api.get('/teachers');
+        const mapped = res.data.map((t: any) => ({
+           ...t,
+           name: t.user?.name || 'Unknown',
+           email: t.user?.email || '',
+        }));
+        setTeachers(mapped);
+      } catch (e) {
+        console.error("Failed to fetch teachers", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTeachers();
+  }, []);
 
   const filteredTeachers = teachers.filter(t => 
     t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -388,149 +590,7 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
     );
   };
 
-  const SlideOverForm = () => createPortal(
-    <div className="fixed inset-0 z-[100] overflow-hidden w-screen h-screen">
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={() => setIsFormOpen(false)} />
-      <div className="fixed inset-y-0 right-0 max-w-full flex pointer-events-none">
-        <div className="w-full sm:max-w-md pointer-events-auto">
-          <div className="h-full flex flex-col bg-white shadow-2xl animate-slide-in-right">
-            {/* Header */}
-            <div className="px-6 py-6 bg-indigo-600 text-white shrink-0 shadow-md">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-xl font-bold">{editingTeacher ? t('teachers.form.edit') : t('teachers.form.new')}</h2>
-                  <p className="text-indigo-100 text-sm mt-1">{editingTeacher ? `Updating ${editingTeacher.id}` : 'Fill in the details below'}</p>
-                </div>
-                <button onClick={() => setIsFormOpen(false)} className="text-indigo-100 hover:text-white transition-colors">
-                  <X className="h-6 w-6" />
-                </button>
-              </div>
-            </div>
 
-            {/* Form Content */}
-            <form onSubmit={handleSave} className="flex-1 overflow-y-auto bg-gray-50">
-               <div className="p-6 space-y-8">
-                  {/* Validation Errors */}
-                  {formErrors.length > 0 && (
-                      <div className="bg-red-50 border border-red-200 rounded-xl p-4 animate-shake">
-                          <h4 className="flex items-center text-red-700 font-bold text-sm mb-2">
-                              <AlertTriangle className="h-4 w-4 mr-2" /> Vui lòng kiểm tra lại:
-                          </h4>
-                          <ul className="list-disc list-inside text-xs text-red-600 space-y-1">
-                              {formErrors.map((err, idx) => <li key={idx}>{err}</li>)}
-                          </ul>
-                      </div>
-                  )}
-
-                  {/* Section 1 */}
-                  <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
-                     <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100">
-                        <Lock className="h-4 w-4 text-indigo-500"/>
-                        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide">{t('teachers.form.account')}</h3>
-                     </div>
-                     <div className="space-y-4">
-                        <div>
-                           <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Full Name <span className="text-red-500">*</span></label>
-                           <input type="text" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" placeholder="e.g. Sarah Connor" value={formTeacher.name} onChange={e => setFormTeacher({...formTeacher, name: e.target.value})} />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                             <div>
-                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Username <span className="text-red-500">*</span></label>
-                                <input type="text" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.username} onChange={e => setFormTeacher({...formTeacher, username: e.target.value})} />
-                             </div>
-                             <div>
-                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Join Year</label>
-                                <input type="number" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.joinYear} onChange={e => setFormTeacher({...formTeacher, joinYear: parseInt(e.target.value) || new Date().getFullYear()})} />
-                             </div>
-                        </div>
-                        <div>
-                             <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Password {editingTeacher ? '' : <span className="text-red-500">*</span>}</label>
-                             <input type="password" placeholder={editingTeacher ? 'Unchanged' : '••••••'} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.password} onChange={e => setFormTeacher({...formTeacher, password: e.target.value})} />
-                        </div>
-                     </div>
-                  </div>
-
-                  {/* Section 2 */}
-                  <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
-                     <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100">
-                        <UserIcon className="h-4 w-4 text-indigo-500"/>
-                        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide">{t('teachers.form.personal')}</h3>
-                     </div>
-                     <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                             <div>
-                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Date of Birth <span className="text-red-500">*</span></label>
-                                <input type="date" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.dateOfBirth} onChange={e => setFormTeacher({...formTeacher, dateOfBirth: e.target.value})} />
-                             </div>
-                             <div>
-                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Gender</label>
-                                <select className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.gender} onChange={e => setFormTeacher({...formTeacher, gender: e.target.value as any})}>
-                                   <option value="Male">Male</option>
-                                   <option value="Female">Female</option>
-                                   <option value="Other">Other</option>
-                                </select>
-                             </div>
-                        </div>
-                        <div>
-                           <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Citizen ID (12 số) <span className="text-red-500">*</span></label>
-                           <input type="text" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.citizenId} onChange={e => setFormTeacher({...formTeacher, citizenId: e.target.value})} />
-                        </div>
-                        <div>
-                           <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Email <span className="text-red-500">*</span></label>
-                           <input type="email" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.email} onChange={e => setFormTeacher({...formTeacher, email: e.target.value})} />
-                        </div>
-                        <div>
-                           <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Phone <span className="text-red-500">*</span></label>
-                           <input type="tel" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" placeholder="0xxxxxxxxx" value={formTeacher.phone} onChange={e => setFormTeacher({...formTeacher, phone: e.target.value})} />
-                        </div>
-                        <div>
-                           <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Address</label>
-                           <input type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.address} onChange={e => setFormTeacher({...formTeacher, address: e.target.value})} />
-                        </div>
-                     </div>
-                  </div>
-
-                  {/* Section 3 */}
-                  <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
-                     <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100">
-                        <BookOpen className="h-4 w-4 text-indigo-500"/>
-                        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide">{t('teachers.form.expertise')}</h3>
-                     </div>
-                     <div>
-                        <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Subjects</label>
-                        <select 
-                           className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none mb-3"
-                           onChange={(e) => { handleAddSubjectToForm(e.target.value); e.target.value = ''; }}
-                        >
-                           <option value="">+ Add Subject</option>
-                           {availableSubjects.map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                        <div className="flex flex-wrap gap-2">
-                           {formTeacher.subjects?.map(sub => (
-                              <span key={sub} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700">
-                                 {sub}
-                                 <button type="button" onClick={() => setFormTeacher({...formTeacher, subjects: formTeacher.subjects?.filter(s => s !== sub)})} className="ml-2 hover:text-indigo-900"><X className="h-3 w-3"/></button>
-                              </span>
-                           ))}
-                        </div>
-                     </div>
-                  </div>
-               </div>
-            </form>
-
-            {/* Footer */}
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 shrink-0 flex justify-end gap-3">
-               <button type="button" onClick={() => setIsFormOpen(false)} className="px-5 py-2.5 text-gray-700 font-medium hover:bg-gray-200 rounded-lg transition-colors text-sm">{t('common.cancel')}</button>
-               <button onClick={handleSave} type="button" className="px-5 py-2.5 bg-indigo-600 text-white font-medium hover:bg-indigo-700 rounded-lg shadow-lg shadow-indigo-500/30 transition-all transform active:scale-95 text-sm flex items-center">
-                  <Check className="h-4 w-4 mr-2" /> {t('common.save')}
-               </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>,
-    document.body
-  );
 
   return (
     <div className="space-y-8 animate-fade-in pb-10">
@@ -641,7 +701,19 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
       </div>
 
       {selectedTeacher && <TeacherDetailModal teacher={selectedTeacher} onClose={() => setSelectedTeacher(null)} />}
-      {isFormOpen && isAdmin && <SlideOverForm />}
+      {isFormOpen && isAdmin && (
+        <SlideOverForm 
+            isOpen={isFormOpen}
+            onClose={() => setIsFormOpen(false)}
+            isEditing={!!editingTeacher}
+            editingId={editingTeacher?.id}
+            formTeacher={formTeacher}
+            setFormTeacher={setFormTeacher}
+            onSave={handleSave}
+            formErrors={formErrors}
+            availableSubjects={availableSubjects}
+        />
+      )}
       
       {/* Security Modal */}
       {securityModalOpen && createPortal(

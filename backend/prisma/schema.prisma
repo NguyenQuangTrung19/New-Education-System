@@ -78,9 +78,11 @@ model Teacher {
   subjects        String[]
   classesAssigned Int      @default(0)
   
-  classes         ClassGroup[]
-  assignments     TeachingAssignment[]
-  scheduleItems   ScheduleItem[]
+  classes             ClassGroup[]
+  teachingAssignments TeachingAssignment[]
+  scheduleItems       ScheduleItem[]
+  
+  postedAssignments   Assignment[]
 }
 
 model Student {
@@ -109,6 +111,8 @@ model Student {
   
   semesterEvaluation  String?
   notes               String[]
+  
+  submissions         AssignmentSubmission[]
 }
 
 model ClassGroup {
@@ -124,6 +128,7 @@ model ClassGroup {
   students           Student[]
   scheduleItems      ScheduleItem[]
   teachingAssignments TeachingAssignment[]
+  homeworks          Assignment[]
   
   description        String?
   averageGpa         Float @default(0.0)
@@ -137,9 +142,10 @@ model Subject {
   department  String?
   description String?
   
-  scheduleItems ScheduleItem[]
-  assignments   TeachingAssignment[]
-  grades        StudentGrade[]
+  scheduleItems       ScheduleItem[]
+  teachingAssignments TeachingAssignment[]
+  grades              StudentGrade[]
+  homeworks           Assignment[]
 }
 
 model ScheduleItem {
@@ -238,4 +244,45 @@ model TuitionItem {
   paidAmount  Float
   dueDate     DateTime?
   status      TuitionStatus
+}
+
+model Assignment {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  
+  subjectId   String
+  subject     Subject  @relation(fields: [subjectId], references: [id])
+  
+  teacherId   String
+  teacher     Teacher  @relation(fields: [teacherId], references: [id])
+  
+  classIds    String[] // Helper field for M:N if needed, or just rely on implicit
+  classes     ClassGroup[]
+  
+  dueDate     DateTime
+  duration    Int? // Minutes
+  password    String?
+  
+  questions   Json? // Store questions structure
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  submissions AssignmentSubmission[]
+}
+
+model AssignmentSubmission {
+  id           String   @id @default(uuid())
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id])
+  
+  studentId    String
+  student      Student    @relation(fields: [studentId], references: [id])
+  
+  submittedAt  DateTime @default(now())
+  answers      Json?
+  score        Float?
+  feedback     String?
+  status       AssignmentStatus @default(pending)
 }

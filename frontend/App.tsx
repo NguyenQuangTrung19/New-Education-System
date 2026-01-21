@@ -43,7 +43,10 @@ const App: React.FC = () => {
   const { t } = useLanguage();
 
   // Auth flow
-  const handleLogin = (user: User) => {
+  const handleLogin = async (user: User) => {
+    // Ideally we fetch the full profile here to ensure we have all relations
+    // But for now, the Login component passes a constructed user object.
+    // Let's rely on that or fetch fresh data.
     setCurrentUser(user);
     setIsAuthenticated(true);
     setShowWelcome(true);

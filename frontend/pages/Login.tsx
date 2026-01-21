@@ -1,10 +1,11 @@
 
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Lock, Mail, ArrowRight, UserCog, User, Eye, EyeOff, ShieldCheck, GraduationCap, Leaf, Info, MapPin, Phone, Globe, X, Code, Heart, History, Award, Facebook, Linkedin, Github } from 'lucide-react';
+import { Lock, User as UserIcon, ArrowRight, UserCog, Eye, EyeOff, ShieldCheck, GraduationCap, Info, MapPin, Phone, Globe, X, Code, Heart, History, Award, Facebook, Linkedin, Github, Mail } from 'lucide-react';
 import { User as UserType, UserRole } from '../types';
-import { MOCK_TEACHERS, MOCK_STUDENTS, SCHOOL_INFO } from '../constants';
+import { SCHOOL_INFO } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
+import api from '../src/api/client';
 
 interface LoginProps {
   onLogin: (user: UserType) => void;
@@ -15,10 +16,11 @@ type InfoTab = 'about' | 'contact' | 'credit';
 export const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const { t } = useLanguage();
   const [role, setRole] = useState<UserRole>(UserRole.ADMIN);
-  const [email, setEmail] = useState('admin@edusphere.edu');
-  const [password, setPassword] = useState('password');
+  const [username, setUsername] = useState('sarah.connor');
+  const [password, setPassword] = useState('password123');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   // Info Modal States
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -26,35 +28,52 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
   const handleRoleChange = (newRole: UserRole) => {
     setRole(newRole);
-    if (newRole === UserRole.ADMIN) {
-      setEmail('admin@edusphere.edu');
-      setPassword('password');
-    } else if (newRole === UserRole.TEACHER) {
-      setEmail(MOCK_TEACHERS[0].email);
-      setPassword('password');
+    // Pre-fill for demo purposes based on seed data
+    if (newRole === UserRole.TEACHER) {
+      setUsername('sarah.connor');
+      setPassword('password123');
+    } else if (newRole === UserRole.STUDENT) {
+      setUsername('alice.j');
+      setPassword('password123');
     } else {
-      setEmail(MOCK_STUDENTS[0].email);
+        // Admin user not seeded yet, fallback
+      setUsername('admin');
       setPassword('password');
     }
+    setError(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
+    setError(null);
+
+    try {
+      const response = await api.post('/auth/login', { username, password });
+      const { access_token, user } = response.data;
+      
+      localStorage.setItem('access_token', access_token);
+      
+      // Transform backend user to frontend user type if needed
+      // Backend user: { id, username, role, teacher: { id, ... }, student: { id, ... } }
+      // Frontend User: { id, name, email, role, ... }
+      
+      const frontendUser: UserType = {
+        id: user.teacher?.id || user.student?.id || user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatarUrl: user.avatarUrl,
+        classId: user.student?.classId
+      };
+
+      onLogin(frontendUser);
+    } catch (err: any) {
+      console.error('Login failed', err);
+      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+    } finally {
       setLoading(false);
-      let user: UserType | null = null;
-      if (role === UserRole.ADMIN) {
-        user = { id: 'ADMIN01', name: 'System Admin', email: email, role: UserRole.ADMIN };
-      } else if (role === UserRole.TEACHER) {
-        const teacher = MOCK_TEACHERS.find(t => t.email === email) || MOCK_TEACHERS[0];
-        user = { id: teacher.id, name: teacher.name, email: teacher.email, role: UserRole.TEACHER };
-      } else {
-        const student = MOCK_STUDENTS.find(s => s.email === email) || MOCK_STUDENTS[0];
-        user = { id: student.id, name: student.name, email: student.email, role: UserRole.STUDENT, classId: student.classId };
-      }
-      if (user) onLogin(user);
-    }, 800);
+    }
   };
 
   const openModal = (tab: InfoTab) => {
@@ -209,7 +228,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                             <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
                             <div className="relative h-32 w-32 rounded-full border-4 border-white shadow-xl overflow-hidden">
                                 <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-4xl font-bold text-gray-400">
-                                    <User className="h-16 w-16" />
+                                    <UserIcon className="h-16 w-16" />
                                 </div>
                             </div>
                             <div className="absolute bottom-0 right-0 bg-blue-500 text-white p-1.5 rounded-full border-2 border-white shadow-md">
@@ -273,13 +292,11 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden font-sans p-4">
       {/* Background Image - Students and Teachers */}
       <div className="absolute inset-0 z-0">
-        {/* Changed Image to a more High School friendly environment */}
         <img 
             src="https://images.unsplash.com/photo-1588072432836-e10032774350?q=80&w=2072&auto=format&fit=crop" 
             alt="School Campus" 
             className="w-full h-full object-cover"
         />
-        {/* Overlay - Glacier Lake (#80B1D3) Dominant */}
         <div className="absolute inset-0 bg-gradient-to-br from-glacier-lake/90 via-[#5D8BAE]/80 to-slate-900/60 mix-blend-multiply"></div>
         <div className="absolute inset-0 bg-black/10"></div>
       </div>
@@ -311,7 +328,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <div className="bg-black/20 p-1.5 rounded-2xl mb-8 flex relative backdrop-blur-sm border border-white/10">
               {[
                   { r: UserRole.ADMIN, icon: ShieldCheck, label: t('login.role.admin') },
-                  { r: UserRole.TEACHER, icon: User, label: t('login.role.teacher') },
+                  { r: UserRole.TEACHER, icon: UserIcon, label: t('login.role.teacher') },
                   { r: UserRole.STUDENT, icon: GraduationCap, label: t('login.role.student') }
               ].map((item) => (
                   <button 
@@ -327,16 +344,21 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+                <div className="bg-red-500/20 border border-red-500/50 p-3 rounded-xl text-white text-sm text-center font-medium backdrop-blur-sm">
+                    {error}
+                </div>
+            )}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-white/80 uppercase tracking-wider ml-1">{t('login.label.email')}</label>
+              <label className="text-xs font-bold text-white/80 uppercase tracking-wider ml-1">Username</label>
               <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors z-10" />
+                <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors z-10" />
                 <input
-                  type="email"
+                  type="text"
                   required
                   className="block w-full pl-12 pr-4 py-3.5 bg-white border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-lg transition-all font-medium"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                 />
               </div>
             </div>

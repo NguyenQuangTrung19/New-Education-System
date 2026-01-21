@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { MOCK_STUDENTS, MOCK_CLASSES } from '../constants';
 import { Student, User, UserRole } from '../types';
@@ -16,9 +16,14 @@ interface StudentsProps {
   currentUser: User | null;
 }
 
+import api from '../src/api/client';
+
+// ... (keep props)
+
 export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
   const { t } = useLanguage();
-  const [students, setStudents] = useState<Student[]>(MOCK_STUDENTS);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedClass, setSelectedClass] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -50,6 +55,26 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
   };
 
   const [formStudent, setFormStudent] = useState<Partial<Student>>(defaultStudentState);
+
+  // Fetch Students Logic
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const response = await api.get('/students');
+        const mapped = response.data.map((s: any) => ({
+          ...s,
+          name: s.user?.name || 'Unknown',
+          email: s.user?.email || '',
+        }));
+        setStudents(mapped);
+      } catch (err) {
+        console.error("Failed to fetch students", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStudents();
+  }, []);
 
   const filteredStudents = students.filter(student => {
     const matchesClass = selectedClass === 'All' || student.classId === selectedClass;
