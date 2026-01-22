@@ -76,8 +76,8 @@ export declare class StudentsService {
         } & {
             id: string;
             academicYear: string;
-            studentId: string;
             subjectId: string;
+            studentId: string;
             semester: string;
             oralScore: number | null;
             fifteenMinScores: number[];

@@ -1,13 +1,12 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
-import { MOCK_SCHEDULE, MOCK_CLASSES, MOCK_SUBJECTS, MOCK_TEACHERS, MOCK_ASSIGNMENTS } from '../constants';
+import api from '../src/api/client';
 import { useLanguage } from '../contexts/LanguageContext';
 import { 
   CalendarDays, Clock, MapPin, ChevronDown, Sun, Moon, Search, X, 
   User as UserIcon, Plus, Edit2, Trash2, Check, BookUser, FileDown, 
   ExternalLink, ChevronLeft, ChevronRight, Filter, Users, GraduationCap
 } from 'lucide-react';
-import { ScheduleItem, TeachingAssignment, User, UserRole } from '../types';
+import { ScheduleItem, TeachingAssignment, User, UserRole, Subject, Teacher, ClassGroup } from '../types';
 
 interface TimetableProps {
   currentUser: User | null;
@@ -62,11 +61,15 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
   const [selectedClassId, setSelectedClassId] = useState<string>('');
   const [selectedTeacherId, setSelectedTeacherId] = useState<string>('');
 
-  // Local state for schedule (in a real app, this would fetch based on date range)
-  const [schedule, setSchedule] = useState<ScheduleItem[]>(MOCK_SCHEDULE);
+  // Local state for schedule
+  const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
+  const [subjectsList, setSubjectsList] = useState<Subject[]>([]);
+  const [classesList, setClassesList] = useState<ClassGroup[]>([]);
+  const [teachersList, setTeachersList] = useState<Teacher[]>([]);
+  const [loading, setLoading] = useState(true);
   
   // Local state for assignments
-  const [assignments, setAssignments] = useState<TeachingAssignment[]>(MOCK_ASSIGNMENTS);
+  const [assignments, setAssignments] = useState<TeachingAssignment[]>([]);
   const [showAssignmentsModal, setShowAssignmentsModal] = useState(false);
 
   // Modes
@@ -99,42 +102,79 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
   }
 
   function getSubjectName(code: string) {
-     const sub = MOCK_SUBJECTS.find(s => s.code === code || s.id === code);
+     const sub = subjectsList.find(s => s.code === code || s.id === code);
      return sub ? sub.name : code;
   }
 
   function getClassName(id: string) {
-      return MOCK_CLASSES.find(c => c.id === id)?.name || id;
+      return classesList.find(c => c.id === id)?.name || id;
   }
 
   function getTeacherName(id: string) {
-      return MOCK_TEACHERS.find(t => t.id === id)?.name || 'Unknown';
+      return teachersList.find(t => t.id === id)?.name || 'Unknown';
   }
 
   // --- Effects ---
 
+    // Fetch Reference Data
+    useEffect(() => {
+    const fetchData = async () => {
+        try {
+            const [subjRes, classRes, teachRes] = await Promise.all([
+                api.get('/subjects'),
+                api.get('/classes'),
+                // api.get('/teachers') // Try to include this in parallel if reliable
+                api.get('/teachers').catch(() => ({ data: [] })) // Safe fallback
+            ]);
+            setSubjectsList(subjRes.data);
+            setClassesList(classRes.data);
+            setTeachersList(teachRes.data.map((t: any) => ({ ...t, name: t.user?.name || t.name })));
+
+        } catch (error) {
+            console.error("Failed to fetch reference data", error);
+        }
+    };
+    fetchData();
+  }, []);
+
+  // Fetch Schedule
+  const fetchSchedule = async () => {
+    try {
+        const { data } = await api.get('/schedule'); // Fetch all for now due to complex filter logic on client vs server
+        setSchedule(data);
+    } catch (error) {
+        console.error("Failed to fetch schedule", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchSchedule();
+  }, [currentWeekStart, selectedClassId, selectedTeacherId]);
+
   // Initialization Logic
   useEffect(() => {
-    if (isTeacher) {
-        // Teachers default to seeing their own schedule
-        setViewMode('teacher');
-        setSelectedTeacherId(currentUser!.id);
-        
-        // Also find their homeroom class for potential class view
-        const homeroom = MOCK_CLASSES.find(c => c.teacherId === currentUser!.id);
-        if (homeroom) setSelectedClassId(homeroom.id);
-        else setSelectedClassId(MOCK_CLASSES[0].id);
-    } else if (isStudent) {
-        // Students default to class view of their own class
-        setViewMode('class');
-        setSelectedClassId(currentUser!.classId || MOCK_CLASSES[0].id);
-    } else {
-        // Admin defaults to Class View of the first class
-        const defaultClass = MOCK_CLASSES.find(c => c.name === '10A1') || MOCK_CLASSES[0];
-        if (defaultClass) setSelectedClassId(defaultClass.id);
-        setSelectedTeacherId(MOCK_TEACHERS[0].id);
+    if (classesList.length > 0 && teachersList.length > 0) {
+        if (isTeacher) {
+            setViewMode('teacher');
+            setSelectedTeacherId(currentUser!.id); // Assuming currentUser.id matches teacher.userId or teacher.id. 
+            // In backend User.id != Teacher.id. Teacher has userId.
+            const teacherProfile = teachersList.find(t => (t as any).userId === currentUser!.id);
+            if(teacherProfile) setSelectedTeacherId(teacherProfile.id);
+
+            const homeroom = classesList.find(c => c.teacherId === teacherProfile?.id);
+            if (homeroom) setSelectedClassId(homeroom.id);
+            else setSelectedClassId(classesList[0]?.id);
+        } else if (isStudent) {
+            setViewMode('class');
+            const myClass = classesList.find(c => c.id === currentUser?.classId) || classesList[0];
+            setSelectedClassId(myClass?.id);
+        } else {
+            const defaultClass = classesList.find(c => c.name === '10A1') || classesList[0];
+            if (defaultClass) setSelectedClassId(defaultClass.id);
+            setSelectedTeacherId(teachersList[0]?.id);
+        }
     }
-  }, [currentUser, isTeacher, isStudent]);
+  }, [currentUser, isTeacher, isStudent, classesList, teachersList]);
 
   // Permission Check for Edit
   const canEditSlot = (slotItem?: ScheduleItem) => {
@@ -143,12 +183,15 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
       if (isAdmin) return true;
       if (isTeacher) {
           // In Teacher View: Can edit their own slots
-          if (viewMode === 'teacher') return selectedTeacherId === currentUser!.id;
+          // Note: currentUser.id expected to match teacher's userId. 
+          // If selectedTeacherId matches teacher profile ID associated with currentUser.
+          const myTeacherProfile = teachersList.find(t => (t as any).userId === currentUser!.id);
+          if (viewMode === 'teacher') return selectedTeacherId === myTeacherProfile?.id;
           
           // In Class View: Can edit if it's their homeroom class OR if the slot belongs to them
-          const isHomeroom = MOCK_CLASSES.find(c => c.id === selectedClassId)?.teacherId === currentUser!.id;
+          const isHomeroom = classesList.find(c => c.id === selectedClassId)?.teacherId === myTeacherProfile?.id;
           if (isHomeroom) return true;
-          if (slotItem && slotItem.teacherId === currentUser!.id) return true;
+          if (slotItem && slotItem.teacherId === myTeacherProfile?.id) return true;
       }
       return false;
   };
@@ -163,7 +206,7 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
       setCurrentWeekStart(getStartOfWeek(new Date()));
   };
 
-  const handleSaveSlot = (e: React.FormEvent, formData: Partial<ScheduleItem>) => {
+  const handleSaveSlot = async (e: React.FormEvent, formData: Partial<ScheduleItem>) => {
     e.preventDefault();
     if(!formData.subjectId) return;
 
@@ -176,35 +219,47 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
         return;
     }
 
-    if (editingSlot?.item) {
-      // Update existing
-      const updatedSchedule = schedule.map(s => 
-        s.id === editingSlot.item!.id 
-          ? { ...s, ...formData } 
-          : s
-      );
-      setSchedule(updatedSchedule);
-    } else {
-      // Create new
-      const newItem: ScheduleItem = {
-        id: `SCH-${Date.now()}`,
-        day: editingSlot!.day,
-        period: editingSlot!.period,
-        session: editingSlot!.session,
-        classId: targetClassId,
-        subjectId: formData.subjectId,
-        teacherId: targetTeacherId,
-        room: formData.room || '',
-      };
-      setSchedule([...schedule, newItem]);
+    try {
+        if (editingSlot?.item) {
+          // Update existing
+          const { data } = await api.patch(`/schedule/${editingSlot.item.id}`, formData);
+          const updatedSchedule = schedule.map(s => 
+            s.id === editingSlot.item!.id 
+              ? { ...s, ...data } 
+              : s
+          );
+          setSchedule(updatedSchedule);
+        } else {
+          // Create new
+          const newItemPayload = {
+            day: editingSlot!.day,
+            period: editingSlot!.period,
+            session: editingSlot!.session,
+            classId: targetClassId,
+            subjectId: formData.subjectId,
+            teacherId: targetTeacherId,
+            room: formData.room || '', // Default room if not provided or handle in backend
+          };
+          const { data } = await api.post('/schedule', newItemPayload);
+          setSchedule([...schedule, data]);
+        }
+        setEditingSlot(null);
+    } catch(e) {
+        console.error("Save slot failed", e);
+        alert("Lưu thất bại!");
     }
-    setEditingSlot(null);
   };
 
-  const handleDeleteSlot = (id: string) => {
+  const handleDeleteSlot = async (id: string) => {
     if(window.confirm(t('common.confirmDelete'))) {
-      setSchedule(schedule.filter(s => s.id !== id));
-      setEditingSlot(null);
+      try {
+          await api.delete(`/schedule/${id}`);
+          setSchedule(schedule.filter(s => s.id !== id));
+          setEditingSlot(null);
+      } catch(e) {
+          console.error("Delete failed", e);
+          alert("Xóa thất bại!");
+      }
     }
   };
   
@@ -257,17 +312,17 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
                               <tr key={assign.id} className="hover:bg-gray-50/50 group">
                                   <td className="px-6 py-2">
                                       <select disabled={!isAdmin} className={`w-full bg-transparent border-none focus:ring-0 text-sm font-medium text-gray-900 ${isAdmin ? 'cursor-pointer' : 'cursor-default'}`} value={assign.teacherId} onChange={(e) => handleAssignmentChange(assign.id, 'teacherId', e.target.value)}>
-                                          {MOCK_TEACHERS.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                                          {teachersList.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                                       </select>
                                   </td>
                                   <td className="px-6 py-2">
                                       <select disabled={!isAdmin} className={`w-full bg-transparent border-none focus:ring-0 text-sm text-gray-700 ${isAdmin ? 'cursor-pointer' : 'cursor-default'}`} value={assign.subjectId} onChange={(e) => handleAssignmentChange(assign.id, 'subjectId', e.target.value)}>
-                                          {MOCK_SUBJECTS.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
+                                          {subjectsList.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
                                       </select>
                                   </td>
                                   <td className="px-6 py-2">
                                       <select disabled={!isAdmin} className={`w-full bg-transparent border-none focus:ring-0 text-sm text-gray-700 ${isAdmin ? 'cursor-pointer' : 'cursor-default'}`} value={assign.classId} onChange={(e) => handleAssignmentChange(assign.id, 'classId', e.target.value)}>
-                                          {MOCK_CLASSES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                          {classesList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                       </select>
                                   </td>
                                   <td className="px-6 py-2"><input type="number" min="1" max="30" disabled={!isAdmin} className={`w-20 px-2 py-1 bg-gray-50 border border-gray-200 rounded text-center text-sm font-bold text-indigo-600 focus:outline-none focus:border-indigo-500 ${!isAdmin && 'opacity-70'}`} value={assign.sessionsPerWeek} onChange={(e) => handleAssignmentChange(assign.id, 'sessionsPerWeek', parseInt(e.target.value) || 0)} /></td>
@@ -321,7 +376,7 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">{t('timetable.selectSubject')}</label>
                  <select required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" value={formData.subjectId} onChange={(e) => setFormData({...formData, subjectId: e.target.value})}>
                    <option value="">-- Select Subject --</option>
-                   {MOCK_SUBJECTS.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
+                   {subjectsList.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
                  </select>
               </div>
 
@@ -337,7 +392,7 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
                      <label className="block text-xs font-bold text-gray-700 uppercase mb-1">{t('timetable.selectTeacher')}</label>
                      <select disabled={isTeacher && !isAdmin} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" value={formData.teacherId} onChange={(e) => setFormData({...formData, teacherId: e.target.value})}>
                        <option value="">-- Select Teacher --</option>
-                       {MOCK_TEACHERS.map(t => <option key={t.id} value={t.id}>{t.name} ({t.subjects.join(', ')})</option>)}
+                       {teachersList.map(t => <option key={t.id} value={t.id}>{t.name} ({t.subjects?.join(', ') || ''})</option>)}
                      </select>
                   </div>
               ) : (
@@ -345,7 +400,7 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
                      <label className="block text-xs font-bold text-gray-700 uppercase mb-1">{t('class.name')}</label>
                      <select disabled={!isAdmin} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" value={formData.classId} onChange={(e) => setFormData({...formData, classId: e.target.value})}>
                        <option value="">-- Select Class --</option>
-                       {MOCK_CLASSES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                       {classesList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                      </select>
                   </div>
               )}
@@ -367,10 +422,12 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
   };
 
   const ScheduleDetailModal = ({ info, onClose }: { info: SelectedSlotInfo, onClose: () => void }) => {
-    const subject = MOCK_SUBJECTS.find(s => s.id === info.item.subjectId);
-    const classGroup = MOCK_CLASSES.find(c => c.id === info.item.classId);
-    const teacher = MOCK_TEACHERS.find(t => t.id === info.item.teacherId);
-    const canViewJournal = isTeacher && (info.item.teacherId === currentUser!.id);
+    const subject = subjectsList.find(s => s.id === info.item.subjectId);
+    const classGroup = classesList.find(c => c.id === info.item.classId);
+    const teacher = teachersList.find(t => t.id === info.item.teacherId);
+    // teacher.userId check might be needed if teacher.id != currentUser.id directly (which is true in backend)
+    // const canViewJournal = isTeacher && ((teacher as any)?.userId === currentUser!.id);
+    const canViewJournal = isTeacher && (info.item.teacherId === teachersList.find(t => (t as any).userId === currentUser!.id)?.id);
 
     return (
       <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -621,7 +678,7 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
                           value={selectedClassId}
                           onChange={(e) => setSelectedClassId(e.target.value)}
                        >
-                         {MOCK_CLASSES.map(cls => (
+                         {classesList.map(cls => (
                            <option key={cls.id} value={cls.id}>{cls.name} - {cls.room}</option>
                          ))}
                        </select>
@@ -636,7 +693,7 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
                           value={selectedTeacherId}
                           onChange={(e) => setSelectedTeacherId(e.target.value)}
                        >
-                         {MOCK_TEACHERS.map(t => (
+                         {teachersList.map(t => (
                            <option key={t.id} value={t.id}>{t.name}</option>
                          ))}
                        </select>

@@ -31,7 +31,56 @@ export declare class TeachersService {
         classesAssigned: number;
         userId: string;
     })[]>;
-    findOne(id: string): Promise<{
+    findOne(id: string): Promise<({
+        user: {
+            id: string;
+            username: string;
+            email: string;
+            password: string;
+            name: string;
+            role: import(".prisma/client").$Enums.UserRole;
+            avatarUrl: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+        classes: {
+            id: string;
+            name: string;
+            gradeLevel: number;
+            room: string | null;
+            academicYear: string;
+            teacherId: string | null;
+            description: string | null;
+            averageGpa: number;
+            currentWeeklyScore: number;
+        }[];
+        teachingAssignments: ({
+            class: {
+                id: string;
+                name: string;
+                gradeLevel: number;
+                room: string | null;
+                academicYear: string;
+                teacherId: string | null;
+                description: string | null;
+                averageGpa: number;
+                currentWeeklyScore: number;
+            };
+            subject: {
+                id: string;
+                name: string;
+                description: string | null;
+                code: string;
+                department: string | null;
+            };
+        } & {
+            id: string;
+            teacherId: string;
+            classId: string;
+            subjectId: string;
+            sessionsPerWeek: number;
+        })[];
+    } & {
         id: string;
         phone: string | null;
         address: string | null;
@@ -42,7 +91,7 @@ export declare class TeachersService {
         subjects: string[];
         classesAssigned: number;
         userId: string;
-    } | null>;
+    }) | null>;
     create(createTeacherDto: any): Promise<{
         user: {
             id: string;

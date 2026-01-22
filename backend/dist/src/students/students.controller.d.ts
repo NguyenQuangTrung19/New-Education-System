@@ -77,8 +77,8 @@ export declare class StudentsController {
         } & {
             id: string;
             academicYear: string;
-            studentId: string;
             subjectId: string;
+            studentId: string;
             semester: string;
             oralScore: number | null;
             fifteenMinScores: number[];

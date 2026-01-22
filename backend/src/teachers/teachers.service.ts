@@ -20,7 +20,7 @@ export class TeachersService {
       include: {
         user: true,
         classes: true,
-        assignments: { include: { subject: true, class: true } },
+        teachingAssignments: { include: { subject: true, class: true } },
         
       }
     });

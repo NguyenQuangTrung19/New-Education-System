@@ -147,6 +147,55 @@ async function main() {
     catch (e) {
         console.log('Student2 likely exists or error', e.code);
     }
+    try {
+        const math = await prisma.subject.upsert({
+            where: { code: 'MATH10' },
+            update: {},
+            create: {
+                id: 'SUBJ001',
+                name: 'Mathematics',
+                code: 'MATH10',
+                department: 'Science',
+                description: 'Grade 10 Mathematics'
+            }
+        });
+        console.log('Created Subject Math');
+        const physics = await prisma.subject.upsert({
+            where: { code: 'PHYS10' },
+            update: {},
+            create: {
+                id: 'SUBJ002',
+                name: 'Physics',
+                code: 'PHYS10',
+                department: 'Science',
+                description: 'Grade 10 Physics'
+            }
+        });
+        console.log('Created Subject Physics');
+    }
+    catch (e) {
+        console.log('Subjects likely exist', e);
+    }
+    try {
+        await prisma.assignment.create({
+            data: {
+                title: 'Algebra Quiz 1',
+                description: 'Solve the quadratic equations.',
+                subjectId: 'SUBJ001',
+                teacherId: 'GV0001',
+                dueDate: new Date(new Date().setDate(new Date().getDate() + 7)),
+                duration: 60,
+                questions: [
+                    { id: 1, text: "Solve x^2 - 4 = 0", options: ["2", "-2", "2, -2", "4"], correct: 2 },
+                    { id: 2, text: "What is the square root of 16?", options: ["2", "4", "8", "6"], correct: 1 }
+                ]
+            }
+        });
+        console.log('Created Assignment 1');
+    }
+    catch (e) {
+        console.log('Assignment creation failed', e);
+    }
     console.log('Seeding finished.');
 }
 main()

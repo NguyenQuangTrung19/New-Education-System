@@ -134,8 +134,8 @@ export declare class ClassesController {
             room: string | null;
             teacherId: string | null;
             classId: string;
-            day: string;
             subjectId: string;
+            day: string;
             period: number;
             session: string;
         })[];

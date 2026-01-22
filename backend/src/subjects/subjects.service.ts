@@ -7,9 +7,10 @@ import { UpdateSubjectDto } from './dto/update-subject.dto';
 export class SubjectsService {
   constructor(private prisma: PrismaService) {}
 
-  create(createSubjectDto: CreateSubjectDto) {
+  create(createSubjectDto: any) {
+    const { notes, ...data } = createSubjectDto;
     return this.prisma.subject.create({
-      data: createSubjectDto
+      data: data
     });
   }
 
@@ -32,10 +33,11 @@ export class SubjectsService {
     });
   }
 
-  update(id: string, updateSubjectDto: UpdateSubjectDto) {
+  update(id: string, updateSubjectDto: any) {
+    const { notes, ...data } = updateSubjectDto;
     return this.prisma.subject.update({
       where: { id },
-      data: updateSubjectDto,
+      data: data,
     });
   }
 

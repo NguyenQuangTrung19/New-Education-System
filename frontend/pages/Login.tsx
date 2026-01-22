@@ -67,6 +67,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
         classId: user.student?.classId
       };
 
+      localStorage.setItem('user_data', JSON.stringify(frontendUser));
       onLogin(frontendUser);
     } catch (err: any) {
       console.error('Login failed', err);

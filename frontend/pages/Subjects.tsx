@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
+import api from '../src/api/client';
 import { MOCK_SUBJECTS, MOCK_TEACHERS } from '../constants';
 import { Subject, Teacher, User, UserRole } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -16,7 +17,8 @@ interface SubjectsProps {
 
 export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
   const { t } = useLanguage();
-  const [subjects, setSubjects] = useState<Subject[]>(MOCK_SUBJECTS);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -35,14 +37,39 @@ export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
 
   const [formSubject, setFormSubject] = useState<Partial<Subject>>(defaultSubjectState);
 
+  // Fetch Subjects
+  const fetchSubjects = async () => {
+    try {
+        const { data } = await api.get('/subjects');
+        // Backend returns subjects. We need to map or ensure format.
+        // Backend doesn't return averageGpaHistory yet, so we mock it for UI consistency if needed
+        const mappedData = data.map((s: any) => ({
+            ...s,
+            averageGpaHistory: s.averageGpaHistory || [],
+            notes: s.notes || []
+        }));
+        setSubjects(mappedData);
+    } catch (error) {
+        console.error("Failed to fetch subjects", error);
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchSubjects();
+  }, []);
+
   const filteredSubjects = subjects.filter(s => 
     s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.department.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Helper to count teachers for a subject
+  // Helper to count teachers for a subject - Mock for now as backend doesn't explicitly link 
+  // (though backend has teachingAssignments, we might not have loaded them all here)
   const getTeachersForSubject = (subject: Subject): Teacher[] => {
+    // In a real app, we might fetch this detail or include it in the getAll response
     return MOCK_TEACHERS.filter(t => 
       t.subjects.some(s => s.toLowerCase() === subject.name.toLowerCase() || s.toLowerCase() === subject.code.toLowerCase())
     );
@@ -50,7 +77,7 @@ export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
 
   const handleOpenAdd = () => {
     setEditingSubject(null);
-    setFormSubject({ ...defaultSubjectState, id: `SUB${Date.now()}` });
+    setFormSubject({ ...defaultSubjectState });
     setIsFormOpen(true);
   };
 
@@ -60,36 +87,45 @@ export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
     setIsFormOpen(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm(t('common.confirmDelete'))) {
-      setSubjects(subjects.filter(s => s.id !== id));
-      if (selectedSubject?.id === id) setSelectedSubject(null);
+      try {
+        await api.delete(`/subjects/${id}`);
+        setSubjects(subjects.filter(s => s.id !== id));
+        if (selectedSubject?.id === id) setSelectedSubject(null);
+      } catch (error) {
+        console.error("Failed to delete subject", error);
+        alert(t('common.error'));
+      }
     }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formSubject.name || !formSubject.code) return;
 
-    const subjectData: Subject = {
-      id: formSubject.id || `SUB${Date.now()}`,
-      name: formSubject.name!,
-      code: formSubject.code!,
-      department: formSubject.department || 'General',
-      description: formSubject.description || '',
-      averageGpaHistory: editingSubject ? editingSubject.averageGpaHistory : [], // Preserve history or init empty
-      notes: editingSubject ? editingSubject.notes : []
-    };
-
-    if (editingSubject) {
-      setSubjects(subjects.map(s => s.id === editingSubject.id ? subjectData : s));
-    } else {
-      setSubjects([...subjects, subjectData]);
+    try {
+        if (editingSubject) {
+            const { data } = await api.patch(`/subjects/${editingSubject.id}`, formSubject);
+             setSubjects(subjects.map(s => s.id === editingSubject.id ? { ...s, ...data } : s));
+        } else {
+            const { data } = await api.post('/subjects', formSubject);
+            // Ensure local shape matches
+            const newSubject = { ...data, averageGpaHistory: [], notes: [] };
+            setSubjects([...subjects, newSubject]);
+        }
+        setIsFormOpen(false);
+    } catch (error) {
+        console.error("Failed to save subject", error);
+        alert(t('common.error'));
     }
-    setIsFormOpen(false);
   };
 
   const handleAddNote = (subjectId: string, note: string) => {
+    // Note implementation: In backend we don't have a specific endpoint for notes on Subject yet, 
+    // unless we treat it as an update to 'notes' field (assuming we added it to schema/dto? We didn't add 'notes' to Subject Schema)
+    // For now, we'll just handle it client side or assume it fails silently on backend if we try to patch it.
+    // The previous schema didn't have notes on Subject.
     if (!note.trim()) return;
     const updatedSubjects = subjects.map(s => {
       if (s.id === subjectId) return { ...s, notes: [...(s.notes || []), note] };
@@ -103,9 +139,145 @@ export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
 
   // --- Components ---
 
-  const SlideOverForm = () => createPortal(
+
+
+  return (
+    <div className="space-y-8 animate-fade-in pb-10">
+      {/* Header Area */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">{t('menu.subjects')}</h2>
+          <p className="text-gray-500 mt-1">{t('subjects.subtitle')}</p>
+        </div>
+        {isAdmin && (
+        <button onClick={handleOpenAdd} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-indigo-500/30 transition-all flex items-center whitespace-nowrap">
+            <Plus className="h-5 w-5 mr-2" /> {t('subjects.add')}
+        </button>
+        )}
+      </div>
+
+      {/* Main Content Card */}
+      <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
+        {/* Filters */}
+        <div className="p-5 border-b border-gray-100 flex flex-col md:flex-row gap-4 items-center justify-between bg-white">
+           <div className="relative w-full md:w-96">
+             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+             <input type="text" placeholder={t('subjects.searchPlaceholder')} className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none text-sm transition-all" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+           </div>
+        </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-50/50 border-b border-gray-100 text-xs uppercase font-bold text-gray-500 tracking-wider">
+                <th className="px-6 py-5 pl-8">{t('subject.name')}</th>
+                <th className="px-6 py-5">{t('subject.department')}</th>
+                <th className="px-6 py-5">{t('subject.teacherCount')}</th>
+                <th className="px-6 py-5">{t('subjects.table.avgGpa')}</th>
+                <th className="px-6 py-5 text-right pr-8">{t('common.actions')}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {filteredSubjects.map((subject) => {
+                const teachers = getTeachersForSubject(subject);
+                const latestGpa = subject.averageGpaHistory.length > 0 ? subject.averageGpaHistory[subject.averageGpaHistory.length - 1].gpa : 0;
+                
+                return (
+                  <tr key={subject.id} className="group hover:bg-indigo-50/30 transition-colors duration-200">
+                    <td className="px-6 py-4 pl-8">
+                       <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-lg bg-teal-100 flex items-center justify-center text-teal-700 font-bold border border-teal-200">
+                              <BookOpen className="h-5 w-5" />
+                          </div>
+                          <div>
+                              <div className="font-bold text-gray-900 text-sm">{subject.name}</div>
+                              <div className="text-xs text-gray-500 font-mono bg-gray-100 px-1.5 rounded inline-block mt-0.5">{subject.code}</div>
+                          </div>
+                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                       <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
+                          {subject.department}
+                       </span>
+                    </td>
+                    <td className="px-6 py-4">
+                       <div className="flex items-center gap-2">
+                           <Users className="h-4 w-4 text-gray-400" />
+                           <span className="text-sm font-medium text-gray-900">{teachers.length}</span>
+                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                       <span className={`font-bold text-sm ${latestGpa >= 8.0 ? 'text-emerald-600' : latestGpa >= 6.5 ? 'text-indigo-600' : 'text-orange-600'}`}>
+                         {latestGpa}
+                       </span>
+                    </td>
+                    <td className="px-6 py-4 pr-8 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button onClick={() => setSelectedSubject(subject)} className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Details"><Eye className="h-4 w-4" /></button>
+                        {isAdmin && (
+                        <>
+                        <button onClick={() => handleOpenEdit(subject)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit"><Pencil className="h-4 w-4" /></button>
+                        <button onClick={() => handleDelete(subject.id)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete"><Trash2 className="h-4 w-4" /></button>
+                        </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {filteredSubjects.length === 0 && (
+             <div className="p-12 text-center">
+               <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-gray-100 mb-4">
+                  <Search className="h-8 w-8 text-gray-400" />
+               </div>
+               <h3 className="text-lg font-medium text-gray-900">No subjects found</h3>
+               <p className="text-gray-500 mt-1">Try adjusting your search query.</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {selectedSubject && (
+        <SubjectDetailModal 
+            subject={selectedSubject} 
+            onClose={() => setSelectedSubject(null)} 
+            isAdmin={isAdmin}
+            onEdit={handleOpenEdit}
+            onAddNote={handleAddNote}
+            getTeachersForSubject={getTeachersForSubject}
+        />
+      )}
+      {isFormOpen && isAdmin && (
+        <SlideOverForm 
+            editingSubject={editingSubject}
+            formSubject={formSubject}
+            setFormSubject={setFormSubject}
+            onClose={() => setIsFormOpen(false)}
+            onSave={handleSave}
+        />
+      )}
+    </div>
+  );
+};
+
+// --- Extracted Components ---
+
+interface SlideOverFormProps {
+    editingSubject: Subject | null;
+    formSubject: Partial<Subject>;
+    setFormSubject: (val: Partial<Subject>) => void;
+    onClose: () => void;
+    onSave: (e: React.FormEvent) => void;
+}
+
+const SlideOverForm: React.FC<SlideOverFormProps> = ({ editingSubject, formSubject, setFormSubject, onClose, onSave }) => {
+    const { t } = useLanguage();
+    return createPortal(
     <div className="fixed inset-0 z-[100] overflow-hidden w-screen h-screen">
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={() => setIsFormOpen(false)} />
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={onClose} />
       <div className="fixed inset-y-0 right-0 pl-10 max-w-full flex pointer-events-none">
         <div className="w-screen max-w-md pointer-events-auto">
           <div className="h-full flex flex-col bg-white shadow-2xl animate-slide-in-right">
@@ -114,10 +286,10 @@ export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
                   <h2 className="text-xl font-bold">{editingSubject ? t('subjects.form.edit') : t('subjects.form.new')}</h2>
                   <p className="text-indigo-100 text-sm mt-1">{t('subject.description')}</p>
                 </div>
-                <button onClick={() => setIsFormOpen(false)} className="text-indigo-100 hover:text-white"><X className="h-6 w-6" /></button>
+                <button onClick={onClose} className="text-indigo-100 hover:text-white"><X className="h-6 w-6" /></button>
              </div>
              
-             <form onSubmit={handleSave} className="flex-1 overflow-y-auto bg-gray-50">
+             <form onSubmit={onSave} className="flex-1 overflow-y-auto bg-gray-50">
                 <div className="p-6 space-y-6">
                    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
                       <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100">
@@ -154,8 +326,8 @@ export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
              </form>
 
              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 shrink-0 flex justify-end gap-3">
-               <button type="button" onClick={() => setIsFormOpen(false)} className="px-5 py-2.5 text-gray-700 font-medium hover:bg-gray-200 rounded-lg transition-colors text-sm">{t('common.cancel')}</button>
-               <button onClick={handleSave} type="button" className="px-5 py-2.5 bg-indigo-600 text-white font-medium hover:bg-indigo-700 rounded-lg shadow-lg shadow-indigo-500/30 transition-all transform active:scale-95 text-sm flex items-center">
+               <button type="button" onClick={onClose} className="px-5 py-2.5 text-gray-700 font-medium hover:bg-gray-200 rounded-lg transition-colors text-sm">{t('common.cancel')}</button>
+               <button onClick={onSave} type="button" className="px-5 py-2.5 bg-indigo-600 text-white font-medium hover:bg-indigo-700 rounded-lg shadow-lg shadow-indigo-500/30 transition-all transform active:scale-95 text-sm flex items-center">
                   <Check className="h-4 w-4 mr-2" /> {t('common.save')}
                </button>
             </div>
@@ -165,15 +337,26 @@ export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
     </div>,
     document.body
   );
+}
 
-  const SubjectDetailModal = ({ subject, onClose }: { subject: Subject, onClose: () => void }) => {
+interface SubjectDetailModalProps {
+    subject: Subject;
+    onClose: () => void;
+    isAdmin: boolean;
+    onEdit: (s: Subject) => void;
+    onAddNote: (id: string, note: string) => void;
+    getTeachersForSubject: (s: Subject) => Teacher[];
+}
+
+const SubjectDetailModal: React.FC<SubjectDetailModalProps> = ({ subject, onClose, isAdmin, onEdit, onAddNote, getTeachersForSubject }) => {
+    const { t } = useLanguage();
     const teachingFaculty = getTeachersForSubject(subject);
     const [noteInput, setNoteInput] = useState('');
     const latestGpa = subject.averageGpaHistory.length > 0 ? subject.averageGpaHistory[subject.averageGpaHistory.length - 1].gpa : 0;
 
     const submitNote = () => {
         if(noteInput.trim()) {
-            handleAddNote(subject.id, noteInput);
+            onAddNote(subject.id, noteInput);
             setNoteInput('');
         }
     };
@@ -209,7 +392,7 @@ export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
                              </div>
                              {isAdmin && (
                              <div className="flex gap-2">
-                                <button onClick={() => { onClose(); handleOpenEdit(subject); }} className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium text-sm shadow-sm flex items-center">
+                                <button onClick={() => { onClose(); onEdit(subject); }} className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium text-sm shadow-sm flex items-center">
                                     <Pencil className="h-4 w-4 mr-2" /> Edit Subject
                                 </button>
                              </div>
@@ -325,109 +508,4 @@ export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
       </div>,
       document.body
     );
-  };
-
-  return (
-    <div className="space-y-8 animate-fade-in pb-10">
-      {/* Header Area */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">{t('menu.subjects')}</h2>
-          <p className="text-gray-500 mt-1">{t('subjects.subtitle')}</p>
-        </div>
-        {isAdmin && (
-        <button onClick={handleOpenAdd} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-indigo-500/30 transition-all flex items-center whitespace-nowrap">
-            <Plus className="h-5 w-5 mr-2" /> {t('subjects.add')}
-        </button>
-        )}
-      </div>
-
-      {/* Main Content Card */}
-      <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
-        {/* Filters */}
-        <div className="p-5 border-b border-gray-100 flex flex-col md:flex-row gap-4 items-center justify-between bg-white">
-           <div className="relative w-full md:w-96">
-             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-             <input type="text" placeholder={t('subjects.searchPlaceholder')} className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none text-sm transition-all" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-           </div>
-        </div>
-
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50/50 border-b border-gray-100 text-xs uppercase font-bold text-gray-500 tracking-wider">
-                <th className="px-6 py-5 pl-8">{t('subject.name')}</th>
-                <th className="px-6 py-5">{t('subject.department')}</th>
-                <th className="px-6 py-5">{t('subject.teacherCount')}</th>
-                <th className="px-6 py-5">{t('subjects.table.avgGpa')}</th>
-                <th className="px-6 py-5 text-right pr-8">{t('common.actions')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredSubjects.map((subject) => {
-                const teachers = getTeachersForSubject(subject);
-                const latestGpa = subject.averageGpaHistory.length > 0 ? subject.averageGpaHistory[subject.averageGpaHistory.length - 1].gpa : 0;
-                
-                return (
-                  <tr key={subject.id} className="group hover:bg-indigo-50/30 transition-colors duration-200">
-                    <td className="px-6 py-4 pl-8">
-                       <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-lg bg-teal-100 flex items-center justify-center text-teal-700 font-bold border border-teal-200">
-                              <BookOpen className="h-5 w-5" />
-                          </div>
-                          <div>
-                              <div className="font-bold text-gray-900 text-sm">{subject.name}</div>
-                              <div className="text-xs text-gray-500 font-mono bg-gray-100 px-1.5 rounded inline-block mt-0.5">{subject.code}</div>
-                          </div>
-                       </div>
-                    </td>
-                    <td className="px-6 py-4">
-                       <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
-                          {subject.department}
-                       </span>
-                    </td>
-                    <td className="px-6 py-4">
-                       <div className="flex items-center gap-2">
-                           <Users className="h-4 w-4 text-gray-400" />
-                           <span className="text-sm font-medium text-gray-900">{teachers.length}</span>
-                       </div>
-                    </td>
-                    <td className="px-6 py-4">
-                       <span className={`font-bold text-sm ${latestGpa >= 8.0 ? 'text-emerald-600' : latestGpa >= 6.5 ? 'text-indigo-600' : 'text-orange-600'}`}>
-                         {latestGpa}
-                       </span>
-                    </td>
-                    <td className="px-6 py-4 pr-8 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button onClick={() => setSelectedSubject(subject)} className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Details"><Eye className="h-4 w-4" /></button>
-                        {isAdmin && (
-                        <>
-                        <button onClick={() => handleOpenEdit(subject)} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit"><Pencil className="h-4 w-4" /></button>
-                        <button onClick={() => handleDelete(subject.id)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete"><Trash2 className="h-4 w-4" /></button>
-                        </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          {filteredSubjects.length === 0 && (
-             <div className="p-12 text-center">
-               <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-gray-100 mb-4">
-                  <Search className="h-8 w-8 text-gray-400" />
-               </div>
-               <h3 className="text-lg font-medium text-gray-900">No subjects found</h3>
-               <p className="text-gray-500 mt-1">Try adjusting your search query.</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {selectedSubject && <SubjectDetailModal subject={selectedSubject} onClose={() => setSelectedSubject(null)} />}
-      {isFormOpen && isAdmin && <SlideOverForm />}
-    </div>
-  );
 };

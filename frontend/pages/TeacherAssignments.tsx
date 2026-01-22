@@ -1,8 +1,8 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import api from '../src/api/client';
 import { User } from '../types';
-import { MOCK_CLASSES, MOCK_SUBJECTS, MOCK_TEACHERS } from '../constants';
 import { 
   Plus, Trash2, Save, FileText, CheckCircle, Circle, 
   HelpCircle, ChevronRight, Check, AlertCircle, LayoutList, 
@@ -34,7 +34,7 @@ interface NewAssignment {
   title: string;
   subjectId: string;
   dueDate: string;
-  duration: number; // Added duration field
+  duration: number;
   classIds: string[];
   passwordAccess: string;
   questions: Question[];
@@ -50,21 +50,49 @@ export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentU
   const [view, setView] = useState<'list' | 'create'>('list');
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
   
-  // -- State Persistence --
-  const [assignments, setAssignments] = useState<StoredAssignment[]>(() => {
-      try {
-          const saved = localStorage.getItem('teacher_assignments');
-          const parsed = saved ? JSON.parse(saved) : [];
-          return Array.isArray(parsed) ? parsed.filter(i => i && i.id) : [];
-      } catch (e) {
-          console.error("Data corruption in assignments, resetting.", e);
-          return [];
-      }
-  });
+  // -- API State --
+  const [assignments, setAssignments] = useState<StoredAssignment[]>([]);
+  const [mySubjects, setMySubjects] = useState<any[]>([]);
+  const [myClasses, setMyClasses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = async () => {
+    try {
+        setLoading(true);
+        // Parallel fetch for efficiency
+        const [assignmentsRes, subjectsRes, classesRes] = await Promise.all([
+            api.get('/assignments'), // Should filter by teacherId in backend ideally, or here
+            api.get('/subjects'),
+            api.get('/classes') // Assuming a classes endpoint exists
+        ]);
+
+        // Transform backend assignment to frontend StoredAssignment
+        const mappedAssignments = assignmentsRes.data.map((a: any) => ({
+            id: a.id,
+            title: a.title,
+            subjectId: a.subjectId,
+            dueDate: a.dueDate,
+            duration: a.duration,
+            classIds: a.classIds || (a.classes ? a.classes.map((c:any) => c.id) : []),
+            passwordAccess: a.password || '',
+            questions: a.questions || [],
+            status: 'active', // Backend doesn't have status on Assignment, assume active for now
+            createdAt: a.createdAt
+        }));
+
+        setAssignments(mappedAssignments);
+        setMySubjects(subjectsRes.data);
+        setMyClasses(classesRes.data); // Should filter by teacher in real app if backend returns all
+    } catch (error) {
+        console.error("Failed to fetch data", error);
+    } finally {
+        setLoading(false);
+    }
+  };
 
   useEffect(() => {
-      localStorage.setItem('teacher_assignments', JSON.stringify(assignments));
-  }, [assignments]);
+      fetchData();
+  }, [currentUser.id]);
 
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -76,7 +104,7 @@ export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentU
   // Validation State
   const [formError, setFormError] = useState<string | null>(null);
   
-  // Action State: Added 'delete'
+  // Action State
   const [pendingAction, setPendingAction] = useState<'publish' | 'edit_access' | 'delete'>('publish');
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -97,16 +125,6 @@ export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentU
   };
 
   const [newAssignment, setNewAssignment] = useState<NewAssignment>(initialAssignmentState);
-
-  // Get Classes taught by this teacher
-  const myClasses = useMemo(() => {
-    return MOCK_CLASSES.filter(c => c.teacherId === currentUser.id);
-  }, [currentUser.id]);
-
-  // Get Subjects (Demo: Return all subjects so user can see options)
-  const mySubjects = useMemo(() => {
-      return MOCK_SUBJECTS;
-  }, []);
 
   // --- Handlers ---
 
@@ -303,7 +321,7 @@ export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentU
       setShowSecurityModal(true);
   };
 
-  const confirmSecurityCheck = () => {
+  const confirmSecurityCheck = async () => {
       if (securityPassword === 'password') {
           if (pendingAction === 'edit_access') {
               setShowSecurityModal(false);
@@ -312,8 +330,14 @@ export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentU
           } else if (pendingAction === 'delete') {
               // Execute Delete
               if (editingId) {
-                  setAssignments(prev => prev.filter(a => a.id !== editingId));
-                  setEditingId(null);
+                  try {
+                    await api.delete(`/assignments/${editingId}`);
+                    setAssignments(prev => prev.filter(a => a.id !== editingId));
+                    setEditingId(null);
+                  } catch(e) {
+                      console.error("Delete failed", e);
+                      alert("Xóa thất bại!");
+                  }
               }
               setShowSecurityModal(false);
           } else {
@@ -325,24 +349,40 @@ export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentU
       }
   };
 
-  const confirmPublishAction = () => {
-      if (editingId) {
-          setAssignments(prev => prev.map(a => a.id === editingId ? {
+  const confirmPublishAction = async () => {
+      const payload = {
+        ...newAssignment,
+        teacherId: currentUser.id,
+        password: newAssignment.passwordAccess, // Map frontend 'passwordAccess' to backend 'password'
+        // CreateAssignmentDto specific fields if needed
+      };
+
+      try {
+        if (editingId) {
+            // Update
+            const { data } = await api.patch(`/assignments/${editingId}`, payload);
+            setAssignments(prev => prev.map(a => a.id === editingId ? {
+                ...newAssignment,
+                id: editingId, 
+                status: 'active', // or preserve
+                createdAt: a.createdAt
+            } : a));
+            alert("Đã cập nhật bài tập thành công!");
+        } else {
+            // Create
+            const { data } = await api.post('/assignments', payload);
+            const finalAssignment: StoredAssignment = {
               ...newAssignment,
-              id: editingId, 
-              status: a.status,
-              createdAt: a.createdAt
-          } : a));
-          alert("Đã cập nhật bài tập thành công!");
-      } else {
-          const finalAssignment: StoredAssignment = {
-            ...newAssignment,
-            id: `ASG-${Date.now()}-${generateId()}`,
-            status: 'active',
-            createdAt: new Date().toISOString()
-          };
-          setAssignments(prev => [finalAssignment, ...prev]);
-          alert("Đã tạo bài tập thành công!");
+              id: data.id,
+              status: 'active',
+              createdAt: data.createdAt || new Date().toISOString()
+            };
+            setAssignments(prev => [finalAssignment, ...prev]);
+            alert("Đã tạo bài tập thành công!");
+        }
+      } catch (error) {
+          console.error("Publish failed", error);
+          alert("Có lỗi xảy ra khi lưu bài tập.");
       }
       
       setShowSecurityModal(false);
@@ -520,7 +560,7 @@ export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentU
                           
                           <div className="space-y-2 mb-6">
                               <div className="flex items-center text-sm text-gray-500">
-                                  <BookOpen className="h-4 w-4 mr-2" /> {MOCK_SUBJECTS.find(s => s.id === asg.subjectId)?.name || 'Chưa chọn môn'}
+                                  <BookOpen className="h-4 w-4 mr-2" /> {mySubjects.find(s => s.id === asg.subjectId)?.name || 'Chưa chọn môn'}
                               </div>
                               <div className="flex items-center text-sm text-gray-500">
                                   <Timer className="h-4 w-4 mr-2" /> Thời gian: {asg.duration || 45} phút
@@ -559,8 +599,8 @@ export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentU
                           <div className="mt-auto pt-4 border-t border-gray-100 flex justify-between items-center relative z-10 bg-white">
                               <div className="flex -space-x-2 overflow-hidden">
                                   {asg.classIds.slice(0, 3).map(cid => (
-                                      <div key={cid} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-600" title={MOCK_CLASSES.find(c => c.id === cid)?.name}>
-                                          {MOCK_CLASSES.find(c => c.id === cid)?.name.substring(0, 2)}
+                                      <div key={cid} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-600" title={myClasses.find(c => c.id === cid)?.name}>
+                                          {myClasses.find(c => c.id === cid)?.name.substring(0, 2)}
                                       </div>
                                   ))}
                                   {asg.classIds.length > 3 && (
