@@ -12,6 +12,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area 
 } from 'recharts';
 import { getCurrentAcademicYear } from '../utils';
+import api from '../src/api/client';
 
 interface ClassesProps {
   currentUser: User | null;
@@ -93,14 +94,20 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
     setIsFormOpen(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm(t('common.confirmDelete'))) {
-      setClasses(classes.filter(c => c.id !== id));
-      if (selectedClass?.id === id) setSelectedClass(null);
+      try {
+        await api.delete(`/classes/${id}`);
+        setClasses(classes.filter(c => c.id !== id));
+        if (selectedClass?.id === id) setSelectedClass(null);
+      } catch (err) {
+        console.error("Failed to delete class", err);
+        alert("Failed to delete class");
+      }
     }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formClass.name || !formClass.room) return;
 
@@ -121,12 +128,24 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
       notes: editingClass ? editingClass.notes : []
     };
 
-    if (editingClass) {
-      setClasses(classes.map(c => c.id === editingClass.id ? classData : c));
-    } else {
-      setClasses([...classes, classData]);
+    const classPayload = {
+      ...classData,
+      gradeLevel: Number(classData.gradeLevel), // Ensure number
+    };
+
+    try {
+      if (editingClass) {
+        const response = await api.patch(`/classes/${editingClass.id}`, classPayload);
+        setClasses(classes.map(c => c.id === editingClass.id ? response.data : c));
+      } else {
+        const response = await api.post('/classes', classPayload);
+        setClasses([...classes, response.data]);
+      }
+      setIsFormOpen(false);
+    } catch (err) {
+      console.error("Failed to save class", err);
+      // alert("Failed to save class"); // Optional: show user error
     }
-    setIsFormOpen(false);
   };
 
   const handleAddNote = (classId: string, note: string) => {

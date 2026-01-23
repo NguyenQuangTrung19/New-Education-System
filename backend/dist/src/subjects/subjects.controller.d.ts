@@ -7,49 +7,48 @@ export declare class SubjectsController {
     create(createSubjectDto: CreateSubjectDto): import(".prisma/client").Prisma.Prisma__SubjectClient<{
         id: string;
         name: string;
+        description: string | null;
         code: string;
         department: string | null;
-        description: string | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     findAll(): import(".prisma/client").Prisma.PrismaPromise<({
         homeworks: {
             id: string;
+            password: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            teacherId: string;
             description: string | null;
             title: string;
-            subjectId: string;
-            teacherId: string;
             classIds: string[];
             dueDate: Date;
             duration: number | null;
-            password: string | null;
             questions: import("@prisma/client/runtime/library").JsonValue | null;
-            createdAt: Date;
-            updatedAt: Date;
+            subjectId: string;
         }[];
     } & {
         id: string;
         name: string;
+        description: string | null;
         code: string;
         department: string | null;
-        description: string | null;
     })[]>;
     findOne(id: string): import(".prisma/client").Prisma.Prisma__SubjectClient<({
         teachingAssignments: ({
             teacher: {
                 user: {
                     id: string;
-                    name: string;
-                    password: string;
-                    createdAt: Date;
-                    updatedAt: Date;
                     username: string;
                     email: string;
+                    password: string;
+                    name: string;
                     role: import(".prisma/client").$Enums.UserRole;
                     avatarUrl: string | null;
+                    createdAt: Date;
+                    updatedAt: Date;
                 };
             } & {
                 id: string;
-                userId: string;
                 phone: string | null;
                 address: string | null;
                 citizenId: string | null;
@@ -58,47 +57,48 @@ export declare class SubjectsController {
                 joinYear: number | null;
                 subjects: string[];
                 classesAssigned: number;
+                userId: string;
             };
         } & {
             id: string;
-            subjectId: string;
             teacherId: string;
             classId: string;
+            subjectId: string;
             sessionsPerWeek: number;
         })[];
         homeworks: {
             id: string;
+            password: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            teacherId: string;
             description: string | null;
             title: string;
-            subjectId: string;
-            teacherId: string;
             classIds: string[];
             dueDate: Date;
             duration: number | null;
-            password: string | null;
             questions: import("@prisma/client/runtime/library").JsonValue | null;
-            createdAt: Date;
-            updatedAt: Date;
+            subjectId: string;
         }[];
     } & {
         id: string;
         name: string;
+        description: string | null;
         code: string;
         department: string | null;
-        description: string | null;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
     update(id: string, updateSubjectDto: UpdateSubjectDto): import(".prisma/client").Prisma.Prisma__SubjectClient<{
         id: string;
         name: string;
+        description: string | null;
         code: string;
         department: string | null;
-        description: string | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     remove(id: string): import(".prisma/client").Prisma.Prisma__SubjectClient<{
         id: string;
         name: string;
+        description: string | null;
         code: string;
         department: string | null;
-        description: string | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
 }

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { MOCK_TEACHERS, MOCK_CLASSES, MOCK_SUBJECTS } from '../constants';
@@ -10,15 +9,11 @@ import {
   MapPin, Calendar, CreditCard, Lock, Trash2, Pencil, ChevronRight, Briefcase, EyeOff, ShieldCheck, AlertTriangle
 } from 'lucide-react';
 import { calculateAge, isValidPhone, isValidCitizenId, toTitleCase } from '../utils';
+import api from '../src/api/client';
 
 interface TeachersProps {
   currentUser: User | null;
 }
-
-import api from '../src/api/client';
-
-
-// ...
 
 interface SlideOverFormProps {
   isOpen: boolean;
@@ -31,6 +26,227 @@ interface SlideOverFormProps {
   formErrors: string[];
   availableSubjects: string[];
 }
+
+interface TeacherDetailModalProps {
+  teacher: Teacher;
+  onClose: () => void;
+  isAdmin: boolean;
+  onEdit: (teacher: Teacher) => void;
+  onAddNote: (teacherId: string, note: string) => void;
+}
+
+// --- Helper Functions ---
+const calculateExperience = (joinYear: number) => Math.max(0, new Date().getFullYear() - joinYear);
+
+// --- Extracted Components ---
+
+const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({ teacher, onClose, isAdmin, onEdit, onAddNote }) => {
+  const { t } = useLanguage();
+  const assignedClasses = MOCK_CLASSES.filter(c => c.teacherId === teacher.id);
+  const totalStudents = assignedClasses.reduce((sum, cls) => sum + cls.studentCount, 0);
+  const [noteInput, setNoteInput] = useState('');
+  const experience = calculateExperience(teacher.joinYear);
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 w-screen h-screen">
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={onClose}/>
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-scale-in">
+         <button onClick={onClose} className="absolute top-4 right-4 z-50 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition-colors backdrop-blur-md">
+           <X className="h-5 w-5" />
+         </button>
+         
+         <div className="overflow-y-auto flex-1 custom-scrollbar">
+            <div className="h-40 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-800 relative">
+              <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
+            </div>
+            
+            <div className="px-6 md:px-8 pb-8">
+               <div className="flex flex-col md:flex-row gap-6 items-start -mt-14 mb-8 relative z-10">
+                  <div className="h-32 w-32 rounded-2xl bg-white p-1.5 shadow-xl shrink-0">
+                     <div className="h-full w-full rounded-xl bg-indigo-50 flex items-center justify-center text-5xl font-bold text-indigo-600 border border-indigo-100">
+                        {teacher.name.charAt(0)}
+                     </div>
+                  </div>
+                  <div className="flex-1 pt-16 md:pt-16">
+                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                         <div>
+                             <h2 className="text-3xl font-bold text-gray-900">{teacher.name}</h2>
+                             <div className="flex flex-wrap items-center gap-3 mt-2 text-sm">
+                                 <span className="px-2.5 py-0.5 bg-indigo-100 text-indigo-700 rounded-full font-medium border border-indigo-200">{teacher.id}</span>
+                                 <span className="flex items-center text-gray-500"><Briefcase className="h-4 w-4 mr-1"/> {t('teachers.modal.joined')} {teacher.joinYear}</span>
+                                 <span className="flex items-center text-gray-500"><Clock className="h-4 w-4 mr-1"/> {experience} {t('teachers.modal.exp')}</span>
+                             </div>
+                         </div>
+                         {isAdmin && (
+                          <div className="flex gap-2">
+                              <button onClick={() => { onClose(); onEdit(teacher); }} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition shadow-sm font-medium flex items-center text-sm">
+                                 <Pencil className="h-4 w-4 mr-2" /> {t('common.edit')}
+                              </button>
+                         </div>
+                         )}
+                     </div>
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <div className="lg:col-span-2 space-y-8">
+                     <div className="grid grid-cols-3 gap-4">
+                         <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-4 rounded-xl border border-emerald-100">
+                            <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider">{t('teachers.modal.classes')}</p>
+                            <div className="flex items-end justify-between mt-2">
+                               <span className="text-3xl font-bold text-gray-800">{teacher.classesAssigned}</span>
+                               <Users className="h-6 w-6 text-emerald-300" />
+                            </div>
+                         </div>
+                         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100">
+                            <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">{t('teachers.modal.students')}</p>
+                            <div className="flex items-end justify-between mt-2">
+                               <span className="text-3xl font-bold text-gray-800">{totalStudents}</span>
+                               <GraduationCap className="h-6 w-6 text-blue-300" />
+                            </div>
+                         </div>
+                          <div className="bg-gradient-to-br from-purple-50 to-fuchsia-50 p-4 rounded-xl border border-purple-100">
+                            <p className="text-xs font-bold text-purple-600 uppercase tracking-wider">{t('teachers.modal.subjects')}</p>
+                            <div className="flex items-end justify-between mt-2">
+                               <span className="text-3xl font-bold text-gray-800">{teacher.subjects.length}</span>
+                               <BookOpen className="h-6 w-6 text-purple-300" />
+                            </div>
+                         </div>
+                     </div>
+
+                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                         <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
+                             <UserIcon className="h-4 w-4 text-gray-500" />
+                             <h3 className="text-sm font-bold text-gray-800 uppercase">{t('teachers.modal.personal')}</h3>
+                         </div>
+                         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
+                             <div>
+                                 <label className="text-xs text-gray-400 font-medium uppercase block mb-1">{t('teacher.email')}</label>
+                                 <div className="text-sm font-medium text-gray-900 flex items-center break-all"><Mail className="h-4 w-4 mr-2 text-indigo-400 shrink-0"/> {teacher.email}</div>
+                             </div>
+                             <div>
+                                 <label className="text-xs text-gray-400 font-medium uppercase block mb-1">{t('teacher.phone')}</label>
+                                 <div className="text-sm font-medium text-gray-900 flex items-center"><Phone className="h-4 w-4 mr-2 text-indigo-400 shrink-0"/> {teacher.phone}</div>
+                             </div>
+                             <div>
+                                 <label className="text-xs text-gray-400 font-medium uppercase block mb-1">{t('teacher.dob')}</label>
+                                 <div className="text-sm font-medium text-gray-900 flex items-center"><Calendar className="h-4 w-4 mr-2 text-indigo-400 shrink-0"/> {teacher.dateOfBirth} ({calculateAge(teacher.dateOfBirth)} years)</div>
+                             </div>
+                             <div>
+                                 <label className="text-xs text-gray-400 font-medium uppercase block mb-1">{t('teacher.address')}</label>
+                                 <div className="text-sm font-medium text-gray-900 flex items-start"><MapPin className="h-4 w-4 mr-2 text-indigo-400 mt-0.5 shrink-0"/> {teacher.address}</div>
+                             </div>
+                              <div>
+                                 <label className="text-xs text-gray-400 font-medium uppercase block mb-1">{t('teacher.citizenId')}</label>
+                                 <div className="text-sm font-medium text-gray-900 flex items-center"><CreditCard className="h-4 w-4 mr-2 text-indigo-400 shrink-0"/> {teacher.citizenId}</div>
+                             </div>
+                              <div>
+                                 <label className="text-xs text-gray-400 font-medium uppercase block mb-1">{t('teacher.gender')}</label>
+                                 <div className="text-sm font-medium text-gray-900">{teacher.gender}</div>
+                             </div>
+                         </div>
+                     </div>
+                  </div>
+
+                  <div className="space-y-8">
+                      {/* Admin Security Section */}
+                      {isAdmin && (
+                          <div className="bg-white rounded-xl border border-red-100 shadow-sm overflow-hidden ring-1 ring-red-50">
+                              <div className="px-6 py-4 border-b border-red-100 bg-red-50/50 flex items-center gap-2">
+                                  <ShieldCheck className="h-4 w-4 text-red-600" />
+                                  <h3 className="text-sm font-bold text-red-900 uppercase">{t('security.accountSecurity')}</h3>
+                              </div>
+                              <div className="p-6">
+                                  <div className="flex items-center justify-between mb-4">
+                                      <div>
+                                          <p className="text-xs text-gray-500 font-medium uppercase mb-1">{t('teacher.username')}</p>
+                                          <p className="font-mono font-bold text-gray-800 bg-gray-100 px-2 py-1 rounded text-sm">{teacher.username}</p>
+                                      </div>
+                                      <div className="h-8 w-px bg-gray-200 mx-2"></div>
+                                      <div>
+                                          <p className="text-xs text-gray-500 font-medium uppercase mb-1">Role</p>
+                                          <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded">TEACHER</span>
+                                      </div>
+                                  </div>
+                                  <button 
+                                      onClick={() => {}} 
+                                      className="w-full py-2 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition text-sm font-bold flex items-center justify-center shadow-sm"
+                                  >
+                                      <EyeOff className="h-4 w-4 mr-2" /> {t('security.viewPass')}
+                                  </button>
+                              </div>
+                          </div>
+                      )}
+
+                      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                         <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                             <h3 className="text-sm font-bold text-gray-800 uppercase">{t('teachers.modal.teachingSubjects')}</h3>
+                         </div>
+                         <div className="p-6">
+                             <div className="flex flex-wrap gap-2">
+                                 {teacher.subjects.map(sub => (
+                                     <span key={sub} className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm font-medium border border-indigo-100">{sub}</span>
+                                 ))}
+                             </div>
+                         </div>
+                     </div>
+
+                     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                         <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                             <h3 className="text-sm font-bold text-gray-800 uppercase">{t('teachers.modal.schedule')}</h3>
+                         </div>
+                          <div className="divide-y divide-gray-100">
+                             {assignedClasses.length > 0 ? assignedClasses.map(cls => (
+                                 <div key={cls.id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition">
+                                     <div className="flex items-center gap-3">
+                                         <div className="h-8 w-8 rounded bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-xs">{cls.gradeLevel}</div>
+                                         <div>
+                                             <p className="text-sm font-bold text-gray-900">{cls.name}</p>
+                                             <p className="text-xs text-gray-500">{cls.studentCount} Students</p>
+                                         </div>
+                                     </div>
+                                     <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-600">{cls.room}</span>
+                                 </div>
+                             )) : <div className="p-6 text-center text-gray-400 italic text-sm">No classes assigned</div>}
+                         </div>
+                     </div>
+
+                     <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-200 flex items-center gap-2 bg-gray-100/50">
+                            <MessageSquare className="h-4 w-4 text-gray-500" />
+                            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">{t('teachers.modal.notes')}</h3>
+                        </div>
+                        <div className="p-6">
+                           <div className="space-y-3 mb-4 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                              {teacher.notes?.map((note, idx) => (
+                                <div key={idx} className="p-3 bg-white rounded-lg text-sm text-gray-600 shadow-sm border border-gray-100">{note}</div>
+                              ))}
+                              {(!teacher.notes || teacher.notes.length === 0) && <p className="text-xs text-gray-400 italic">No notes yet.</p>}
+                           </div>
+                           {isAdmin && (
+                           <div className="flex gap-2">
+                              <input 
+                                 type="text" 
+                                 value={noteInput} 
+                                 onChange={(e) => setNoteInput(e.target.value)} 
+                                 onKeyDown={(e) => e.key === 'Enter' && (onAddNote(teacher.id, noteInput), setNoteInput(''))}
+                                 placeholder="Add note..." 
+                                 className="flex-1 w-full min-w-0 text-xs border border-gray-300 bg-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 shadow-sm outline-none text-gray-700" 
+                              />
+                              <button onClick={() => { onAddNote(teacher.id, noteInput); setNoteInput(''); }} className="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm shrink-0 flex items-center justify-center"><Send className="h-3 w-3" /></button>
+                           </div>
+                           )}
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+    </div>,
+    document.body
+  );
+};
 
 const SlideOverForm: React.FC<SlideOverFormProps> = ({
   isOpen, onClose, isEditing, editingId,
@@ -223,8 +439,6 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
   const [formTeacher, setFormTeacher] = useState<Partial<Teacher>>(defaultTeacherState);
 
   const isAdmin = currentUser?.role === UserRole.ADMIN;
-
-  const calculateExperience = (joinYear: number) => Math.max(0, new Date().getFullYear() - joinYear);
   const availableSubjects = Array.from(new Set(MOCK_SUBJECTS.map(s => s.name)));
 
   // Fetch Teachers
@@ -267,10 +481,16 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
     setIsFormOpen(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm(t('common.confirmDelete'))) {
-      setTeachers(teachers.filter(t => t.id !== id));
-      if (selectedTeacher?.id === id) setSelectedTeacher(null);
+        try {
+            await api.delete(`/teachers/${id}`);
+            setTeachers(teachers.filter(t => t.id !== id));
+            if (selectedTeacher?.id === id) setSelectedTeacher(null);
+        } catch (err) {
+            console.error("Failed to delete teacher", err);
+            alert("Failed to delete teacher");
+        }
     }
   };
 
@@ -307,7 +527,7 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
       return errors;
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Auto-format
@@ -338,20 +558,21 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
       dateOfBirth: formattedData.dateOfBirth || '',
       joinYear: formattedData.joinYear || new Date().getFullYear(),
       classesAssigned: editingTeacher ? editingTeacher.classesAssigned : 0,
-      notes: editingTeacher ? editingTeacher.notes : []
+       notes: editingTeacher ? editingTeacher.notes : []
     };
 
-    if (editingTeacher) {
-      setTeachers(teachers.map(t => t.id === editingTeacher.id ? teacherData : t));
-    } else {
-      setTeachers([...teachers, teacherData]);
-    }
-    setIsFormOpen(false);
-  };
-
-  const handleAddSubjectToForm = (subject: string) => {
-    if (subject && !formTeacher.subjects?.includes(subject)) {
-      setFormTeacher({ ...formTeacher, subjects: [...(formTeacher.subjects || []), subject] });
+    try {
+        if (editingTeacher) {
+            const response = await api.patch(`/teachers/${editingTeacher.id}`, teacherData);
+            setTeachers(teachers.map(t => t.id === editingTeacher.id ? response.data : t));
+        } else {
+            const response = await api.post('/teachers', teacherData);
+            setTeachers([...teachers, response.data]);
+        }
+        setIsFormOpen(false);
+    } catch (error) {
+        console.error("Failed to save teacher", error);
+        alert("Failed to save teacher. Please try again.");
     }
   };
 
@@ -379,218 +600,6 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
           alert("Incorrect security code.");
       }
   };
-
-  // --- Components ---
-
-  const TeacherDetailModal = ({ teacher, onClose }: { teacher: Teacher, onClose: () => void }) => {
-    const assignedClasses = MOCK_CLASSES.filter(c => c.teacherId === teacher.id);
-    const totalStudents = assignedClasses.reduce((sum, cls) => sum + cls.studentCount, 0);
-    const [noteInput, setNoteInput] = useState('');
-    const experience = calculateExperience(teacher.joinYear);
-
-    return createPortal(
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 w-screen h-screen">
-        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={onClose}/>
-        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-scale-in">
-           <button onClick={onClose} className="absolute top-4 right-4 z-50 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition-colors backdrop-blur-md">
-             <X className="h-5 w-5" />
-           </button>
-           
-           <div className="overflow-y-auto flex-1 custom-scrollbar">
-              <div className="h-40 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-800 relative">
-                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
-              </div>
-              
-              <div className="px-6 md:px-8 pb-8">
-                 <div className="flex flex-col md:flex-row gap-6 items-start -mt-14 mb-8 relative z-10">
-                    <div className="h-32 w-32 rounded-2xl bg-white p-1.5 shadow-xl shrink-0">
-                       <div className="h-full w-full rounded-xl bg-indigo-50 flex items-center justify-center text-5xl font-bold text-indigo-600 border border-indigo-100">
-                          {teacher.name.charAt(0)}
-                       </div>
-                    </div>
-                    <div className="flex-1 pt-16 md:pt-16">
-                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                           <div>
-                               <h2 className="text-3xl font-bold text-gray-900">{teacher.name}</h2>
-                               <div className="flex flex-wrap items-center gap-3 mt-2 text-sm">
-                                   <span className="px-2.5 py-0.5 bg-indigo-100 text-indigo-700 rounded-full font-medium border border-indigo-200">{teacher.id}</span>
-                                   <span className="flex items-center text-gray-500"><Briefcase className="h-4 w-4 mr-1"/> {t('teachers.modal.joined')} {teacher.joinYear}</span>
-                                   <span className="flex items-center text-gray-500"><Clock className="h-4 w-4 mr-1"/> {experience} {t('teachers.modal.exp')}</span>
-                               </div>
-                           </div>
-                           {isAdmin && (
-                            <div className="flex gap-2">
-                                <button onClick={() => { onClose(); handleOpenEdit(teacher); }} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition shadow-sm font-medium flex items-center text-sm">
-                                   <Pencil className="h-4 w-4 mr-2" /> {t('common.edit')}
-                                </button>
-                           </div>
-                           )}
-                       </div>
-                    </div>
-                 </div>
-
-                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2 space-y-8">
-                       <div className="grid grid-cols-3 gap-4">
-                           <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-4 rounded-xl border border-emerald-100">
-                              <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider">{t('teachers.modal.classes')}</p>
-                              <div className="flex items-end justify-between mt-2">
-                                 <span className="text-3xl font-bold text-gray-800">{teacher.classesAssigned}</span>
-                                 <Users className="h-6 w-6 text-emerald-300" />
-                              </div>
-                           </div>
-                           <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100">
-                              <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">{t('teachers.modal.students')}</p>
-                              <div className="flex items-end justify-between mt-2">
-                                 <span className="text-3xl font-bold text-gray-800">{totalStudents}</span>
-                                 <GraduationCap className="h-6 w-6 text-blue-300" />
-                              </div>
-                           </div>
-                            <div className="bg-gradient-to-br from-purple-50 to-fuchsia-50 p-4 rounded-xl border border-purple-100">
-                              <p className="text-xs font-bold text-purple-600 uppercase tracking-wider">{t('teachers.modal.subjects')}</p>
-                              <div className="flex items-end justify-between mt-2">
-                                 <span className="text-3xl font-bold text-gray-800">{teacher.subjects.length}</span>
-                                 <BookOpen className="h-6 w-6 text-purple-300" />
-                              </div>
-                           </div>
-                       </div>
-
-                       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                           <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
-                               <UserIcon className="h-4 w-4 text-gray-500" />
-                               <h3 className="text-sm font-bold text-gray-800 uppercase">{t('teachers.modal.personal')}</h3>
-                           </div>
-                           <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
-                               <div>
-                                   <label className="text-xs text-gray-400 font-medium uppercase block mb-1">{t('teacher.email')}</label>
-                                   <div className="text-sm font-medium text-gray-900 flex items-center break-all"><Mail className="h-4 w-4 mr-2 text-indigo-400 shrink-0"/> {teacher.email}</div>
-                               </div>
-                               <div>
-                                   <label className="text-xs text-gray-400 font-medium uppercase block mb-1">{t('teacher.phone')}</label>
-                                   <div className="text-sm font-medium text-gray-900 flex items-center"><Phone className="h-4 w-4 mr-2 text-indigo-400 shrink-0"/> {teacher.phone}</div>
-                               </div>
-                               <div>
-                                   <label className="text-xs text-gray-400 font-medium uppercase block mb-1">{t('teacher.dob')}</label>
-                                   <div className="text-sm font-medium text-gray-900 flex items-center"><Calendar className="h-4 w-4 mr-2 text-indigo-400 shrink-0"/> {teacher.dateOfBirth} ({calculateAge(teacher.dateOfBirth)} years)</div>
-                               </div>
-                               <div>
-                                   <label className="text-xs text-gray-400 font-medium uppercase block mb-1">{t('teacher.address')}</label>
-                                   <div className="text-sm font-medium text-gray-900 flex items-start"><MapPin className="h-4 w-4 mr-2 text-indigo-400 mt-0.5 shrink-0"/> {teacher.address}</div>
-                               </div>
-                                <div>
-                                   <label className="text-xs text-gray-400 font-medium uppercase block mb-1">{t('teacher.citizenId')}</label>
-                                   <div className="text-sm font-medium text-gray-900 flex items-center"><CreditCard className="h-4 w-4 mr-2 text-indigo-400 shrink-0"/> {teacher.citizenId}</div>
-                               </div>
-                                <div>
-                                   <label className="text-xs text-gray-400 font-medium uppercase block mb-1">{t('teacher.gender')}</label>
-                                   <div className="text-sm font-medium text-gray-900">{teacher.gender}</div>
-                               </div>
-                           </div>
-                       </div>
-                    </div>
-
-                    <div className="space-y-8">
-                        {/* Admin Security Section */}
-                        {isAdmin && (
-                            <div className="bg-white rounded-xl border border-red-100 shadow-sm overflow-hidden ring-1 ring-red-50">
-                                <div className="px-6 py-4 border-b border-red-100 bg-red-50/50 flex items-center gap-2">
-                                    <ShieldCheck className="h-4 w-4 text-red-600" />
-                                    <h3 className="text-sm font-bold text-red-900 uppercase">{t('security.accountSecurity')}</h3>
-                                </div>
-                                <div className="p-6">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div>
-                                            <p className="text-xs text-gray-500 font-medium uppercase mb-1">{t('teacher.username')}</p>
-                                            <p className="font-mono font-bold text-gray-800 bg-gray-100 px-2 py-1 rounded text-sm">{teacher.username}</p>
-                                        </div>
-                                        <div className="h-8 w-px bg-gray-200 mx-2"></div>
-                                        <div>
-                                            <p className="text-xs text-gray-500 font-medium uppercase mb-1">Role</p>
-                                            <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded">TEACHER</span>
-                                        </div>
-                                    </div>
-                                    <button 
-                                        onClick={() => handleRevealPassword(teacher)} 
-                                        className="w-full py-2 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition text-sm font-bold flex items-center justify-center shadow-sm"
-                                    >
-                                        <EyeOff className="h-4 w-4 mr-2" /> {t('security.viewPass')}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                           <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
-                               <h3 className="text-sm font-bold text-gray-800 uppercase">{t('teachers.modal.teachingSubjects')}</h3>
-                           </div>
-                           <div className="p-6">
-                               <div className="flex flex-wrap gap-2">
-                                   {teacher.subjects.map(sub => (
-                                       <span key={sub} className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm font-medium border border-indigo-100">{sub}</span>
-                                   ))}
-                               </div>
-                           </div>
-                       </div>
-
-                       {/* Other blocks... (Classes, Notes) kept same */}
-                       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                           <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
-                               <h3 className="text-sm font-bold text-gray-800 uppercase">{t('teachers.modal.schedule')}</h3>
-                           </div>
-                            <div className="divide-y divide-gray-100">
-                               {assignedClasses.length > 0 ? assignedClasses.map(cls => (
-                                   <div key={cls.id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition">
-                                       <div className="flex items-center gap-3">
-                                           <div className="h-8 w-8 rounded bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-xs">{cls.gradeLevel}</div>
-                                           <div>
-                                               <p className="text-sm font-bold text-gray-900">{cls.name}</p>
-                                               <p className="text-xs text-gray-500">{cls.studentCount} Students</p>
-                                           </div>
-                                       </div>
-                                       <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-600">{cls.room}</span>
-                                   </div>
-                               )) : <div className="p-6 text-center text-gray-400 italic text-sm">No classes assigned</div>}
-                           </div>
-                       </div>
-
-                       <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
-                          <div className="px-6 py-4 border-b border-gray-200 flex items-center gap-2 bg-gray-100/50">
-                              <MessageSquare className="h-4 w-4 text-gray-500" />
-                              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">{t('teachers.modal.notes')}</h3>
-                          </div>
-                          <div className="p-6">
-                             <div className="space-y-3 mb-4 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
-                                {teacher.notes?.map((note, idx) => (
-                                  <div key={idx} className="p-3 bg-white rounded-lg text-sm text-gray-600 shadow-sm border border-gray-100">{note}</div>
-                                ))}
-                                {(!teacher.notes || teacher.notes.length === 0) && <p className="text-xs text-gray-400 italic">No notes yet.</p>}
-                             </div>
-                             {isAdmin && (
-                             <div className="flex gap-2">
-                                <input 
-                                   type="text" 
-                                   value={noteInput} 
-                                   onChange={(e) => setNoteInput(e.target.value)} 
-                                   onKeyDown={(e) => e.key === 'Enter' && (handleAddNote(teacher.id, noteInput), setNoteInput(''))}
-                                   placeholder="Add note..." 
-                                   className="flex-1 w-full min-w-0 text-xs border border-gray-300 bg-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 shadow-sm outline-none text-gray-700" 
-                                />
-                                <button onClick={() => { handleAddNote(teacher.id, noteInput); setNoteInput(''); }} className="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm shrink-0 flex items-center justify-center"><Send className="h-3 w-3" /></button>
-                             </div>
-                             )}
-                          </div>
-                       </div>
-                    </div>
-                 </div>
-              </div>
-           </div>
-        </div>
-      </div>,
-      document.body
-    );
-  };
-
-
 
   return (
     <div className="space-y-8 animate-fade-in pb-10">
@@ -700,7 +709,16 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
         </div>
       </div>
 
-      {selectedTeacher && <TeacherDetailModal teacher={selectedTeacher} onClose={() => setSelectedTeacher(null)} />}
+      {selectedTeacher && (
+        <TeacherDetailModal 
+          teacher={selectedTeacher} 
+          onClose={() => setSelectedTeacher(null)} 
+          isAdmin={isAdmin}
+          onEdit={handleOpenEdit}
+          onAddNote={handleAddNote}
+        />
+      )}
+      
       {isFormOpen && isAdmin && (
         <SlideOverForm 
             isOpen={isFormOpen}

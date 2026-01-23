@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { MOCK_STUDENTS, MOCK_CLASSES } from '../constants';
@@ -11,380 +10,210 @@ import {
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { calculateAge, isValidPhone, isValidCitizenId, toTitleCase } from '../utils';
+import api from '../src/api/client';
 
 interface StudentsProps {
   currentUser: User | null;
 }
 
-import api from '../src/api/client';
+// --- Extracted Interfaces ---
 
-// ... (keep props)
+interface StudentDetailModalProps {
+  student: Student;
+  onClose: () => void;
+  onEdit: (student: Student) => void;
+  onAddNote: (studentId: string, note: string) => void;
+  onRevealPassword: (student: Student) => void;
+  isAdmin: boolean;
+  canEdit: boolean;
+}
 
-export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
+interface SlideOverFormProps {
+  onClose: () => void;
+  editingStudent: Student | null;
+  formStudent: Partial<Student>;
+  setFormStudent: (data: Partial<Student>) => void;
+  onSave: (e: React.FormEvent) => void;
+  formErrors: string[];
+}
+
+// --- Extracted Components ---
+
+const StudentDetailModal: React.FC<StudentDetailModalProps> = ({ 
+  student, onClose, onEdit, onAddNote, onRevealPassword, isAdmin, canEdit 
+}) => {
   const { t } = useLanguage();
-  const [students, setStudents] = useState<Student[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedClass, setSelectedClass] = useState('All');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
-  
-  // Validation Error State
-  const [formErrors, setFormErrors] = useState<string[]>([]);
+  const className = MOCK_CLASSES.find(c => c.id === student.classId)?.name || student.classId;
+  const [noteInput, setNoteInput] = useState('');
+  const history = student.academicHistory || [];
+  const chartData = [...history.map(r => ({ year: r.year, gpa: r.gpa })), { year: 'Now', gpa: student.gpa }];
 
-  // Security Modal State
-  const [securityModalOpen, setSecurityModalOpen] = useState(false);
-  const [studentToReveal, setStudentToReveal] = useState<Student | null>(null);
-  const [securityCode, setSecurityCode] = useState('');
-  const [revealedPassword, setRevealedPassword] = useState<string | null>(null);
+  // Using Portal to render at document.body level
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 w-screen h-screen">
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={onClose}/>
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-scale-in">
+         {/* Absolute Close Button */}
+         <button onClick={onClose} className="absolute top-4 right-4 z-50 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition-colors backdrop-blur-md">
+            <X className="h-5 w-5" />
+         </button>
 
-  const isAdmin = currentUser?.role === UserRole.ADMIN;
-  const isTeacher = currentUser?.role === UserRole.TEACHER;
+         {/* Single Scrollable Container */}
+         <div className="flex-1 overflow-y-auto bg-gray-50/50 custom-scrollbar">
+            {/* Header with Pattern */}
+            <div className="h-40 bg-indigo-900 relative overflow-hidden">
+               <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-purple-400 via-indigo-500 to-blue-500"></div>
+            </div>
 
-  // Determine which classes the current teacher is the homeroom teacher for
-  const teacherHomeroomClassId = isTeacher 
-      ? MOCK_CLASSES.find(c => c.teacherId === currentUser.id)?.id 
-      : null;
+            <div className="px-6 md:px-8 pb-8 relative">
+               {/* Student Identity Card */}
+               <div className="relative -mt-14 mb-8 bg-white rounded-xl shadow-lg border border-gray-100 p-6 flex flex-col md:flex-row gap-6 items-center md:items-start z-10">
+                   <div className="h-28 w-28 rounded-full bg-indigo-100 flex items-center justify-center text-4xl font-bold text-indigo-600 border-4 border-white shadow-sm shrink-0">
+                      {student.name.charAt(0)}
+                   </div>
+                   <div className="flex-1 text-center md:text-left">
+                      <h2 className="text-2xl font-bold text-gray-900">{student.name}</h2>
+                      <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-2 text-sm">
+                         <span className="flex items-center text-gray-500"><UserIcon className="h-4 w-4 mr-1 text-gray-400"/> {student.id}</span>
+                         <span className="flex items-center text-gray-500"><GraduationCap className="h-4 w-4 mr-1 text-gray-400"/> {className}</span>
+                         <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full font-bold text-xs flex items-center"><Award className="h-3 w-3 mr-1"/> {student.gpa.toFixed(1)} GPA</span>
+                      </div>
+                   </div>
+                   {canEdit && (
+                   <div className="flex gap-2">
+                      <button onClick={() => { onClose(); onEdit(student); }} className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium text-sm shadow-sm">Edit Profile</button>
+                   </div>
+                   )}
+               </div>
 
-  const defaultStudentState: Partial<Student> = {
-    id: '', name: '', username: '', password: '', classId: MOCK_CLASSES[0]?.id || '',
-    email: '', gpa: 0, enrollmentYear: new Date().getFullYear(), dateOfBirth: '',
-    address: '', guardianName: '', guardianCitizenId: '', guardianYearOfBirth: 1980,
-    guardianJob: '', guardianPhone: ''
-  };
+               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8">
+                   {/* Left: Personal & Guardian */}
+                   <div className="space-y-6">
+                      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                         <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">{t('students.modal.details')}</h3>
+                         <div className="space-y-3 text-sm">
+                            <div className="flex justify-between"><span className="text-gray-500">Date of Birth</span> <span className="font-medium text-gray-900">{student.dateOfBirth} ({calculateAge(student.dateOfBirth)} years old)</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">Enrollment Year</span> <span className="font-medium text-gray-900">{student.enrollmentYear}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">Email</span> <span className="font-medium text-gray-900 break-all">{student.email}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">Address</span> <span className="font-medium text-gray-900 text-right max-w-[200px] truncate">{student.address || 'N/A'}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">Username</span> <span className="font-mono text-gray-700 bg-gray-100 px-2 rounded">{student.username}</span></div>
+                         </div>
+                      </div>
 
-  const [formStudent, setFormStudent] = useState<Partial<Student>>(defaultStudentState);
+                      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                         <div className="flex items-center gap-2 mb-4 border-b border-gray-100 pb-2">
+                            <UserCheck className="h-4 w-4 text-indigo-500" />
+                            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">{t('student.guardianInfo')}</h3>
+                         </div>
+                         <div className="space-y-3 text-sm">
+                            <div className="flex justify-between"><span className="text-gray-500">Name</span> <span className="font-bold text-gray-900">{student.guardianName}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">Relation</span> <span className="font-medium text-gray-900">Parent/Guardian</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">Phone</span> <span className="font-medium text-indigo-600">{student.guardianPhone}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">Job</span> <span className="font-medium text-gray-900">{student.guardianJob}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">Citizen ID</span> <span className="font-medium text-gray-900">{student.guardianCitizenId}</span></div>
+                         </div>
+                      </div>
+                   </div>
 
-  // Fetch Students Logic
-  useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const response = await api.get('/students');
-        const mapped = response.data.map((s: any) => ({
-          ...s,
-          name: s.user?.name || 'Unknown',
-          email: s.user?.email || '',
-        }));
-        setStudents(mapped);
-      } catch (err) {
-        console.error("Failed to fetch students", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStudents();
-  }, []);
+                   {/* Right: Academic & Notes */}
+                   <div className="space-y-6">
+                      {/* Admin Security Section */}
+                      {isAdmin && (
+                          <div className="bg-white rounded-xl border border-red-100 shadow-sm overflow-hidden ring-1 ring-red-50">
+                              <div className="px-6 py-4 border-b border-red-100 bg-red-50/50 flex items-center gap-2">
+                                  <ShieldCheck className="h-4 w-4 text-red-600" />
+                                  <h3 className="text-sm font-bold text-red-900 uppercase">{t('security.accountSecurity')}</h3>
+                              </div>
+                              <div className="p-6">
+                                  <div className="flex items-center justify-between mb-4">
+                                      <div>
+                                          <p className="text-xs text-gray-500 font-medium uppercase mb-1">Username</p>
+                                          <p className="font-mono font-bold text-gray-800 bg-gray-100 px-2 py-1 rounded text-sm">{student.username}</p>
+                                      </div>
+                                      <div className="h-8 w-px bg-gray-200 mx-2"></div>
+                                      <div>
+                                          <p className="text-xs text-gray-500 font-medium uppercase mb-1">Role</p>
+                                          <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">STUDENT</span>
+                                      </div>
+                                  </div>
+                                  <button 
+                                      onClick={() => onRevealPassword(student)} 
+                                      className="w-full py-2 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition text-sm font-bold flex items-center justify-center shadow-sm"
+                                  >
+                                      <EyeOff className="h-4 w-4 mr-2" /> {t('security.viewPass')}
+                                  </button>
+                              </div>
+                          </div>
+                      )}
 
-  const filteredStudents = students.filter(student => {
-    const matchesClass = selectedClass === 'All' || student.classId === selectedClass;
-    const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          student.id.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesClass && matchesSearch;
-  });
+                      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                         <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">{t('students.modal.academic')}</h3>
+                         <div className="h-48 w-full">
+                              <ResponsiveContainer width="100%" height="100%">
+                                  <LineChart data={chartData}>
+                                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                                      <XAxis dataKey="year" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
+                                      <YAxis domain={[0, 4]} hide />
+                                      <Tooltip contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 10px rgba(0,0,0,0.1)'}} />
+                                      <Line type="monotone" dataKey="gpa" stroke="#4f46e5" strokeWidth={3} dot={{r: 4, fill: '#4f46e5', strokeWidth: 2, stroke: '#fff'}} />
+                                  </LineChart>
+                              </ResponsiveContainer>
+                         </div>
+                         <div className="mt-4 space-y-2">
+                              {student.academicHistory.map((rec, idx) => (
+                                  <div key={idx} className="flex justify-between items-center text-xs p-2 bg-gray-50 rounded">
+                                      <span className="font-medium text-gray-600">{rec.year} - {rec.className}</span>
+                                      <span className="font-bold text-indigo-600">{rec.gpa} GPA</span>
+                                  </div>
+                              ))}
+                         </div>
+                      </div>
 
-  const handleOpenAdd = () => {
-    setEditingStudent(null);
-    setFormStudent({ ...defaultStudentState, id: `S${Date.now().toString().slice(-5)}` });
-    setFormErrors([]);
-    setIsFormOpen(true);
-  };
+                      <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+                          <div className="px-6 py-4 border-b border-gray-200 bg-gray-100/50 flex items-center gap-2">
+                              <MessageSquare className="h-4 w-4 text-gray-500" />
+                              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Notes</h3>
+                          </div>
+                          <div className="p-6">
+                              <div className="space-y-2 mb-4 max-h-32 overflow-y-auto custom-scrollbar">
+                                  {student.notes?.map((n, i) => (
+                                      <div key={i} className="p-2.5 bg-white text-xs text-gray-600 rounded border border-gray-100 shadow-sm">{n}</div>
+                                  ))}
+                                  {(!student.notes || student.notes.length === 0) && <p className="text-xs text-gray-400 italic">No notes.</p>}
+                              </div>
+                              {canEdit && (
+                              <div className="flex gap-2">
+                                  <input 
+                                      type="text" 
+                                      value={noteInput} 
+                                      onChange={(e) => setNoteInput(e.target.value)} 
+                                      onKeyDown={(e) => e.key === 'Enter' && (onAddNote(student.id, noteInput), setNoteInput(''))} 
+                                      placeholder="Add note..." 
+                                      className="flex-1 w-full min-w-0 text-xs border border-gray-300 bg-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 shadow-sm outline-none text-gray-700" 
+                                  />
+                                  <button onClick={() => { onAddNote(student.id, noteInput); setNoteInput(''); }} className="p-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 shadow-sm shrink-0 flex items-center justify-center"><Send className="h-3 w-3" /></button>
+                              </div>
+                              )}
+                          </div>
+                      </div>
+                   </div>
+               </div>
+            </div>
+         </div>
+      </div>
+    </div>,
+    document.body
+  );
+};
 
-  const handleOpenEdit = (student: Student) => {
-    setEditingStudent(student);
-    setFormStudent({ ...student });
-    setFormErrors([]);
-    setIsFormOpen(true);
-  };
+const SlideOverForm: React.FC<SlideOverFormProps> = ({ 
+  onClose, editingStudent, formStudent, setFormStudent, onSave, formErrors 
+}) => {
+  const { t } = useLanguage();
 
-  const handleDelete = (id: string) => {
-    if (window.confirm(t('common.confirmDelete'))) {
-        setStudents(students.filter(s => s.id !== id));
-        if (selectedStudent?.id === id) setSelectedStudent(null);
-    }
-  };
-
-  const validateStudentForm = (data: Partial<Student>): string[] => {
-      const errors: string[] = [];
-
-      // Required fields (Address is optional)
-      if (!data.name?.trim()) errors.push("Họ tên không được để trống.");
-      if (!data.username?.trim()) errors.push("Tên đăng nhập không được để trống.");
-      if (!editingStudent && !data.password?.trim()) errors.push("Mật khẩu không được để trống.");
-      if (!data.dateOfBirth) errors.push("Ngày sinh không được để trống.");
-      if (!data.email?.trim()) errors.push("Email không được để trống.");
-      if (!data.guardianName?.trim()) errors.push("Tên người giám hộ không được để trống.");
-      if (!data.guardianPhone?.trim()) errors.push("SĐT người giám hộ không được để trống.");
-      if (!data.guardianCitizenId?.trim()) errors.push("CCCD người giám hộ không được để trống.");
-
-      // Age Validation (10 - 20)
-      if (data.dateOfBirth) {
-          const age = calculateAge(data.dateOfBirth);
-          if (age < 10 || age > 20) {
-              errors.push(`Tuổi học sinh phải từ 10 đến 20 (Hiện tại: ${age} tuổi).`);
-          }
-      }
-
-      // Phone Validation
-      if (data.guardianPhone && !isValidPhone(data.guardianPhone)) {
-          errors.push("SĐT người giám hộ phải bắt đầu bằng số 0 và có đủ 10 số.");
-      }
-
-      // Citizen ID Validation
-      if (data.guardianCitizenId && !isValidCitizenId(data.guardianCitizenId)) {
-          errors.push("CCCD người giám hộ phải có đủ 12 số.");
-      }
-
-      return errors;
-  };
-
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Auto-format Name & Address & Guardian Name before validation
-    const formattedData = {
-        ...formStudent,
-        name: toTitleCase(formStudent.name || ''),
-        address: toTitleCase(formStudent.address || ''),
-        guardianName: toTitleCase(formStudent.guardianName || '')
-    };
-    setFormStudent(formattedData);
-
-    const errors = validateStudentForm(formattedData);
-    if (errors.length > 0) {
-        setFormErrors(errors);
-        return;
-    }
-
-    const studentData: Student = {
-      id: formattedData.id || `S${Date.now()}`,
-      name: formattedData.name!,
-      username: formattedData.username!,
-      password: formattedData.password,
-      classId: formattedData.classId || 'C101',
-      email: formattedData.email || '',
-      enrollmentYear: formattedData.enrollmentYear || new Date().getFullYear(),
-      gpa: formattedData.gpa || 0,
-      dateOfBirth: formattedData.dateOfBirth || '',
-      address: formattedData.address || '',
-      guardianName: formattedData.guardianName || '',
-      guardianCitizenId: formattedData.guardianCitizenId || '',
-      guardianYearOfBirth: formattedData.guardianYearOfBirth || 1980,
-      guardianJob: formattedData.guardianJob || '',
-      guardianPhone: formattedData.guardianPhone || '',
-      academicHistory: editingStudent ? editingStudent.academicHistory : [],
-      notes: editingStudent ? editingStudent.notes : []
-    };
-
-    if (editingStudent) {
-        setStudents(students.map(s => s.id === editingStudent.id ? studentData : s));
-    } else {
-        setStudents([...students, studentData]);
-    }
-    setIsFormOpen(false);
-  };
-
-  const handleAddNote = (studentId: string, note: string) => {
-    if (!note.trim()) return;
-    const updatedStudents = students.map(s => s.id === studentId ? { ...s, notes: [...(s.notes || []), note] } : s);
-    setStudents(updatedStudents);
-    if (selectedStudent?.id === studentId) {
-      setSelectedStudent(prev => prev ? { ...prev, notes: [...(prev.notes || []), note] } : null);
-    }
-  };
-
-  const handleRevealPassword = (student: Student) => {
-      setStudentToReveal(student);
-      setSecurityCode('');
-      setRevealedPassword(null);
-      setSecurityModalOpen(true);
-  };
-
-  const verifySecurityCode = () => {
-      if (securityCode === 'password') {
-          setRevealedPassword(studentToReveal?.password || 'No Password Set');
-      } else {
-          alert("Incorrect security code.");
-      }
-  };
-
-  // Helper to check if current teacher can edit a student
-  const canEditStudent = (student: Student) => {
-      if (isAdmin) return true;
-      if (isTeacher && student.classId === teacherHomeroomClassId) return true;
-      return false;
-  };
-
-  // --- Components ---
-
-  const StudentDetailModal = ({ student, onClose }: { student: Student, onClose: () => void }) => {
-    const className = MOCK_CLASSES.find(c => c.id === student.classId)?.name || student.classId;
-    const [noteInput, setNoteInput] = useState('');
-    const history = student.academicHistory || [];
-    const chartData = [...history.map(r => ({ year: r.year, gpa: r.gpa })), { year: 'Now', gpa: student.gpa }];
-    const canEdit = canEditStudent(student);
-
-    // Using Portal to render at document.body level
-    return createPortal(
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 w-screen h-screen">
-        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={onClose}/>
-        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-scale-in">
-           {/* Absolute Close Button */}
-           <button onClick={onClose} className="absolute top-4 right-4 z-50 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition-colors backdrop-blur-md">
-              <X className="h-5 w-5" />
-           </button>
-
-           {/* Single Scrollable Container */}
-           <div className="flex-1 overflow-y-auto bg-gray-50/50 custom-scrollbar">
-              {/* Header with Pattern */}
-              <div className="h-40 bg-indigo-900 relative overflow-hidden">
-                 <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-purple-400 via-indigo-500 to-blue-500"></div>
-              </div>
-
-              <div className="px-6 md:px-8 pb-8 relative">
-                 {/* Student Identity Card */}
-                 <div className="relative -mt-14 mb-8 bg-white rounded-xl shadow-lg border border-gray-100 p-6 flex flex-col md:flex-row gap-6 items-center md:items-start z-10">
-                     <div className="h-28 w-28 rounded-full bg-indigo-100 flex items-center justify-center text-4xl font-bold text-indigo-600 border-4 border-white shadow-sm shrink-0">
-                        {student.name.charAt(0)}
-                     </div>
-                     <div className="flex-1 text-center md:text-left">
-                        <h2 className="text-2xl font-bold text-gray-900">{student.name}</h2>
-                        <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-2 text-sm">
-                           <span className="flex items-center text-gray-500"><UserIcon className="h-4 w-4 mr-1 text-gray-400"/> {student.id}</span>
-                           <span className="flex items-center text-gray-500"><GraduationCap className="h-4 w-4 mr-1 text-gray-400"/> {className}</span>
-                           <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full font-bold text-xs flex items-center"><Award className="h-3 w-3 mr-1"/> {student.gpa.toFixed(1)} GPA</span>
-                        </div>
-                     </div>
-                     {canEdit && (
-                     <div className="flex gap-2">
-                        <button onClick={() => { onClose(); handleOpenEdit(student); }} className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium text-sm shadow-sm">Edit Profile</button>
-                     </div>
-                     )}
-                 </div>
-
-                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8">
-                     {/* Left: Personal & Guardian */}
-                     <div className="space-y-6">
-                        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                           <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">{t('students.modal.details')}</h3>
-                           <div className="space-y-3 text-sm">
-                              <div className="flex justify-between"><span className="text-gray-500">Date of Birth</span> <span className="font-medium text-gray-900">{student.dateOfBirth} ({calculateAge(student.dateOfBirth)} years old)</span></div>
-                              <div className="flex justify-between"><span className="text-gray-500">Enrollment Year</span> <span className="font-medium text-gray-900">{student.enrollmentYear}</span></div>
-                              <div className="flex justify-between"><span className="text-gray-500">Email</span> <span className="font-medium text-gray-900 break-all">{student.email}</span></div>
-                              <div className="flex justify-between"><span className="text-gray-500">Address</span> <span className="font-medium text-gray-900 text-right max-w-[200px] truncate">{student.address || 'N/A'}</span></div>
-                              <div className="flex justify-between"><span className="text-gray-500">Username</span> <span className="font-mono text-gray-700 bg-gray-100 px-2 rounded">{student.username}</span></div>
-                           </div>
-                        </div>
-
-                        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                           <div className="flex items-center gap-2 mb-4 border-b border-gray-100 pb-2">
-                              <UserCheck className="h-4 w-4 text-indigo-500" />
-                              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">{t('student.guardianInfo')}</h3>
-                           </div>
-                           <div className="space-y-3 text-sm">
-                              <div className="flex justify-between"><span className="text-gray-500">Name</span> <span className="font-bold text-gray-900">{student.guardianName}</span></div>
-                              <div className="flex justify-between"><span className="text-gray-500">Relation</span> <span className="font-medium text-gray-900">Parent/Guardian</span></div>
-                              <div className="flex justify-between"><span className="text-gray-500">Phone</span> <span className="font-medium text-indigo-600">{student.guardianPhone}</span></div>
-                              <div className="flex justify-between"><span className="text-gray-500">Job</span> <span className="font-medium text-gray-900">{student.guardianJob}</span></div>
-                              <div className="flex justify-between"><span className="text-gray-500">Citizen ID</span> <span className="font-medium text-gray-900">{student.guardianCitizenId}</span></div>
-                           </div>
-                        </div>
-                     </div>
-
-                     {/* Right: Academic & Notes */}
-                     <div className="space-y-6">
-                        {/* Admin Security Section */}
-                        {isAdmin && (
-                            <div className="bg-white rounded-xl border border-red-100 shadow-sm overflow-hidden ring-1 ring-red-50">
-                                <div className="px-6 py-4 border-b border-red-100 bg-red-50/50 flex items-center gap-2">
-                                    <ShieldCheck className="h-4 w-4 text-red-600" />
-                                    <h3 className="text-sm font-bold text-red-900 uppercase">{t('security.accountSecurity')}</h3>
-                                </div>
-                                <div className="p-6">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div>
-                                            <p className="text-xs text-gray-500 font-medium uppercase mb-1">Username</p>
-                                            <p className="font-mono font-bold text-gray-800 bg-gray-100 px-2 py-1 rounded text-sm">{student.username}</p>
-                                        </div>
-                                        <div className="h-8 w-px bg-gray-200 mx-2"></div>
-                                        <div>
-                                            <p className="text-xs text-gray-500 font-medium uppercase mb-1">Role</p>
-                                            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">STUDENT</span>
-                                        </div>
-                                    </div>
-                                    <button 
-                                        onClick={() => handleRevealPassword(student)} 
-                                        className="w-full py-2 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition text-sm font-bold flex items-center justify-center shadow-sm"
-                                    >
-                                        <EyeOff className="h-4 w-4 mr-2" /> {t('security.viewPass')}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                           <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">{t('students.modal.academic')}</h3>
-                           <div className="h-48 w-full">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={chartData}>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                                        <XAxis dataKey="year" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
-                                        <YAxis domain={[0, 4]} hide />
-                                        <Tooltip contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 10px rgba(0,0,0,0.1)'}} />
-                                        <Line type="monotone" dataKey="gpa" stroke="#4f46e5" strokeWidth={3} dot={{r: 4, fill: '#4f46e5', strokeWidth: 2, stroke: '#fff'}} />
-                                    </LineChart>
-                                </ResponsiveContainer>
-                           </div>
-                           <div className="mt-4 space-y-2">
-                                {student.academicHistory.map((rec, idx) => (
-                                    <div key={idx} className="flex justify-between items-center text-xs p-2 bg-gray-50 rounded">
-                                        <span className="font-medium text-gray-600">{rec.year} - {rec.className}</span>
-                                        <span className="font-bold text-indigo-600">{rec.gpa} GPA</span>
-                                    </div>
-                                ))}
-                           </div>
-                        </div>
-
-                        <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-200 bg-gray-100/50 flex items-center gap-2">
-                                <MessageSquare className="h-4 w-4 text-gray-500" />
-                                <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Notes</h3>
-                            </div>
-                            <div className="p-6">
-                                <div className="space-y-2 mb-4 max-h-32 overflow-y-auto custom-scrollbar">
-                                    {student.notes?.map((n, i) => (
-                                        <div key={i} className="p-2.5 bg-white text-xs text-gray-600 rounded border border-gray-100 shadow-sm">{n}</div>
-                                    ))}
-                                    {(!student.notes || student.notes.length === 0) && <p className="text-xs text-gray-400 italic">No notes.</p>}
-                                </div>
-                                {canEdit && (
-                                <div className="flex gap-2">
-                                    <input 
-                                        type="text" 
-                                        value={noteInput} 
-                                        onChange={(e) => setNoteInput(e.target.value)} 
-                                        onKeyDown={(e) => e.key === 'Enter' && (handleAddNote(student.id, noteInput), setNoteInput(''))} 
-                                        placeholder="Add note..." 
-                                        className="flex-1 w-full min-w-0 text-xs border border-gray-300 bg-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 shadow-sm outline-none text-gray-700" 
-                                    />
-                                    <button onClick={() => { handleAddNote(student.id, noteInput); setNoteInput(''); }} className="p-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 shadow-sm shrink-0 flex items-center justify-center"><Send className="h-3 w-3" /></button>
-                                </div>
-                                )}
-                            </div>
-                        </div>
-                     </div>
-                 </div>
-              </div>
-           </div>
-        </div>
-      </div>,
-      document.body
-    );
-  };
-
-  const SlideOverForm = () => createPortal(
+  return createPortal(
     <div className="fixed inset-0 z-[100] overflow-hidden w-screen h-screen">
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={() => setIsFormOpen(false)} />
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={onClose} />
       <div className="fixed inset-y-0 right-0 max-w-full flex pointer-events-none">
         <div className="w-full sm:max-w-lg pointer-events-auto">
           <div className="h-full flex flex-col bg-white shadow-2xl animate-slide-in-right">
@@ -393,10 +222,10 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
                    <h2 className="text-xl font-bold">{editingStudent ? t('students.form.edit') : t('students.form.new')}</h2>
                    <p className="text-indigo-100 text-sm mt-1">Complete the academic & personal profile</p>
                 </div>
-                <button onClick={() => setIsFormOpen(false)} className="text-indigo-100 hover:text-white"><X className="h-6 w-6" /></button>
+                <button onClick={onClose} className="text-indigo-100 hover:text-white"><X className="h-6 w-6" /></button>
             </div>
             
-            <form onSubmit={handleSave} className="flex-1 overflow-y-auto bg-gray-50">
+            <form onSubmit={onSave} className="flex-1 overflow-y-auto bg-gray-50">
                <div className="p-6 space-y-8">
                   
                   {/* Validation Errors */}
@@ -522,8 +351,8 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
                </div>
             </form>
             <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 shrink-0 flex justify-end gap-3">
-               <button type="button" onClick={() => setIsFormOpen(false)} className="px-5 py-2.5 text-gray-700 font-medium hover:bg-gray-200 rounded-lg transition-colors text-sm">{t('common.cancel')}</button>
-               <button onClick={handleSave} type="button" className="px-5 py-2.5 bg-indigo-600 text-white font-medium hover:bg-indigo-700 rounded-lg shadow-lg shadow-indigo-500/30 transition-all transform active:scale-95 text-sm flex items-center">
+               <button type="button" onClick={onClose} className="px-5 py-2.5 text-gray-700 font-medium hover:bg-gray-200 rounded-lg transition-colors text-sm">{t('common.cancel')}</button>
+               <button onClick={onSave} type="button" className="px-5 py-2.5 bg-indigo-600 text-white font-medium hover:bg-indigo-700 rounded-lg shadow-lg shadow-indigo-500/30 transition-all transform active:scale-95 text-sm flex items-center">
                   <Check className="h-4 w-4 mr-2" /> {t('common.save')}
                </button>
             </div>
@@ -533,11 +362,206 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
     </div>,
     document.body
   );
+};
+
+export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
+  const { t } = useLanguage();
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedClass, setSelectedClass] = useState('All');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  
+  // Validation Error State
+  const [formErrors, setFormErrors] = useState<string[]>([]);
+
+  // Security Modal State
+  const [securityModalOpen, setSecurityModalOpen] = useState(false);
+  const [studentToReveal, setStudentToReveal] = useState<Student | null>(null);
+  const [securityCode, setSecurityCode] = useState('');
+  const [revealedPassword, setRevealedPassword] = useState<string | null>(null);
+
+  const isAdmin = currentUser?.role === UserRole.ADMIN;
+  const isTeacher = currentUser?.role === UserRole.TEACHER;
+
+  // Determine which classes the current teacher is the homeroom teacher for
+  const teacherHomeroomClassId = isTeacher 
+      ? MOCK_CLASSES.find(c => c.teacherId === currentUser.id)?.id 
+      : null;
+
+  const defaultStudentState: Partial<Student> = {
+    id: '', name: '', username: '', password: '', classId: MOCK_CLASSES[0]?.id || '',
+    email: '', gpa: 0, enrollmentYear: new Date().getFullYear(), dateOfBirth: '',
+    address: '', guardianName: '', guardianCitizenId: '', guardianYearOfBirth: 1980,
+    guardianJob: '', guardianPhone: ''
+  };
+
+  const [formStudent, setFormStudent] = useState<Partial<Student>>(defaultStudentState);
+
+  // Fetch Students Logic
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const response = await api.get('/students');
+        const mapped = response.data.map((s: any) => ({
+          ...s,
+          name: s.user?.name || 'Unknown',
+          email: s.user?.email || '',
+        }));
+        setStudents(mapped);
+      } catch (err) {
+        console.error("Failed to fetch students", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStudents();
+  }, []);
+
+  const filteredStudents = students.filter(student => {
+    const matchesClass = selectedClass === 'All' || student.classId === selectedClass;
+    const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          student.id.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesClass && matchesSearch;
+  });
+
+  const handleOpenAdd = () => {
+    setEditingStudent(null);
+    setFormStudent({ ...defaultStudentState, id: `S${Date.now().toString().slice(-5)}` });
+    setFormErrors([]);
+    setIsFormOpen(true);
+  };
+
+  const handleOpenEdit = (student: Student) => {
+    setEditingStudent(student);
+    setFormStudent({ ...student });
+    setFormErrors([]);
+    setIsFormOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm(t('common.confirmDelete'))) {
+        try {
+            await api.delete(`/students/${id}`);
+            setStudents(students.filter(s => s.id !== id));
+            if (selectedStudent?.id === id) setSelectedStudent(null);
+        } catch (err) {
+            console.error("Failed to delete student", err);
+            alert("Failed to delete student");
+        }
+    }
+  };
+
+  const validateStudentForm = (data: Partial<Student>): string[] => {
+      const errors: string[] = [];
+
+      // Required fields (Address is optional)
+      if (!data.name?.trim()) errors.push("Họ tên không được để trống.");
+      if (!data.username?.trim()) errors.push("Tên đăng nhập không được để trống.");
+      if (!editingStudent && !data.password?.trim()) errors.push("Mật khẩu không được để trống.");
+      if (!data.dateOfBirth) errors.push("Ngày sinh không được để trống.");
+      if (!data.email?.trim()) errors.push("Email không được để trống.");
+      if (!data.guardianName?.trim()) errors.push("Tên người giám hộ không được để trống.");
+      if (!data.guardianPhone?.trim()) errors.push("SĐT người giám hộ không được để trống.");
+      if (!data.guardianCitizenId?.trim()) errors.push("CCCD người giám hộ không được để trống.");
+
+      // Age Validation (10 - 20)
+      if (data.dateOfBirth) {
+          const age = calculateAge(data.dateOfBirth);
+          if (age < 10 || age > 20) {
+              errors.push(`Tuổi học sinh phải từ 10 đến 20 (Hiện tại: ${age} tuổi).`);
+          }
+      }
+
+      // Phone Validation
+      if (data.guardianPhone && !isValidPhone(data.guardianPhone)) {
+          errors.push("SĐT người giám hộ phải bắt đầu bằng số 0 và có đủ 10 số.");
+      }
+
+      // Citizen ID Validation
+      if (data.guardianCitizenId && !isValidCitizenId(data.guardianCitizenId)) {
+          errors.push("CCCD người giám hộ phải có đủ 12 số.");
+      }
+
+      return errors;
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Auto-format Name & Address & Guardian Name before validation
+    const formattedData = {
+        ...formStudent,
+        name: toTitleCase(formStudent.name || ''),
+        address: toTitleCase(formStudent.address || ''),
+        guardianName: toTitleCase(formStudent.guardianName || '')
+    };
+    setFormStudent(formattedData);
+
+    const errors = validateStudentForm(formattedData);
+    if (errors.length > 0) {
+        setFormErrors(errors);
+        return;
+    }
+
+    const studentPayload = {
+      ...formattedData,
+      classId: formattedData.classId || 'C101',
+      enrollmentYear: formattedData.enrollmentYear || new Date().getFullYear(),
+      gpa: formattedData.gpa || 0,
+      guardianYearOfBirth: formattedData.guardianYearOfBirth || 1980,
+    };
+
+    try {
+        if (editingStudent) {
+            const response = await api.patch(`/students/${editingStudent.id}`, studentPayload);
+             setStudents(students.map(s => s.id === editingStudent.id ? response.data : s));
+        } else {
+            const response = await api.post('/students', studentPayload);
+            setStudents([...students, response.data]);
+        }
+        setIsFormOpen(false);
+    } catch (error) {
+        console.error("Failed to save student", error);
+        alert("Failed to save student. Please try again.");
+    }
+  };
+
+  const handleAddNote = (studentId: string, note: string) => {
+    if (!note.trim()) return;
+    const updatedStudents = students.map(s => s.id === studentId ? { ...s, notes: [...(s.notes || []), note] } : s);
+    setStudents(updatedStudents);
+    if (selectedStudent?.id === studentId) {
+      setSelectedStudent(prev => prev ? { ...prev, notes: [...(prev.notes || []), note] } : null);
+    }
+  };
+
+  const handleRevealPassword = (student: Student) => {
+      setStudentToReveal(student);
+      setSecurityCode('');
+      setRevealedPassword(null);
+      setSecurityModalOpen(true);
+  };
+
+  const verifySecurityCode = () => {
+      if (securityCode === 'password') {
+          setRevealedPassword(studentToReveal?.password || 'No Password Set');
+      } else {
+          alert("Incorrect security code.");
+      }
+  };
+
+  // Helper to check if current teacher can edit a student
+  const canEditStudent = (student: Student) => {
+      if (isAdmin) return true;
+      if (isTeacher && student.classId === teacherHomeroomClassId) return true;
+      return false;
+  };
 
   return (
     <div className="space-y-8 animate-fade-in pb-10">
-      {/* ... (Existing render code for table, etc) ... */}
-      {/* Keeping existing render structure unchanged for brevity as requested change is logical */}
       
       {/* Header Area */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -646,8 +670,29 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
         </div>
       </div>
 
-      {selectedStudent && <StudentDetailModal student={selectedStudent} onClose={() => setSelectedStudent(null)} />}
-      {isFormOpen && <SlideOverForm />}
+      {selectedStudent && (
+        <StudentDetailModal 
+          student={selectedStudent} 
+          onClose={() => setSelectedStudent(null)} 
+          onEdit={handleOpenEdit}
+          onAddNote={handleAddNote}
+          onRevealPassword={handleRevealPassword}
+          isAdmin={isAdmin}
+          canEdit={canEditStudent(selectedStudent)}
+        />
+      )}
+      
+      {isFormOpen && (
+        <SlideOverForm 
+          onClose={() => setIsFormOpen(false)}
+          editingStudent={editingStudent}
+          formStudent={formStudent}
+          setFormStudent={setFormStudent}
+          onSave={handleSave}
+          formErrors={formErrors}
+        />
+      )}
+
       {securityModalOpen && createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md w-screen h-screen">
               <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 animate-scale-in">
