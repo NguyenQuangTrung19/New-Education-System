@@ -12,10 +12,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.StudentsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const id_generator_service_1 = require("../common/id-generator.service");
 let StudentsService = class StudentsService {
     prisma;
-    constructor(prisma) {
+    idGenerator;
+    constructor(prisma, idGenerator) {
         this.prisma = prisma;
+        this.idGenerator = idGenerator;
     }
     async findAll() {
         return this.prisma.student.findMany({
@@ -50,9 +53,11 @@ let StudentsService = class StudentsService {
         const { username, password, name, email, classId, ...studentData } = createStudentDto;
         const hashedPassword = password || 'student123';
         return this.prisma.$transaction(async (prisma) => {
+            const enrollmentYear = studentData.enrollmentYear || new Date().getFullYear();
+            const studentId = await this.idGenerator.generateStudentId(enrollmentYear);
             const user = await prisma.user.create({
                 data: {
-                    username,
+                    username: studentId,
                     password: hashedPassword,
                     name,
                     email,
@@ -61,10 +66,10 @@ let StudentsService = class StudentsService {
             });
             const student = await prisma.student.create({
                 data: {
-                    id: user.id,
+                    id: studentId,
                     userId: user.id,
                     classId: classId || null,
-                    enrollmentYear: studentData.enrollmentYear || new Date().getFullYear(),
+                    enrollmentYear,
                     address: studentData.address,
                     guardianName: studentData.guardianName,
                     guardianPhone: studentData.guardianPhone,
@@ -99,6 +104,7 @@ let StudentsService = class StudentsService {
 exports.StudentsService = StudentsService;
 exports.StudentsService = StudentsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        id_generator_service_1.IdGeneratorService])
 ], StudentsService);
 //# sourceMappingURL=students.service.js.map

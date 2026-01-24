@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { IdGeneratorService } from '../common/id-generator.service';
 
 @Injectable()
 export class TeachersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private idGenerator: IdGeneratorService
+  ) {}
 
   async findAll() {
     return this.prisma.teacher.findMany({
@@ -31,9 +35,12 @@ export class TeachersService {
     const hashedPassword = password || 'teacher123';
 
     return this.prisma.$transaction(async (prisma) => {
+      const joinYear = teacherData.joinYear || new Date().getFullYear();
+      const teacherId = await this.idGenerator.generateTeacherId(joinYear);
+
       const user = await prisma.user.create({
         data: {
-          username,
+          username: teacherId, // Use Teacher ID as username
           password: hashedPassword,
           name,
           email,
@@ -43,9 +50,9 @@ export class TeachersService {
 
       const teacher = await prisma.teacher.create({
         data: {
-          id: user.id,
+          id: teacherId,
           userId: user.id,
-          joinYear: teacherData.joinYear || new Date().getFullYear(),
+          joinYear,
           address: teacherData.address,
           phone: teacherData.phone,
           // subjects logic would go here, simplified for now

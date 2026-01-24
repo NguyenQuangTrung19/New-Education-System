@@ -12,10 +12,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ClassesService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const id_generator_service_1 = require("../common/id-generator.service");
 let ClassesService = class ClassesService {
     prisma;
-    constructor(prisma) {
+    idGenerator;
+    constructor(prisma, idGenerator) {
         this.prisma = prisma;
+        this.idGenerator = idGenerator;
     }
     async findAll() {
         return this.prisma.classGroup.findMany({
@@ -44,10 +47,34 @@ let ClassesService = class ClassesService {
             }
         });
     }
+    async create(createClassDto) {
+        const { academicYear, ...classData } = createClassDto;
+        const year = academicYear || `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
+        const classId = await this.idGenerator.generateClassId(year);
+        return this.prisma.classGroup.create({
+            data: {
+                id: classId,
+                academicYear: year,
+                ...classData
+            }
+        });
+    }
+    async update(id, updateClassDto) {
+        return this.prisma.classGroup.update({
+            where: { id },
+            data: updateClassDto
+        });
+    }
+    async remove(id) {
+        return this.prisma.classGroup.delete({
+            where: { id }
+        });
+    }
 };
 exports.ClassesService = ClassesService;
 exports.ClassesService = ClassesService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        id_generator_service_1.IdGeneratorService])
 ], ClassesService);
 //# sourceMappingURL=classes.service.js.map

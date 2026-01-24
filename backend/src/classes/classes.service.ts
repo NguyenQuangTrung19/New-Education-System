@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { IdGeneratorService } from '../common/id-generator.service';
 
 @Injectable()
 export class ClassesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private idGenerator: IdGeneratorService
+  ) {}
 
   async findAll() {
     return this.prisma.classGroup.findMany({
@@ -32,5 +36,33 @@ export class ClassesService {
         }
       }
     });
+  }
+
+  async create(createClassDto: any) {
+      const { academicYear, ...classData } = createClassDto;
+      const year = academicYear || `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
+      
+      const classId = await this.idGenerator.generateClassId(year);
+
+      return this.prisma.classGroup.create({
+          data: {
+              id: classId,
+              academicYear: year,
+              ...classData
+          }
+      });
+  }
+
+  async update(id: string, updateClassDto: any) {
+      return this.prisma.classGroup.update({
+          where: { id },
+          data: updateClassDto
+      });
+  }
+
+  async remove(id: string) {
+      return this.prisma.classGroup.delete({
+          where: { id }
+      });
   }
 }

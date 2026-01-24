@@ -1,7 +1,9 @@
 import { PrismaService } from '../prisma/prisma.service';
+import { IdGeneratorService } from '../common/id-generator.service';
 export declare class StudentsService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private idGenerator;
+    constructor(prisma: PrismaService, idGenerator: IdGeneratorService);
     findAll(): Promise<({
         user: {
             email: string;
@@ -21,11 +23,12 @@ export declare class StudentsService {
         } | null;
     } & {
         id: string;
-        address: string | null;
-        dateOfBirth: Date | null;
         userId: string;
+        dateOfBirth: Date | null;
         enrollmentYear: number;
+        classId: string | null;
         gpa: number;
+        address: string | null;
         guardianName: string | null;
         guardianCitizenId: string | null;
         guardianYearOfBirth: number | null;
@@ -33,14 +36,13 @@ export declare class StudentsService {
         guardianPhone: string | null;
         semesterEvaluation: string | null;
         notes: string[];
-        classId: string | null;
     })[]>;
     findOne(id: string): Promise<({
         user: {
             id: string;
             username: string;
-            email: string;
             password: string;
+            email: string;
             name: string;
             role: import(".prisma/client").$Enums.UserRole;
             avatarUrl: string | null;
@@ -61,8 +63,8 @@ export declare class StudentsService {
         academicHistory: {
             id: string;
             gpa: number;
-            year: string;
             studentId: string;
+            year: string;
             className: string;
         }[];
         grades: ({
@@ -76,8 +78,8 @@ export declare class StudentsService {
         } & {
             id: string;
             academicYear: string;
-            subjectId: string;
             studentId: string;
+            subjectId: string;
             semester: string;
             oralScore: number | null;
             fifteenMinScores: number[];
@@ -105,11 +107,12 @@ export declare class StudentsService {
         }[];
     } & {
         id: string;
-        address: string | null;
-        dateOfBirth: Date | null;
         userId: string;
+        dateOfBirth: Date | null;
         enrollmentYear: number;
+        classId: string | null;
         gpa: number;
+        address: string | null;
         guardianName: string | null;
         guardianCitizenId: string | null;
         guardianYearOfBirth: number | null;
@@ -117,14 +120,13 @@ export declare class StudentsService {
         guardianPhone: string | null;
         semesterEvaluation: string | null;
         notes: string[];
-        classId: string | null;
     }) | null>;
     create(createStudentDto: any): Promise<{
         user: {
             id: string;
             username: string;
-            email: string;
             password: string;
+            email: string;
             name: string;
             role: import(".prisma/client").$Enums.UserRole;
             avatarUrl: string | null;
@@ -132,11 +134,12 @@ export declare class StudentsService {
             updatedAt: Date;
         };
         id: string;
-        address: string | null;
-        dateOfBirth: Date | null;
         userId: string;
+        dateOfBirth: Date | null;
         enrollmentYear: number;
+        classId: string | null;
         gpa: number;
+        address: string | null;
         guardianName: string | null;
         guardianCitizenId: string | null;
         guardianYearOfBirth: number | null;
@@ -144,15 +147,15 @@ export declare class StudentsService {
         guardianPhone: string | null;
         semesterEvaluation: string | null;
         notes: string[];
-        classId: string | null;
     }>;
     update(id: string, updateStudentDto: any): Promise<{
         id: string;
-        address: string | null;
-        dateOfBirth: Date | null;
         userId: string;
+        dateOfBirth: Date | null;
         enrollmentYear: number;
+        classId: string | null;
         gpa: number;
+        address: string | null;
         guardianName: string | null;
         guardianCitizenId: string | null;
         guardianYearOfBirth: number | null;
@@ -160,13 +163,12 @@ export declare class StudentsService {
         guardianPhone: string | null;
         semesterEvaluation: string | null;
         notes: string[];
-        classId: string | null;
     }>;
     remove(id: string): Promise<{
         id: string;
         username: string;
-        email: string;
         password: string;
+        email: string;
         name: string;
         role: import(".prisma/client").$Enums.UserRole;
         avatarUrl: string | null;

@@ -1,7 +1,9 @@
 import { PrismaService } from '../prisma/prisma.service';
+import { IdGeneratorService } from '../common/id-generator.service';
 export declare class TeachersService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private idGenerator;
+    constructor(prisma: PrismaService, idGenerator: IdGeneratorService);
     findAll(): Promise<({
         user: {
             email: string;
@@ -21,6 +23,7 @@ export declare class TeachersService {
         }[];
     } & {
         id: string;
+        userId: string;
         phone: string | null;
         address: string | null;
         citizenId: string | null;
@@ -29,14 +32,13 @@ export declare class TeachersService {
         joinYear: number | null;
         subjects: string[];
         classesAssigned: number;
-        userId: string;
     })[]>;
     findOne(id: string): Promise<({
         user: {
             id: string;
             username: string;
-            email: string;
             password: string;
+            email: string;
             name: string;
             role: import(".prisma/client").$Enums.UserRole;
             avatarUrl: string | null;
@@ -55,6 +57,13 @@ export declare class TeachersService {
             currentWeeklyScore: number;
         }[];
         teachingAssignments: ({
+            subject: {
+                id: string;
+                name: string;
+                description: string | null;
+                code: string;
+                department: string | null;
+            };
             class: {
                 id: string;
                 name: string;
@@ -66,22 +75,16 @@ export declare class TeachersService {
                 averageGpa: number;
                 currentWeeklyScore: number;
             };
-            subject: {
-                id: string;
-                name: string;
-                description: string | null;
-                code: string;
-                department: string | null;
-            };
         } & {
             id: string;
             teacherId: string;
-            classId: string;
             subjectId: string;
+            classId: string;
             sessionsPerWeek: number;
         })[];
     } & {
         id: string;
+        userId: string;
         phone: string | null;
         address: string | null;
         citizenId: string | null;
@@ -90,14 +93,13 @@ export declare class TeachersService {
         joinYear: number | null;
         subjects: string[];
         classesAssigned: number;
-        userId: string;
     }) | null>;
     create(createTeacherDto: any): Promise<{
         user: {
             id: string;
             username: string;
-            email: string;
             password: string;
+            email: string;
             name: string;
             role: import(".prisma/client").$Enums.UserRole;
             avatarUrl: string | null;
@@ -105,6 +107,7 @@ export declare class TeachersService {
             updatedAt: Date;
         };
         id: string;
+        userId: string;
         phone: string | null;
         address: string | null;
         citizenId: string | null;
@@ -113,10 +116,10 @@ export declare class TeachersService {
         joinYear: number | null;
         subjects: string[];
         classesAssigned: number;
-        userId: string;
     }>;
     update(id: string, updateTeacherDto: any): Promise<{
         id: string;
+        userId: string;
         phone: string | null;
         address: string | null;
         citizenId: string | null;
@@ -125,13 +128,12 @@ export declare class TeachersService {
         joinYear: number | null;
         subjects: string[];
         classesAssigned: number;
-        userId: string;
     }>;
     remove(id: string): Promise<{
         id: string;
         username: string;
-        email: string;
         password: string;
+        email: string;
         name: string;
         role: import(".prisma/client").$Enums.UserRole;
         avatarUrl: string | null;

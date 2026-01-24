@@ -27,6 +27,15 @@ let ClassesController = class ClassesController {
     findOne(id) {
         return this.classesService.findOne(id);
     }
+    create(createClassDto) {
+        return this.classesService.create(createClassDto);
+    }
+    update(id, updateClassDto) {
+        return this.classesService.update(id, updateClassDto);
+    }
+    remove(id) {
+        return this.classesService.remove(id);
+    }
 };
 exports.ClassesController = ClassesController;
 __decorate([
@@ -44,6 +53,31 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ClassesController.prototype, "findOne", null);
+__decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], ClassesController.prototype, "create", null);
+__decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
+    (0, common_1.Patch)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], ClassesController.prototype, "update", null);
+__decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ClassesController.prototype, "remove", null);
 exports.ClassesController = ClassesController = __decorate([
     (0, common_1.Controller)('classes'),
     __metadata("design:paramtypes", [classes_service_1.ClassesService])

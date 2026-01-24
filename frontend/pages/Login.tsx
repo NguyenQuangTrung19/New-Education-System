@@ -49,7 +49,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setError(null);
 
     try {
-      const response = await api.post('/auth/login', { username, password });
+      const response = await api.post('/auth/login', { username, password, role });
       const { access_token, user } = response.data;
       
       localStorage.setItem('access_token', access_token);

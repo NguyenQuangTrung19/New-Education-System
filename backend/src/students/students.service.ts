@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { IdGeneratorService } from '../common/id-generator.service';
 
 @Injectable()
 export class StudentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private idGenerator: IdGeneratorService
+  ) {}
 
   async findAll() {
     return this.prisma.student.findMany({
@@ -35,6 +39,7 @@ export class StudentsService {
       }
     });
   }
+  
   async create(createStudentDto: any) {
     const { username, password, name, email, classId, ...studentData } = createStudentDto;
     
@@ -42,9 +47,12 @@ export class StudentsService {
     const hashedPassword = password || 'student123'; // In real app, hash this!
 
     return this.prisma.$transaction(async (prisma) => {
+      const enrollmentYear = studentData.enrollmentYear || new Date().getFullYear();
+      const studentId = await this.idGenerator.generateStudentId(enrollmentYear);
+
       const user = await prisma.user.create({
         data: {
-          username,
+          username: studentId, // Use Student ID as username
           password: hashedPassword, 
           name,
           email,
@@ -54,10 +62,10 @@ export class StudentsService {
 
       const student = await prisma.student.create({
         data: {
-          id: user.id, // Link 1:1
+          id: studentId,
           userId: user.id,
           classId: classId || null,
-          enrollmentYear: studentData.enrollmentYear || new Date().getFullYear(),
+          enrollmentYear,
           // Add other fields as necessary from dto
           address: studentData.address,
           guardianName: studentData.guardianName,

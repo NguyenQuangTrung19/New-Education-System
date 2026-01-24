@@ -65,8 +65,13 @@ model User {
   student   Student?
 }
 
+model IdSequence {
+  key       String   @id // e.g. "STUDENT_2024"
+  value     Int      @default(0)
+}
+
 model Teacher {
-  id              String   @id @default(uuid())
+  id              String   @id
   userId          String   @unique
   user            User     @relation(fields: [userId], references: [id])
   phone           String?
@@ -86,7 +91,7 @@ model Teacher {
 }
 
 model Student {
-  id                  String   @id @default(uuid())
+  id                  String   @id
   userId              String   @unique
   user                User     @relation(fields: [userId], references: [id])
   
@@ -116,7 +121,8 @@ model Student {
 }
 
 model ClassGroup {
-  id                 String   @id @default(uuid())
+  id                 String   @id
+
   name               String   @unique
   gradeLevel         Int
   room               String?

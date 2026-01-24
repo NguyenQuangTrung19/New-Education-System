@@ -12,10 +12,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TeachersService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const id_generator_service_1 = require("../common/id-generator.service");
 let TeachersService = class TeachersService {
     prisma;
-    constructor(prisma) {
+    idGenerator;
+    constructor(prisma, idGenerator) {
         this.prisma = prisma;
+        this.idGenerator = idGenerator;
     }
     async findAll() {
         return this.prisma.teacher.findMany({
@@ -39,9 +42,11 @@ let TeachersService = class TeachersService {
         const { username, password, name, email, subjects, ...teacherData } = createTeacherDto;
         const hashedPassword = password || 'teacher123';
         return this.prisma.$transaction(async (prisma) => {
+            const joinYear = teacherData.joinYear || new Date().getFullYear();
+            const teacherId = await this.idGenerator.generateTeacherId(joinYear);
             const user = await prisma.user.create({
                 data: {
-                    username,
+                    username: teacherId,
                     password: hashedPassword,
                     name,
                     email,
@@ -50,9 +55,9 @@ let TeachersService = class TeachersService {
             });
             const teacher = await prisma.teacher.create({
                 data: {
-                    id: user.id,
+                    id: teacherId,
                     userId: user.id,
-                    joinYear: teacherData.joinYear || new Date().getFullYear(),
+                    joinYear,
                     address: teacherData.address,
                     phone: teacherData.phone,
                     subjects: subjects || [],
@@ -84,6 +89,7 @@ let TeachersService = class TeachersService {
 exports.TeachersService = TeachersService;
 exports.TeachersService = TeachersService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        id_generator_service_1.IdGeneratorService])
 ], TeachersService);
 //# sourceMappingURL=teachers.service.js.map

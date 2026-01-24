@@ -19,12 +19,13 @@ const classes_module_1 = require("./classes/classes.module");
 const assignments_module_1 = require("./assignments/assignments.module");
 const subjects_module_1 = require("./subjects/subjects.module");
 const schedule_module_1 = require("./schedule/schedule.module");
+const common_module_1 = require("./common/common.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule, users_module_1.UsersModule, auth_module_1.AuthModule, students_module_1.StudentsModule, teachers_module_1.TeachersModule, classes_module_1.ClassesModule, assignments_module_1.AssignmentsModule, subjects_module_1.SubjectsModule, schedule_module_1.ScheduleModule],
+        imports: [prisma_module_1.PrismaModule, users_module_1.UsersModule, auth_module_1.AuthModule, students_module_1.StudentsModule, teachers_module_1.TeachersModule, classes_module_1.ClassesModule, assignments_module_1.AssignmentsModule, subjects_module_1.SubjectsModule, schedule_module_1.ScheduleModule, common_module_1.CommonModule],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
     })

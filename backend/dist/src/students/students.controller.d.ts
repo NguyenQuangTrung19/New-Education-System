@@ -22,11 +22,12 @@ export declare class StudentsController {
         } | null;
     } & {
         id: string;
-        address: string | null;
-        dateOfBirth: Date | null;
         userId: string;
+        dateOfBirth: Date | null;
         enrollmentYear: number;
+        classId: string | null;
         gpa: number;
+        address: string | null;
         guardianName: string | null;
         guardianCitizenId: string | null;
         guardianYearOfBirth: number | null;
@@ -34,14 +35,13 @@ export declare class StudentsController {
         guardianPhone: string | null;
         semesterEvaluation: string | null;
         notes: string[];
-        classId: string | null;
     })[]>;
     findOne(id: string): Promise<({
         user: {
             id: string;
             username: string;
-            email: string;
             password: string;
+            email: string;
             name: string;
             role: import(".prisma/client").$Enums.UserRole;
             avatarUrl: string | null;
@@ -62,8 +62,8 @@ export declare class StudentsController {
         academicHistory: {
             id: string;
             gpa: number;
-            year: string;
             studentId: string;
+            year: string;
             className: string;
         }[];
         grades: ({
@@ -77,8 +77,8 @@ export declare class StudentsController {
         } & {
             id: string;
             academicYear: string;
-            subjectId: string;
             studentId: string;
+            subjectId: string;
             semester: string;
             oralScore: number | null;
             fifteenMinScores: number[];
@@ -106,11 +106,12 @@ export declare class StudentsController {
         }[];
     } & {
         id: string;
-        address: string | null;
-        dateOfBirth: Date | null;
         userId: string;
+        dateOfBirth: Date | null;
         enrollmentYear: number;
+        classId: string | null;
         gpa: number;
+        address: string | null;
         guardianName: string | null;
         guardianCitizenId: string | null;
         guardianYearOfBirth: number | null;
@@ -118,14 +119,13 @@ export declare class StudentsController {
         guardianPhone: string | null;
         semesterEvaluation: string | null;
         notes: string[];
-        classId: string | null;
     }) | null>;
     create(createStudentDto: CreateStudentDto): Promise<{
         user: {
             id: string;
             username: string;
-            email: string;
             password: string;
+            email: string;
             name: string;
             role: import(".prisma/client").$Enums.UserRole;
             avatarUrl: string | null;
@@ -133,11 +133,12 @@ export declare class StudentsController {
             updatedAt: Date;
         };
         id: string;
-        address: string | null;
-        dateOfBirth: Date | null;
         userId: string;
+        dateOfBirth: Date | null;
         enrollmentYear: number;
+        classId: string | null;
         gpa: number;
+        address: string | null;
         guardianName: string | null;
         guardianCitizenId: string | null;
         guardianYearOfBirth: number | null;
@@ -145,15 +146,15 @@ export declare class StudentsController {
         guardianPhone: string | null;
         semesterEvaluation: string | null;
         notes: string[];
-        classId: string | null;
     }>;
     update(id: string, updateStudentDto: UpdateStudentDto): Promise<{
         id: string;
-        address: string | null;
-        dateOfBirth: Date | null;
         userId: string;
+        dateOfBirth: Date | null;
         enrollmentYear: number;
+        classId: string | null;
         gpa: number;
+        address: string | null;
         guardianName: string | null;
         guardianCitizenId: string | null;
         guardianYearOfBirth: number | null;
@@ -161,13 +162,12 @@ export declare class StudentsController {
         guardianPhone: string | null;
         semesterEvaluation: string | null;
         notes: string[];
-        classId: string | null;
     }>;
     remove(id: string): Promise<{
         id: string;
         username: string;
-        email: string;
         password: string;
+        email: string;
         name: string;
         role: import(".prisma/client").$Enums.UserRole;
         avatarUrl: string | null;

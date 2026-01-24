@@ -9,10 +9,11 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(username: string, pass: string): Promise<any> {
+  async validateUser(username: string, pass: string, role: string): Promise<any> {
     const user = await this.usersService.findOne(username);
     // In a real app, use bcrypt.compare(pass, user.password)
-    if (user && user.password === pass) {
+    // Also validate if the user's role matches the requested role
+    if (user && user.password === pass && user.role === role) {
       const { password, ...result } = user;
       return result;
     }
