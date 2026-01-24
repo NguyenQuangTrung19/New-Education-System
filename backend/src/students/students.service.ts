@@ -52,7 +52,7 @@ export class StudentsService {
 
       const user = await prisma.user.create({
         data: {
-          username: studentId, // Use Student ID as username
+          username, 
           password: hashedPassword, 
           name,
           email,

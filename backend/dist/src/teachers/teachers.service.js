@@ -46,7 +46,7 @@ let TeachersService = class TeachersService {
             const teacherId = await this.idGenerator.generateTeacherId(joinYear);
             const user = await prisma.user.create({
                 data: {
-                    username: teacherId,
+                    username,
                     password: hashedPassword,
                     name,
                     email,

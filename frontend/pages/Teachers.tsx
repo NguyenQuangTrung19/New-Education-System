@@ -419,6 +419,7 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
   
   // Validation State
@@ -562,17 +563,34 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
     };
 
     try {
+        setIsSubmitting(true);
         if (editingTeacher) {
             const response = await api.patch(`/teachers/${editingTeacher.id}`, teacherData);
-            setTeachers(teachers.map(t => t.id === editingTeacher.id ? response.data : t));
+            // Normalize response data to match frontend Model
+            const updatedTeacher = {
+                ...response.data,
+                name: response.data.user?.name || response.data.name,
+                email: response.data.user?.email || response.data.email,
+                username: response.data.user?.username || response.data.username,
+            };
+            setTeachers(teachers.map(t => t.id === editingTeacher.id ? updatedTeacher : t));
         } else {
             const response = await api.post('/teachers', teacherData);
-            setTeachers([...teachers, response.data]);
+            // Normalize response data
+            const newTeacher = {
+                ...response.data,
+                name: response.data.user?.name || teacherData.name, // Fallback to form data if needed
+                email: response.data.user?.email || teacherData.email,
+                username: response.data.user?.username || teacherData.username,
+            };
+            setTeachers([...teachers, newTeacher]);
         }
         setIsFormOpen(false);
     } catch (error) {
         console.error("Failed to save teacher", error);
         alert("Failed to save teacher. Please try again.");
+    } finally {
+        setIsSubmitting(false);
     }
   };
 

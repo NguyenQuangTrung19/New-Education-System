@@ -57,7 +57,7 @@ let StudentsService = class StudentsService {
             const studentId = await this.idGenerator.generateStudentId(enrollmentYear);
             const user = await prisma.user.create({
                 data: {
-                    username: studentId,
+                    username,
                     password: hashedPassword,
                     name,
                     email,

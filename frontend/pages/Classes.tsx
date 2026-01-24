@@ -24,6 +24,7 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState<ClassGroup | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingClass, setEditingClass] = useState<ClassGroup | null>(null);
 
   const isAdmin = currentUser?.role === UserRole.ADMIN;
@@ -134,6 +135,7 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
     };
 
     try {
+      setIsSubmitting(true);
       if (editingClass) {
         const response = await api.patch(`/classes/${editingClass.id}`, classPayload);
         setClasses(classes.map(c => c.id === editingClass.id ? response.data : c));
@@ -145,6 +147,8 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
     } catch (err) {
       console.error("Failed to save class", err);
       // alert("Failed to save class"); // Optional: show user error
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
