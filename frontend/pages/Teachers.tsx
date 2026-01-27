@@ -6,10 +6,13 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { 
   Search, Plus, Mail, Phone, BookOpen, Eye, X, 
   Clock, Users, GraduationCap, Check, User as UserIcon, MessageSquare, Send, 
-  MapPin, Calendar, CreditCard, Lock, Trash2, Pencil, ChevronRight, Briefcase, EyeOff, ShieldCheck, AlertTriangle
+  MapPin, Calendar, CreditCard, Lock, Trash2, Pencil, ChevronRight, Briefcase, EyeOff, ShieldCheck, AlertTriangle, Key
 } from 'lucide-react';
 import { calculateAge, isValidPhone, isValidCitizenId, toTitleCase } from '../utils';
 import api from '../src/api/client';
+import ReAuthModal from '../components/ReAuthModal';
+import PasswordManagementModal from '../components/PasswordManagementModal';
+import CredentialRevealModal from '../components/CredentialRevealModal';
 
 interface TeachersProps {
   currentUser: User | null;
@@ -25,13 +28,15 @@ interface SlideOverFormProps {
   onSave: (e: React.FormEvent) => void;
   formErrors: string[];
   availableSubjects: string[];
+  onChangePassword?: () => void;
 }
 
 interface TeacherDetailModalProps {
   teacher: Teacher;
   onClose: () => void;
   isAdmin: boolean;
-  onEdit: (teacher: Teacher) => void;
+
+  onEdit: (teacher: Teacher, action?: string) => void;
   onAddNote: (teacherId: string, note: string) => void;
 }
 
@@ -130,7 +135,7 @@ const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({ teacher, onClos
                              </div>
                              <div>
                                  <label className="text-xs text-gray-400 font-medium uppercase block mb-1">{t('teacher.dob')}</label>
-                                 <div className="text-sm font-medium text-gray-900 flex items-center"><Calendar className="h-4 w-4 mr-2 text-indigo-400 shrink-0"/> {teacher.dateOfBirth} ({calculateAge(teacher.dateOfBirth)} years)</div>
+                                 <div className="text-sm font-medium text-gray-900 flex items-center"><Calendar className="h-4 w-4 mr-2 text-indigo-400 shrink-0"/> {new Date(teacher.dateOfBirth || '').toLocaleDateString('vi-VN')} ({calculateAge(teacher.dateOfBirth)} years)</div>
                              </div>
                              <div>
                                  <label className="text-xs text-gray-400 font-medium uppercase block mb-1">{t('teacher.address')}</label>
@@ -169,7 +174,7 @@ const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({ teacher, onClos
                                       </div>
                                   </div>
                                   <button 
-                                      onClick={() => {}} 
+                                      onClick={() => onEdit(teacher, 'VIEW_PASSWORD')} 
                                       className="w-full py-2 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition text-sm font-bold flex items-center justify-center shadow-sm"
                                   >
                                       <EyeOff className="h-4 w-4 mr-2" /> {t('security.viewPass')}
@@ -250,7 +255,7 @@ const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({ teacher, onClos
 
 const SlideOverForm: React.FC<SlideOverFormProps> = ({
   isOpen, onClose, isEditing, editingId,
-  formTeacher, setFormTeacher, onSave, formErrors, availableSubjects
+  formTeacher, setFormTeacher, onSave, formErrors = [], availableSubjects, onChangePassword
 }) => {
   const { t } = useLanguage();
 
@@ -314,17 +319,33 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({
                         <div className="grid grid-cols-2 gap-4">
                              <div>
                                 <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Username <span className="text-red-500">*</span></label>
-                                <input type="text" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.username} onChange={e => setFormTeacher({...formTeacher, username: e.target.value})} />
+                                <input 
+                                    type="text" 
+                                    required 
+                                    className={`w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none ${isEditing ? 'opacity-60 cursor-not-allowed bg-gray-100' : ''}`} 
+                                    value={formTeacher.username} 
+                                    onChange={e => setFormTeacher({...formTeacher, username: e.target.value})} 
+                                    disabled={isEditing}
+                                />
                              </div>
                              <div>
                                 <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Join Year</label>
                                 <input type="number" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.joinYear} onChange={e => setFormTeacher({...formTeacher, joinYear: parseInt(e.target.value) || new Date().getFullYear()})} />
                              </div>
                         </div>
+                        {!isEditing && (
                         <div>
-                             <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Password {isEditing ? '' : <span className="text-red-500">*</span>}</label>
-                             <input type="password" placeholder={isEditing ? 'Unchanged' : '••••••'} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.password} onChange={e => setFormTeacher({...formTeacher, password: e.target.value})} />
+                             <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Password <span className="text-red-500">*</span></label>
+                             <input type="password" placeholder="••••••" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.password} onChange={e => setFormTeacher({...formTeacher, password: e.target.value})} />
                         </div>
+                        )}
+                        {isEditing && (
+                             <div className="flex items-end">
+                                 <button type="button" onClick={onChangePassword} className="w-full py-2.5 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors text-sm font-bold flex items-center justify-center">
+                                     <Key className="h-4 w-4 mr-2" /> Change Password
+                                 </button>
+                             </div>
+                        )}
                      </div>
                   </div>
 
@@ -338,7 +359,7 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({
                         <div className="grid grid-cols-2 gap-4">
                              <div>
                                 <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Date of Birth <span className="text-red-500">*</span></label>
-                                <input type="date" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.dateOfBirth} onChange={e => setFormTeacher({...formTeacher, dateOfBirth: e.target.value})} />
+                                <input type="date" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.dateOfBirth ? new Date(formTeacher.dateOfBirth).toISOString().split('T')[0] : ''} onChange={e => setFormTeacher({...formTeacher, dateOfBirth: e.target.value})} />
                              </div>
                              <div>
                                 <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Gender</label>
@@ -428,9 +449,8 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
   // Security Modal State
   const [securityModalOpen, setSecurityModalOpen] = useState(false);
   const [teacherToReveal, setTeacherToReveal] = useState<Teacher | null>(null);
-  const [securityCode, setSecurityCode] = useState('');
-  const [revealedPassword, setRevealedPassword] = useState<string | null>(null);
-
+  // Removed legacy security state
+  
   // State for Add/Edit Teacher Form
   const defaultTeacherState: Partial<Teacher> = {
     id: '', name: '', username: '', password: '', subjects: [], email: '', phone: '',
@@ -438,6 +458,72 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
   };
 
   const [formTeacher, setFormTeacher] = useState<Partial<Teacher>>(defaultTeacherState);
+  
+  // Re-Auth and Password Management State
+  const [isReAuthOpen, setIsReAuthOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [selectedUserForPassword, setSelectedUserForPassword] = useState<{ id: string; name: string; userId?: string } | null>(null);
+  const [reAuthAction, setReAuthAction] = useState<'CHANGE' | 'VIEW' | null>(null);
+  
+  // Credential Reveal State
+  const [revealModalOpen, setRevealModalOpen] = useState(false);
+  const [revealedCredentials, setRevealedCredentials] = useState<{ name: string; username: string; password?: string } | null>(null);
+
+  const handleOpenPasswordManage = (teacher: Teacher, action: string = 'CHANGE') => {
+      // Close detail modal if open
+      if (action === 'VIEW' || action === 'VIEW_PASSWORD') {
+         setSelectedTeacher(null);
+      }
+      // Need to find the userId from the teacher object.
+      // In fetchTeachers mapping, we mapped t.user?.name, etc.
+      // We should assume t.userId is available if we fetched it, or t.user.id.
+      // Let's rely on t.userId which exists in Teacher model, BUT the frontend interface might not have it strictly defined?
+      // Actually Teacher interface has id, name, username...
+      // Let's pass the whole teacher object and let the modal handle it or extract here.
+      // We mapped t.user?.username to t.username.
+      // IMPORTANT: We need the USER UUID (userId) for the password update, NOT the Teacher ID (GV...)
+      // The backend Teacher model has `userId`. The response from backend likely included it.
+      // Let's assume teacher.userId exists or teacher.user.id exists.
+      // We'll pass a constructed object.
+      const userId = (teacher as any).userId || (teacher as any).user?.id;
+      if (!userId) {
+          alert("Không thể tìm thấy ID người dùng hệ thống. Vui lòng kiểm tra lại dữ liệu.");
+          return;
+      }
+      setSelectedUserForPassword({ id: teacher.id, name: teacher.name, userId: userId }); // pass password for View? Or fetch it? The teacher object has it currently.
+      setReAuthAction(action as any);
+      setIsReAuthOpen(true);
+  };
+
+  const handleReAuthSuccess = async () => {
+      setIsReAuthOpen(false);
+      if (reAuthAction === 'CHANGE') {
+          setIsPasswordModalOpen(true);
+      } else if (reAuthAction === 'VIEW' || reAuthAction === 'VIEW_PASSWORD') {
+          try {
+              // Fetch password securely from backend
+              // We need the User ID (UUID), not the Teacher ID (GV...)
+              const userId = selectedUserForPassword?.userId;
+              if (!userId) {
+                  alert("Không tìm thấy ID người dùng.");
+                  return;
+              }
+              
+              const res = await api.get(`/users/${userId}/credentials`);
+              const password = res.data?.password;
+              
+              setRevealedCredentials({
+                  name: selectedUserForPassword?.name || 'User',
+                  username: teachers.find(t => t.id === selectedUserForPassword?.id)?.username || '',
+                  password: password
+              });
+              setRevealModalOpen(true);
+          } catch (error) {
+              console.error("Failed to fetch credentials:", error);
+              alert("Không thể lấy mật khẩu. Vui lòng kiểm tra quyền admin.");
+          }
+      }
+  };
 
   const isAdmin = currentUser?.role === UserRole.ADMIN;
   const availableSubjects = Array.from(new Set(MOCK_SUBJECTS.map(s => s.name)));
@@ -451,6 +537,7 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
            ...t,
            name: t.user?.name || 'Unknown',
            email: t.user?.email || '',
+           username: t.user?.username || '',
         }));
         setTeachers(mapped);
       } catch (e) {
@@ -475,11 +562,22 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
     setIsFormOpen(true);
   };
 
-  const handleOpenEdit = (teacher: Teacher) => {
+  const handleOpenEdit = (teacher: Teacher, action?: string) => {
+    if (action === 'VIEW_PASSWORD') {
+        handleOpenPasswordManage(teacher, 'VIEW');
+        return;
+    }
     setEditingTeacher(teacher);
     setFormTeacher({ ...teacher });
     setFormErrors([]);
     setIsFormOpen(true);
+  };
+
+  const handleChangePassword = () => {
+      if (editingTeacher) {
+          setIsFormOpen(false);
+          handleOpenPasswordManage(editingTeacher, 'CHANGE');
+      }
   };
 
   const handleDelete = async (id: string) => {
@@ -603,21 +701,7 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
     }
   };
 
-  const handleRevealPassword = (teacher: Teacher) => {
-      setTeacherToReveal(teacher);
-      setSecurityCode('');
-      setRevealedPassword(null);
-      setSecurityModalOpen(true);
-  };
 
-  const verifySecurityCode = () => {
-      // Mock validation: check against "password" (the hardcoded admin password)
-      if (securityCode === 'password') {
-          setRevealedPassword(teacherToReveal?.password || 'No Password Set');
-      } else {
-          alert("Incorrect security code.");
-      }
-  };
 
   return (
     <div className="space-y-8 animate-fade-in pb-10">
@@ -746,47 +830,32 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
             formTeacher={formTeacher}
             setFormTeacher={setFormTeacher}
             onSave={handleSave}
-            formErrors={formErrors}
+
+
             availableSubjects={availableSubjects}
+            onChangePassword={handleChangePassword}
         />
       )}
       
-      {/* Security Modal */}
-      {securityModalOpen && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md w-screen h-screen">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 animate-scale-in">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{t('security.check')}</h3>
-                <p className="text-sm text-gray-500 mb-4">{t('security.enterPass')} <strong>{teacherToReveal?.name}</strong>.</p>
-                
-                {!revealedPassword ? (
-                    <div className="space-y-4">
-                        <input 
-                            type="password" 
-                            placeholder="Enter admin password" 
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                            value={securityCode}
-                            onChange={(e) => setSecurityCode(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && verifySecurityCode()}
-                            autoFocus
-                        />
-                        <div className="flex gap-2">
-                            <button onClick={() => setSecurityModalOpen(false)} className="flex-1 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">{t('common.cancel')}</button>
-                            <button onClick={verifySecurityCode} className="flex-1 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">{t('security.verify')}</button>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="space-y-4">
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-                            <p className="text-xs text-green-600 uppercase font-bold mb-1">User Password</p>
-                            <p className="text-lg font-mono font-bold text-green-800">{revealedPassword}</p>
-                        </div>
-                        <button onClick={() => setSecurityModalOpen(false)} className="w-full py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Close</button>
-                    </div>
-                )}
-            </div>
-        </div>,
-        document.body
-      )}
+      {/* Legacy Security Modal Removed */}
+      {/* Re-Auth and Password Management Modals */}
+      <ReAuthModal 
+        isOpen={isReAuthOpen} 
+        onClose={() => setIsReAuthOpen(false)} 
+        onSuccess={handleReAuthSuccess} 
+      />
+      
+      <PasswordManagementModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+        targetUser={selectedUserForPassword}
+      />
+      
+      <CredentialRevealModal
+        isOpen={revealModalOpen}
+        onClose={() => setRevealModalOpen(false)}
+        credentials={revealedCredentials}
+      />
     </div>
   );
 };

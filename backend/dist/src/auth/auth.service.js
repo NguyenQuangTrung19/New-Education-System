@@ -28,6 +28,13 @@ let AuthService = class AuthService {
         }
         return null;
     }
+    async verifyPassword(userId, pass) {
+        const user = await this.usersService.findById(userId);
+        if (user && user.password === pass) {
+            return true;
+        }
+        return false;
+    }
     async login(user) {
         const payload = { username: user.username, sub: user.id, role: user.role };
         return {

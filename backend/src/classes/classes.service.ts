@@ -61,8 +61,29 @@ export class ClassesService {
   }
 
   async remove(id: string) {
-      return this.prisma.classGroup.delete({
-          where: { id }
+      return this.prisma.$transaction(async (prisma) => {
+          // 1. Unassign students (optional relation)
+          await prisma.student.updateMany({
+              where: { classId: id },
+              data: { classId: null }
+          });
+
+          // 2. Delete Schedule Items (required relation)
+          await prisma.scheduleItem.deleteMany({
+              where: { classId: id }
+          });
+
+          // 3. Delete Teaching Assignments (required relation)
+          await prisma.teachingAssignment.deleteMany({
+              where: { classId: id }
+          });
+
+          // 4. Assignments (Implicit M:N)
+          // Prisma handles the join table deletion automatically.
+          
+          return prisma.classGroup.delete({
+              where: { id }
+          });
       });
   }
 }

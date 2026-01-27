@@ -5,6 +5,7 @@ export declare class TeachersController {
     constructor(teachersService: TeachersService);
     findAll(): Promise<({
         user: {
+            username: string;
             email: string;
             name: string;
             avatarUrl: string | null;
@@ -138,5 +139,5 @@ export declare class TeachersController {
         avatarUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
-    }>;
+    } | null>;
 }

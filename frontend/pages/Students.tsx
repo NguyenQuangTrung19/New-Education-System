@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { MOCK_STUDENTS, MOCK_CLASSES } from '../constants';
-import { Student, User, UserRole } from '../types';
+import { MOCK_STUDENTS } from '../constants';
+import { Student, User, UserRole, ClassGroup } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { 
   Search, Plus, Mail, BookOpen, Eye, X, GraduationCap, Check, User as UserIcon, 
@@ -11,6 +11,9 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { calculateAge, isValidPhone, isValidCitizenId, toTitleCase } from '../utils';
 import api from '../src/api/client';
+import ReAuthModal from '../components/ReAuthModal';
+import PasswordManagementModal from '../components/PasswordManagementModal';
+import CredentialRevealModal from '../components/CredentialRevealModal';
 
 interface StudentsProps {
   currentUser: User | null;
@@ -21,11 +24,12 @@ interface StudentsProps {
 interface StudentDetailModalProps {
   student: Student;
   onClose: () => void;
-  onEdit: (student: Student) => void;
+  onEdit: (student: Student, action?: string) => void;
   onAddNote: (studentId: string, note: string) => void;
   onRevealPassword: (student: Student) => void;
   isAdmin: boolean;
   canEdit: boolean;
+  classes: ClassGroup[];
 }
 
 interface SlideOverFormProps {
@@ -35,15 +39,17 @@ interface SlideOverFormProps {
   setFormStudent: (data: Partial<Student>) => void;
   onSave: (e: React.FormEvent) => void;
   formErrors: string[];
+  classes: ClassGroup[];
+  onChangePassword?: () => void;
 }
 
 // --- Extracted Components ---
 
 const StudentDetailModal: React.FC<StudentDetailModalProps> = ({ 
-  student, onClose, onEdit, onAddNote, onRevealPassword, isAdmin, canEdit 
+  student, onClose, onEdit, onAddNote, onRevealPassword, isAdmin, canEdit, classes 
 }) => {
   const { t } = useLanguage();
-  const className = MOCK_CLASSES.find(c => c.id === student.classId)?.name || student.classId;
+  const className = classes.find(c => c.id === student.classId)?.name || student.classId;
   const [noteInput, setNoteInput] = useState('');
   const history = student.academicHistory || [];
   const chartData = [...history.map(r => ({ year: r.year, gpa: r.gpa })), { year: 'Now', gpa: student.gpa }];
@@ -92,7 +98,7 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
                       <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                          <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">{t('students.modal.details')}</h3>
                          <div className="space-y-3 text-sm">
-                            <div className="flex justify-between"><span className="text-gray-500">Date of Birth</span> <span className="font-medium text-gray-900">{student.dateOfBirth} ({calculateAge(student.dateOfBirth)} years old)</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">Date of Birth</span> <span className="font-medium text-gray-900">{student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString('vi-VN') : 'N/A'} ({calculateAge(student.dateOfBirth)} years old)</span></div>
                             <div className="flex justify-between"><span className="text-gray-500">Enrollment Year</span> <span className="font-medium text-gray-900">{student.enrollmentYear}</span></div>
                             <div className="flex justify-between"><span className="text-gray-500">Email</span> <span className="font-medium text-gray-900 break-all">{student.email}</span></div>
                             <div className="flex justify-between"><span className="text-gray-500">Address</span> <span className="font-medium text-gray-900 text-right max-w-[200px] truncate">{student.address || 'N/A'}</span></div>
@@ -136,8 +142,8 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
                                           <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">STUDENT</span>
                                       </div>
                                   </div>
-                                  <button 
-                                      onClick={() => onRevealPassword(student)} 
+                                  <button
+                                      onClick={() => onEdit(student, 'VIEW_PASSWORD')} 
                                       className="w-full py-2 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition text-sm font-bold flex items-center justify-center shadow-sm"
                                   >
                                       <EyeOff className="h-4 w-4 mr-2" /> {t('security.viewPass')}
@@ -207,7 +213,7 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
 };
 
 const SlideOverForm: React.FC<SlideOverFormProps> = ({ 
-  onClose, editingStudent, formStudent, setFormStudent, onSave, formErrors 
+  onClose, editingStudent, formStudent, setFormStudent, onSave, formErrors = [], classes, onChangePassword
 }) => {
   const { t } = useLanguage();
 
@@ -259,7 +265,8 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({
                              <label className="block text-xs font-semibold text-gray-500 mb-1">Class</label>
                              <div className="relative">
                                 <select className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm outline-none appearance-none" value={formStudent.classId} onChange={e => setFormStudent({...formStudent, classId: e.target.value})}>
-                                    {MOCK_CLASSES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                    <option value="">No Class</option>
+                                    {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                 </select>
                                 <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
                              </div>
@@ -303,7 +310,7 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className="block text-xs font-semibold text-gray-500 mb-1">Date of Birth <span className="text-red-500">*</span></label>
-                                <input type="date" required className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm outline-none" value={formStudent.dateOfBirth} onChange={e => setFormStudent({...formStudent, dateOfBirth: e.target.value})} />
+                                <input type="date" required className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm outline-none" value={formStudent.dateOfBirth ? new Date(formStudent.dateOfBirth).toISOString().split('T')[0] : ''} onChange={e => setFormStudent({...formStudent, dateOfBirth: e.target.value})} />
                             </div>
                             <div>
                                 <label className="block text-xs font-semibold text-gray-500 mb-1">Email <span className="text-red-500">*</span></label>
@@ -367,32 +374,97 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({
 export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
   const { t } = useLanguage();
   const [students, setStudents] = useState<Student[]>([]);
+  const [classes, setClasses] = useState<ClassGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedClass, setSelectedClass] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   
   // Validation Error State
   const [formErrors, setFormErrors] = useState<string[]>([]);
 
-  // Security Modal State
-  const [securityModalOpen, setSecurityModalOpen] = useState(false);
-  const [studentToReveal, setStudentToReveal] = useState<Student | null>(null);
-  const [securityCode, setSecurityCode] = useState('');
-  const [revealedPassword, setRevealedPassword] = useState<string | null>(null);
+  // Re-Auth and Password Management State
+  const [isReAuthOpen, setIsReAuthOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [selectedUserForPassword, setSelectedUserForPassword] = useState<{ id: string; name: string; userId?: string } | null>(null);
+  const [reAuthAction, setReAuthAction] = useState<'CHANGE' | 'VIEW' | null>(null);
+
+  // Credential Reveal State
+  const [revealModalOpen, setRevealModalOpen] = useState(false);
+  const [revealedCredentials, setRevealedCredentials] = useState<{ name: string; username: string; password?: string } | null>(null);
+
+  const handleOpenPasswordManage = (student: Student, action: string = 'CHANGE') => {
+      // Close detail modal if open for VIEW
+      if (action === 'VIEW' || action === 'VIEW_PASSWORD') {
+         setSelectedStudent(null);
+      }
+      // Assuming student.userId is available from fetch
+      const userId = (student as any).userId || (student as any).user?.id;
+      if (!userId) {
+          alert("Không thể tìm thấy ID người dùng hệ thống.");
+          return;
+      }
+      setSelectedUserForPassword({ id: student.id, name: student.name, userId: userId });
+      setReAuthAction(action as any);
+      setIsReAuthOpen(true);
+  };
+
+  const handleReAuthSuccess = async () => {
+      setIsReAuthOpen(false);
+      if (reAuthAction === 'CHANGE') {
+          setIsPasswordModalOpen(true);
+      } else if (reAuthAction === 'VIEW' || reAuthAction === 'VIEW_PASSWORD') {
+          try {
+              const userId = selectedUserForPassword?.userId;
+              if (!userId) return;
+              
+              const res = await api.get(`/users/${userId}/credentials`);
+              const password = res.data?.password;
+              
+              setRevealedCredentials({
+                  name: selectedUserForPassword?.name || 'Student',
+                  username: students.find(s => s.id === selectedUserForPassword?.id)?.username || '',
+                  password: password
+              });
+              setRevealModalOpen(true);
+          } catch (error) {
+              console.error("Failed to fetch credentials:", error);
+              alert("Không thể lấy mật khẩu. Kiểm tra quyền admin.");
+          }
+      }
+  };
+
+  const handleOpenEdit = (student: Student, action?: string) => {
+    if (action === 'VIEW_PASSWORD') {
+        handleOpenPasswordManage(student, 'VIEW');
+        return;
+    }
+    setEditingStudent(student);
+    setFormStudent({ ...student });
+    setFormErrors([]);
+    setIsFormOpen(true);
+  };
+  
+  const handleChangePassword = () => {
+      if (editingStudent) {
+          setIsFormOpen(false);
+          handleOpenPasswordManage(editingStudent, 'CHANGE');
+      }
+  };
 
   const isAdmin = currentUser?.role === UserRole.ADMIN;
   const isTeacher = currentUser?.role === UserRole.TEACHER;
 
   // Determine which classes the current teacher is the homeroom teacher for
   const teacherHomeroomClassId = isTeacher 
-      ? MOCK_CLASSES.find(c => c.teacherId === currentUser.id)?.id 
+      ? classes.find(c => c.teacherId === currentUser.id)?.id 
       : null;
 
   const defaultStudentState: Partial<Student> = {
-    id: '', name: '', username: '', password: '', classId: MOCK_CLASSES[0]?.id || '',
+    id: '', name: '', username: '', password: '', classId: '',
     email: '', gpa: 0, enrollmentYear: new Date().getFullYear(), dateOfBirth: '',
     address: '', guardianName: '', guardianCitizenId: '', guardianYearOfBirth: 1980,
     guardianJob: '', guardianPhone: ''
@@ -417,7 +489,18 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
         setLoading(false);
       }
     };
+
+    const fetchClasses = async () => {
+        try {
+            const response = await api.get('/classes');
+            setClasses(response.data);
+        } catch (err) {
+            console.error("Failed to fetch classes", err);
+        }
+    };
+
     fetchStudents();
+    fetchClasses();
   }, []);
 
   const filteredStudents = students.filter(student => {
@@ -430,13 +513,6 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
   const handleOpenAdd = () => {
     setEditingStudent(null);
     setFormStudent({ ...defaultStudentState, id: `S${Date.now().toString().slice(-5)}` });
-    setFormErrors([]);
-    setIsFormOpen(true);
-  };
-
-  const handleOpenEdit = (student: Student) => {
-    setEditingStudent(student);
-    setFormStudent({ ...student });
     setFormErrors([]);
     setIsFormOpen(true);
   };
@@ -508,24 +584,39 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
 
     const studentPayload = {
       ...formattedData,
-      classId: formattedData.classId || 'C101',
+      classId: formattedData.classId || null, // Send null if empty
       enrollmentYear: formattedData.enrollmentYear || new Date().getFullYear(),
       gpa: formattedData.gpa || 0,
       guardianYearOfBirth: formattedData.guardianYearOfBirth || 1980,
     };
 
     try {
+        setIsSubmitting(true);
         if (editingStudent) {
             const response = await api.patch(`/students/${editingStudent.id}`, studentPayload);
-             setStudents(students.map(s => s.id === editingStudent.id ? response.data : s));
+            const updatedStudent = {
+                 ...response.data,
+                 name: response.data.user?.name || response.data.name,
+                 email: response.data.user?.email || response.data.email,
+                 username: response.data.user?.username || response.data.username,
+            };
+             setStudents(students.map(s => s.id === editingStudent.id ? updatedStudent : s));
         } else {
             const response = await api.post('/students', studentPayload);
-            setStudents([...students, response.data]);
+             const newStudent = {
+                ...response.data,
+                name: response.data.user?.name || studentPayload.name,
+                email: response.data.user?.email || studentPayload.email,
+                username: response.data.user?.username || studentPayload.username,
+            };
+            setStudents([...students, newStudent]);
         }
         setIsFormOpen(false);
     } catch (error) {
         console.error("Failed to save student", error);
         alert("Failed to save student. Please try again.");
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
@@ -538,20 +629,9 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
     }
   };
 
-  const handleRevealPassword = (student: Student) => {
-      setStudentToReveal(student);
-      setSecurityCode('');
-      setRevealedPassword(null);
-      setSecurityModalOpen(true);
-  };
 
-  const verifySecurityCode = () => {
-      if (securityCode === 'password') {
-          setRevealedPassword(studentToReveal?.password || 'No Password Set');
-      } else {
-          alert("Incorrect security code.");
-      }
-  };
+
+
 
   // Helper to check if current teacher can edit a student
   const canEditStudent = (student: Student) => {
@@ -589,7 +669,7 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
                  <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                  <select className="pl-10 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none appearance-none cursor-pointer" value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)}>
                     <option value="All">{t('students.filter.allClasses')}</option>
-                    {MOCK_CLASSES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                  </select>
                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400 pointer-events-none" />
               </div>
@@ -609,7 +689,7 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filteredStudents.map((student) => {
-                const className = MOCK_CLASSES.find(c => c.id === student.classId)?.name || student.classId;
+                const className = classes.find(c => c.id === student.classId)?.name || student.classId;
                 const canEdit = canEditStudent(student);
 
                 return (
@@ -676,9 +756,10 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
           onClose={() => setSelectedStudent(null)} 
           onEdit={handleOpenEdit}
           onAddNote={handleAddNote}
-          onRevealPassword={handleRevealPassword}
+          onRevealPassword={(s) => handleOpenEdit(s, 'VIEW_PASSWORD')}
           isAdmin={isAdmin}
           canEdit={canEditStudent(selectedStudent)}
+          classes={classes}
         />
       )}
       
@@ -690,44 +771,27 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
           setFormStudent={setFormStudent}
           onSave={handleSave}
           formErrors={formErrors}
+          classes={classes}
         />
       )}
 
-      {securityModalOpen && createPortal(
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md w-screen h-screen">
-              <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 animate-scale-in">
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">{t('security.check')}</h3>
-                  <p className="text-sm text-gray-500 mb-4">{t('security.enterPass')} <strong>{studentToReveal?.name}</strong>.</p>
-                  
-                  {!revealedPassword ? (
-                      <div className="space-y-4">
-                          <input 
-                              type="password" 
-                              placeholder="Enter admin password" 
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                              value={securityCode}
-                              onChange={(e) => setSecurityCode(e.target.value)}
-                              onKeyDown={(e) => e.key === 'Enter' && verifySecurityCode()}
-                              autoFocus
-                          />
-                          <div className="flex gap-2">
-                              <button onClick={() => setSecurityModalOpen(false)} className="flex-1 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">{t('common.cancel')}</button>
-                              <button onClick={verifySecurityCode} className="flex-1 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">{t('security.verify')}</button>
-                          </div>
-                      </div>
-                  ) : (
-                      <div className="space-y-4">
-                          <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-                              <p className="text-xs text-green-600 uppercase font-bold mb-1">User Password</p>
-                              <p className="text-lg font-mono font-bold text-green-800">{revealedPassword}</p>
-                          </div>
-                          <button onClick={() => setSecurityModalOpen(false)} className="w-full py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Close</button>
-                      </div>
-                  )}
-              </div>
-          </div>,
-          document.body
-      )}
+      <ReAuthModal 
+        isOpen={isReAuthOpen} 
+        onClose={() => setIsReAuthOpen(false)} 
+        onSuccess={handleReAuthSuccess}
+      />
+      
+      <PasswordManagementModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+        targetUser={selectedUserForPassword}
+      />
+
+      <CredentialRevealModal
+        isOpen={revealModalOpen}
+        onClose={() => setRevealModalOpen(false)}
+        credentials={revealedCredentials}
+      />
     </div>
   );
 };

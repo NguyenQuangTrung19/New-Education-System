@@ -6,6 +6,7 @@ export declare class StudentsService {
     constructor(prisma: PrismaService, idGenerator: IdGeneratorService);
     findAll(): Promise<({
         user: {
+            username: string;
             email: string;
             name: string;
             avatarUrl: string | null;
@@ -174,5 +175,5 @@ export declare class StudentsService {
         avatarUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
-    }>;
+    } | null>;
 }

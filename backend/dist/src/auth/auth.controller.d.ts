@@ -7,4 +7,7 @@ export declare class AuthController {
         access_token: string;
         user: any;
     }>;
+    verifyPassword(req: any, password: string): Promise<{
+        success: boolean;
+    }>;
 }

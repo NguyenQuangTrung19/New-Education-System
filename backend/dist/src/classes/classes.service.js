@@ -66,8 +66,20 @@ let ClassesService = class ClassesService {
         });
     }
     async remove(id) {
-        return this.prisma.classGroup.delete({
-            where: { id }
+        return this.prisma.$transaction(async (prisma) => {
+            await prisma.student.updateMany({
+                where: { classId: id },
+                data: { classId: null }
+            });
+            await prisma.scheduleItem.deleteMany({
+                where: { classId: id }
+            });
+            await prisma.teachingAssignment.deleteMany({
+                where: { classId: id }
+            });
+            return prisma.classGroup.delete({
+                where: { id }
+            });
         });
     }
 };

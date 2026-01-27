@@ -23,7 +23,7 @@ let TeachersService = class TeachersService {
     async findAll() {
         return this.prisma.teacher.findMany({
             include: {
-                user: { select: { name: true, email: true, avatarUrl: true } },
+                user: { select: { name: true, email: true, avatarUrl: true, username: true } },
                 classes: true,
             }
         });
@@ -60,6 +60,9 @@ let TeachersService = class TeachersService {
                     joinYear,
                     address: teacherData.address,
                     phone: teacherData.phone,
+                    citizenId: teacherData.citizenId,
+                    gender: teacherData.gender || 'Male',
+                    dateOfBirth: teacherData.dateOfBirth ? new Date(teacherData.dateOfBirth) : null,
                     subjects: subjects || [],
                 },
             });
@@ -67,12 +70,15 @@ let TeachersService = class TeachersService {
         });
     }
     async update(id, updateTeacherDto) {
-        const { name, email, ...teacherData } = updateTeacherDto;
+        const { name, email, username, password, user, id: _id, notes, ...teacherData } = updateTeacherDto;
         if (name || email) {
-            await this.prisma.user.update({
-                where: { id },
-                data: { name, email }
-            });
+            const teacher = await this.prisma.teacher.findUnique({ where: { id } });
+            if (teacher && teacher.userId) {
+                await this.prisma.user.update({
+                    where: { id: teacher.userId },
+                    data: { name, email }
+                });
+            }
         }
         return this.prisma.teacher.update({
             where: { id },
@@ -80,9 +86,26 @@ let TeachersService = class TeachersService {
         });
     }
     async remove(id) {
+        const teacher = await this.prisma.teacher.findUnique({ where: { id } });
+        if (!teacher)
+            return null;
         return this.prisma.$transaction(async (prisma) => {
+            await prisma.classGroup.updateMany({
+                where: { teacherId: id },
+                data: { teacherId: null }
+            });
+            await prisma.scheduleItem.updateMany({
+                where: { teacherId: id },
+                data: { teacherId: null }
+            });
+            await prisma.teachingAssignment.deleteMany({
+                where: { teacherId: id }
+            });
+            await prisma.assignment.deleteMany({
+                where: { teacherId: id }
+            });
             await prisma.teacher.delete({ where: { id } });
-            return prisma.user.delete({ where: { id } });
+            return prisma.user.delete({ where: { id: teacher.userId } });
         });
     }
 };

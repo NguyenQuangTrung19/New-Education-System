@@ -27,6 +27,7 @@ let StudentsService = class StudentsService {
                     select: {
                         name: true,
                         email: true,
+                        username: true,
                         avatarUrl: true,
                     }
                 },
@@ -71,23 +72,31 @@ let StudentsService = class StudentsService {
                     classId: classId || null,
                     enrollmentYear,
                     address: studentData.address,
+                    dateOfBirth: studentData.dateOfBirth ? new Date(studentData.dateOfBirth) : null,
+                    gpa: studentData.gpa || 0.0,
                     guardianName: studentData.guardianName,
                     guardianPhone: studentData.guardianPhone,
+                    guardianCitizenId: studentData.guardianCitizenId,
+                    guardianJob: studentData.guardianJob,
+                    guardianYearOfBirth: studentData.guardianYearOfBirth,
                 },
             });
             return { ...student, user };
         });
     }
     async update(id, updateStudentDto) {
-        const { name, email, ...studentData } = updateStudentDto;
+        const { name, email, username, password, user, id: _id, ...studentData } = updateStudentDto;
         if (name || email) {
-            await this.prisma.user.update({
-                where: { id },
-                data: {
-                    name: name,
-                    email: email
-                }
-            });
+            const student = await this.prisma.student.findUnique({ where: { id } });
+            if (student && student.userId) {
+                await this.prisma.user.update({
+                    where: { id: student.userId },
+                    data: {
+                        name: name,
+                        email: email
+                    }
+                });
+            }
         }
         return this.prisma.student.update({
             where: { id },
@@ -95,9 +104,12 @@ let StudentsService = class StudentsService {
         });
     }
     async remove(id) {
+        const student = await this.prisma.student.findUnique({ where: { id } });
+        if (!student)
+            return null;
         return this.prisma.$transaction(async (prisma) => {
             await prisma.student.delete({ where: { id } });
-            return prisma.user.delete({ where: { id } });
+            return prisma.user.delete({ where: { id: student.userId } });
         });
     }
 };

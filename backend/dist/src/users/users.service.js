@@ -31,6 +31,23 @@ let UsersService = class UsersService {
             data,
         });
     }
+    async findById(id) {
+        return this.prisma.user.findUnique({
+            where: { id },
+        });
+    }
+    async updatePassword(id, password) {
+        return this.prisma.user.update({
+            where: { id },
+            data: { password }
+        });
+    }
+    async getUserCredentials(id) {
+        return this.prisma.user.findUnique({
+            where: { id },
+            select: { password: true }
+        });
+    }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([

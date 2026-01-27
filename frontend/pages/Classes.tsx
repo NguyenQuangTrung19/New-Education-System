@@ -1,8 +1,8 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { MOCK_CLASSES, MOCK_TEACHERS, MOCK_STUDENTS } from '../constants';
-import { ClassGroup, User, UserRole } from '../types';
+import { MOCK_CLASSES, MOCK_TEACHERS } from '../constants';
+import { ClassGroup, User, UserRole, Teacher } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { 
   Search, Plus, MapPin, Users, Eye, MoreVertical, X, Check, School, 
@@ -21,6 +21,7 @@ interface ClassesProps {
 export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
   const { t } = useLanguage();
   const [classes, setClasses] = useState<ClassGroup[]>(MOCK_CLASSES);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState<ClassGroup | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -45,7 +46,7 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
     name: '',
     gradeLevel: 10,
     room: '',
-    teacherId: MOCK_TEACHERS[0]?.id || '',
+    teacherId: '',
     academicYear: currentYearDefault,
     studentCount: 0,
     maleStudentCount: 0,
@@ -67,6 +68,30 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
       }
     }
   }, [formClass.name]);
+  
+  // Fetch Teachers for Dropdown
+  useEffect(() => {
+      const fetchTeachers = async () => {
+          try {
+              const res = await api.get('/teachers');
+              setTeachers(res.data);
+          } catch (err) {
+              console.error("Failed to fetch teachers", err);
+          }
+      };
+      
+      const fetchClasses = async () => {
+        try {
+            const res = await api.get('/classes');
+            setClasses(res.data);
+        } catch (err) {
+            console.error("Failed to fetch classes", err);
+        }
+      };
+
+      fetchTeachers();
+      fetchClasses();
+  }, []);
 
   const filteredClasses = classes.filter(c => 
     c.academicYear === selectedYear &&
@@ -76,7 +101,7 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
   );
 
   function getTeacherName(id: string) {
-    return MOCK_TEACHERS.find(t => t.id === id)?.name || 'Unknown';
+    return teachers.find(t => t.id === id)?.name || 'Unknown';
   }
 
   const handleOpenAdd = () => {
@@ -312,6 +337,7 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
             setFormClass={setFormClass}
             onClose={() => setIsFormOpen(false)}
             onSave={handleSave}
+            teachers={teachers}
         />
       )}
     </div>
@@ -326,9 +352,10 @@ interface SlideOverFormProps {
     setFormClass: (val: Partial<ClassGroup>) => void;
     onClose: () => void;
     onSave: (e: React.FormEvent) => void;
+    teachers: Teacher[];
 }
 
-const SlideOverForm: React.FC<SlideOverFormProps> = ({ editingClass, formClass, setFormClass, onClose, onSave }) => {
+const SlideOverForm: React.FC<SlideOverFormProps> = ({ editingClass, formClass, setFormClass, onClose, onSave, teachers }) => {
     const { t } = useLanguage();
     return createPortal(
     <div className="fixed inset-0 z-[100] overflow-hidden w-screen h-screen">
@@ -369,9 +396,10 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({ editingClass, formClass, 
                       </div>
                       <div>
                          <label className="block text-xs font-semibold text-gray-500 mb-1">{t('class.homeroomTeacher')}</label>
-                         <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white" value={formClass.teacherId} onChange={e => setFormClass({...formClass, teacherId: e.target.value})}>
-                            {MOCK_TEACHERS.map(t => <option key={t.id} value={t.id}>{t.name} ({t.subjects.join(', ')})</option>)}
-                         </select>
+                          <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white" value={formClass.teacherId} onChange={e => setFormClass({...formClass, teacherId: e.target.value})}>
+                             <option value="">Select Homeroom Teacher</option>
+                             {teachers.map(t => <option key={t.id} value={t.id}>{t.name} ({t.subjects?.join(', ') || 'N/A'})</option>)}
+                          </select>
                       </div>
                        <div>
                          <label className="block text-xs font-semibold text-gray-500 mb-1">{t('class.description')}</label>

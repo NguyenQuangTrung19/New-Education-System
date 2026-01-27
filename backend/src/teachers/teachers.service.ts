@@ -12,7 +12,7 @@ export class TeachersService {
   async findAll() {
     return this.prisma.teacher.findMany({
       include: {
-        user: { select: { name: true, email: true, avatarUrl: true } },
+        user: { select: { name: true, email: true, avatarUrl: true, username: true } },
         classes: true,
       }
     });
@@ -55,6 +55,9 @@ export class TeachersService {
           joinYear,
           address: teacherData.address,
           phone: teacherData.phone,
+          citizenId: teacherData.citizenId,
+          gender: teacherData.gender || 'Male',
+          dateOfBirth: teacherData.dateOfBirth ? new Date(teacherData.dateOfBirth) : null,
           // subjects logic would go here, simplified for now
           subjects: subjects || [],
         },
@@ -65,13 +68,18 @@ export class TeachersService {
   }
 
   async update(id: string, updateTeacherDto: any) {
-     const { name, email, ...teacherData } = updateTeacherDto;
+     // Destructure to separate User fields, Teacher fields, and fields to IGNORE (username, password, id, notes)
+     // notes is sent by frontend but not in Teacher schema
+     const { name, email, username, password, user, id: _id, notes, ...teacherData } = updateTeacherDto;
      
      if (name || email) {
-        await this.prisma.user.update({
-          where: { id },
-          data: { name, email }
-        });
+        const teacher = await this.prisma.teacher.findUnique({ where: { id } });
+        if (teacher && teacher.userId) {
+            await this.prisma.user.update({
+                where: { id: teacher.userId },
+                data: { name, email }
+            });
+        }
      }
 
      return this.prisma.teacher.update({
@@ -81,9 +89,42 @@ export class TeachersService {
   }
 
   async remove(id: string) {
+    const teacher = await this.prisma.teacher.findUnique({ where: { id } });
+    if (!teacher) return null;
+
     return this.prisma.$transaction(async (prisma) => {
+        // 1. Remove/Unlink related records to avoid FK violations
+        
+        // Unassign from Classes
+        await prisma.classGroup.updateMany({
+            where: { teacherId: id },
+            data: { teacherId: null }
+        });
+
+        // Unassign from Schedule Items
+        await prisma.scheduleItem.updateMany({
+            where: { teacherId: id },
+            data: { teacherId: null }
+        });
+
+        // Delete Teaching Assignments
+        await prisma.teachingAssignment.deleteMany({
+            where: { teacherId: id }
+        });
+
+        // Assignments posted by teacher: 
+        // We cannot set teacherId to null as it is required. 
+        // For now, we will DELETE them (cascade) or we assume user accepts this data loss.
+        // Alternative: Reassign to a placeholder. Let's delete for now as it makes sense if teacher creates content.
+        await prisma.assignment.deleteMany({
+            where: { teacherId: id }
+        });
+
+        // 2. Delete Teacher Profile
         await prisma.teacher.delete({ where: { id } });
-        return prisma.user.delete({ where: { id } }); // cascade?
+
+        // 3. Delete User Account
+        return prisma.user.delete({ where: { id: teacher.userId } });
     });
   }
 }

@@ -16,6 +16,7 @@ export class StudentsService {
           select: {
             name: true,
             email: true,
+            username: true,
             avatarUrl: true,
           }
         },
@@ -68,8 +69,13 @@ export class StudentsService {
           enrollmentYear,
           // Add other fields as necessary from dto
           address: studentData.address,
+          dateOfBirth: studentData.dateOfBirth ? new Date(studentData.dateOfBirth) : null,
+          gpa: studentData.gpa || 0.0,
           guardianName: studentData.guardianName,
           guardianPhone: studentData.guardianPhone,
+          guardianCitizenId: studentData.guardianCitizenId,
+          guardianJob: studentData.guardianJob,
+          guardianYearOfBirth: studentData.guardianYearOfBirth,
         },
       });
       
@@ -78,17 +84,20 @@ export class StudentsService {
   }
 
   async update(id: string, updateStudentDto: any) {
-    const { name, email, ...studentData } = updateStudentDto;
+    const { name, email, username, password, user, id: _id, ...studentData } = updateStudentDto;
 
     // Update User info if provided
     if (name || email) {
-      await this.prisma.user.update({
-        where: { id },
-        data: { 
-          name: name,
-          email: email
-        }
-      });
+      const student = await this.prisma.student.findUnique({ where: { id } });
+      if (student && student.userId) {
+          await this.prisma.user.update({
+            where: { id: student.userId },
+            data: { 
+              name: name,
+              email: email
+            }
+          });
+      }
     }
 
     return this.prisma.student.update({
@@ -98,11 +107,21 @@ export class StudentsService {
   }
 
   async remove(id: string) {
+    const student = await this.prisma.student.findUnique({ where: { id } });
+    if (!student) return null;
+
     return this.prisma.$transaction(async (prisma) => {
-        // Delete student profile first (FK constraint usually)
+        // Cleanup relations if needed (mostly cascades for student, but good to be safe)
+        // e.g. Attendance, Grades usually cascade delete on Student delete? 
+        // Let's assume Prisma schema handles cascade for simple child tables, 
+        // but let's be explicit if we are unsure.
+        // For now, simple delete of student usually works unless strict constraints exist.
+
+        // Delete student profile first
         await prisma.student.delete({ where: { id } });
+        
         // Delete user account
-        return prisma.user.delete({ where: { id } });
+        return prisma.user.delete({ where: { id: student.userId } });
     });
   }
 }
