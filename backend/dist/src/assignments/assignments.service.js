@@ -62,6 +62,49 @@ let AssignmentsService = class AssignmentsService {
             where: { id },
         });
     }
+    async submit(assignmentId, submitDto) {
+        const { studentId, answers } = submitDto;
+        const assignment = await this.prisma.assignment.findUnique({
+            where: { id: assignmentId }
+        });
+        if (!assignment) {
+            throw new Error('Assignment not found');
+        }
+        const existing = await this.prisma.assignmentSubmission.findFirst({
+            where: {
+                assignmentId,
+                studentId
+            }
+        });
+        if (existing) {
+            return this.prisma.assignmentSubmission.update({
+                where: { id: existing.id },
+                data: {
+                    answers,
+                    submittedAt: new Date(),
+                    status: 'submitted'
+                }
+            });
+        }
+        return this.prisma.assignmentSubmission.create({
+            data: {
+                assignmentId,
+                studentId,
+                answers,
+                status: 'submitted'
+            }
+        });
+    }
+    async grade(submissionId, gradeDto) {
+        return this.prisma.assignmentSubmission.update({
+            where: { id: submissionId },
+            data: {
+                score: gradeDto.score,
+                feedback: gradeDto.feedback,
+                status: 'graded'
+            }
+        });
+    }
 };
 exports.AssignmentsService = AssignmentsService;
 exports.AssignmentsService = AssignmentsService = __decorate([

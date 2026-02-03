@@ -75,7 +75,7 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
                {/* Student Identity Card */}
                <div className="relative -mt-14 mb-8 bg-white rounded-xl shadow-lg border border-gray-100 p-6 flex flex-col md:flex-row gap-6 items-center md:items-start z-10">
                    <div className="h-28 w-28 rounded-full bg-indigo-100 flex items-center justify-center text-4xl font-bold text-indigo-600 border-4 border-white shadow-sm shrink-0">
-                      {student.name.charAt(0)}
+                      {(student.name || "").charAt(0).toUpperCase()}
                    </div>
                    <div className="flex-1 text-center md:text-left">
                       <h2 className="text-2xl font-bold text-gray-900">{student.name}</h2>
@@ -473,23 +473,25 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
   const [formStudent, setFormStudent] = useState<Partial<Student>>(defaultStudentState);
 
   // Fetch Students Logic
-  useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const response = await api.get('/students');
-        const mapped = response.data.map((s: any) => ({
-          ...s,
-          name: s.user?.name || 'Unknown',
-          email: s.user?.email || '',
-        }));
-        setStudents(mapped);
-      } catch (err) {
-        console.error("Failed to fetch students", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Fetch Students Logic
+  const fetchStudents = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/students');
+      const mapped = response.data.map((s: any) => ({
+        ...s,
+        name: s.user?.name || 'Unknown',
+        email: s.user?.email || '',
+      }));
+      setStudents(mapped);
+    } catch (err) {
+      console.error("Failed to fetch students", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     const fetchClasses = async () => {
         try {
             const response = await api.get('/classes');
@@ -594,22 +596,12 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
         setIsSubmitting(true);
         if (editingStudent) {
             const response = await api.patch(`/students/${editingStudent.id}`, studentPayload);
-            const updatedStudent = {
-                 ...response.data,
-                 name: response.data.user?.name || response.data.name,
-                 email: response.data.user?.email || response.data.email,
-                 username: response.data.user?.username || response.data.username,
-            };
-             setStudents(students.map(s => s.id === editingStudent.id ? updatedStudent : s));
+            // Re-fetch to guarantee data consistency
+            await fetchStudents();
         } else {
             const response = await api.post('/students', studentPayload);
-             const newStudent = {
-                ...response.data,
-                name: response.data.user?.name || studentPayload.name,
-                email: response.data.user?.email || studentPayload.email,
-                username: response.data.user?.username || studentPayload.username,
-            };
-            setStudents([...students, newStudent]);
+             // Re-fetch to guarantee data consistency
+            await fetchStudents();
         }
         setIsFormOpen(false);
     } catch (error) {
@@ -697,7 +689,7 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
                     <td className="px-6 py-4 pl-8">
                        <div className="flex items-center gap-4">
                          <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-sm font-bold text-slate-600 border border-slate-200 group-hover:border-indigo-200 group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors">
-                           {student.name.substring(0, 2).toUpperCase()}
+                           {(student.name || "").substring(0, 2).toUpperCase()}
                          </div>
                          <div>
                            <div className="font-bold text-gray-900 text-sm group-hover:text-indigo-700 transition-colors">{student.name}</div>

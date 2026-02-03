@@ -241,13 +241,13 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
 
   // --- Grading Logic ---
   const getTempStudentGrade = (studentId: string) => {
-      if (!currentSubjectId) return null;
-      const existing = tempGrades.find(g => g.studentId === studentId && g.subjectId === currentSubjectId);
+      // if (!currentSubjectId) return null; // Removed to prevent null return
+      const existing = currentSubjectId ? tempGrades.find(g => g.studentId === studentId && g.subjectId === currentSubjectId) : undefined;
       if (existing) return existing;
 
       return {
           studentId,
-          subjectId: currentSubjectId,
+          subjectId: currentSubjectId || '',
           oralScore: null,
           fifteenMinScores: [null, null, null],
           midTermScore: null,
@@ -752,7 +752,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
                             <tbody className="divide-y divide-gray-100">
                                 {classStudents.map(student => {
                                     const grade = getTempStudentGrade(student.id);
-                                    if (!grade) return null;
+                                    // if (!grade) return null; // Removed
 
                                     return (
                                         <tr key={student.id} className="hover:bg-gray-50/50 transition-colors group">

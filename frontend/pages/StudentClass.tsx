@@ -7,6 +7,7 @@ import {
   Flag, ArrowLeft, Send, Check, Menu, X, Timer, ArrowRight, ChevronLeft
 } from 'lucide-react';
 import { Assignment, User, LearningMaterial } from '../types';
+import api from '../src/api/client';
 
 // --- MOCK QUIZ DATA (Fallback) ---
 // Used only for the hardcoded assignments in constants.ts
@@ -37,61 +38,45 @@ export const StudentClass: React.FC<StudentClassProps> = ({ currentUser }) => {
   const [allMaterials, setAllMaterials] = useState<LearningMaterial[]>([]);
 
   useEffect(() => {
-      // 1. Get Teacher created assignments from LocalStorage
-      let teacherAssignments: any[] = [];
-      try {
-          const stored = localStorage.getItem('teacher_assignments');
-          if (stored) {
-              const parsed = JSON.parse(stored);
-              // Filter assignments assigned to this student's class
-              teacherAssignments = parsed.filter((a: any) => 
-                  a.classIds && a.classIds.includes(userClassId) && a.status === 'active'
-              ).map((a: any) => ({
-                  id: a.id,
-                  subjectId: a.subjectId,
-                  title: a.title,
-                  dueDate: a.dueDate,
-                  status: 'pending', // Default status for new items (in a real app, check submissions table)
-                  duration: a.duration,
-                  passwordAccess: a.passwordAccess,
-                  questions: a.questions
-              }));
-          }
-      } catch (e) {
-          console.error("Error loading teacher assignments", e);
-      }
+    const validClassId = userClassId || currentUser.classId || "CLASS_001"; // Fallback for dev
 
-      // 2. Combine with Mock Data (Legacy)
-      // We attach the fallback quiz data to mock assignments so they work too
-      const normalizedMock = MOCK_ASSIGNMENTS_STUDENT.map(m => ({
-          ...m,
-          duration: 45,
-          passwordAccess: '123456',
-          questions: MOCK_QUIZ_DATA_FALLBACK
-      }));
+    const fetchAssignments = async () => {
+        try {
+            const { data } = await api.get('/assignments');
+            // Filter assignments for this student's class
+            // In a real app, backend should filter.
+            const myAssignments = data.filter((a: any) => 
+                a.classIds && (a.classIds.includes(validClassId) || a.classIds.includes("ALL"))
+            ).map((a: any) => ({
+                id: a.id,
+                subjectId: a.subjectId || 'UNKNOWN', // Fallback
+                title: a.title,
+                dueDate: a.dueDate,
+                status: 'pending', // We need to check submissions to determine status, for now 'pending' or 'submitted' if found in local logic? 
+                // Actually we should fetch student's submissions to know status.
+                // For MVP, we'll assume pending unless we check locally or fetch submissions.
+                duration: a.duration,
+                passwordAccess: a.password || '', // Map backend 'password' to frontend 'passwordAccess'
+                questions: a.questions || []
+            }));
+            
+            // Check submissions logic could be added here if we had an endpoint for it
+            // For now, let's just show the assignments.
+            
+            setAllAssignments(myAssignments);
+        } catch (error) {
+            console.error("Failed to fetch assignments", error);
+            // Fallback to mock if API fails?
+            // setAllAssignments([...MOCK_ASSIGNMENTS_STUDENT]);
+        }
+    };
 
-      setAllAssignments([...teacherAssignments, ...normalizedMock]);
+    fetchAssignments();
 
-      // 3. Load Materials from LocalStorage + Mock
-      try {
-          const storedMaterials = localStorage.getItem('learning_materials');
-          const localMaterials = storedMaterials ? JSON.parse(storedMaterials) : [];
-          // Combine Mock and Local (De-duplicate by ID if necessary, though simplistic concat usually works for this demo)
-          // Ideally we should use a Map, but simplistic concat is okay if IDs are unique or we prioritize local
-          const combinedMaterials = [...MOCK_MATERIALS];
-          
-          localMaterials.forEach((m: LearningMaterial) => {
-              if (!combinedMaterials.find(existing => existing.id === m.id)) {
-                  combinedMaterials.push(m);
-              }
-          });
-          setAllMaterials(combinedMaterials);
-      } catch (e) {
-          console.error("Error loading materials", e);
-          setAllMaterials(MOCK_MATERIALS);
-      }
+    // Load Materials (Keep existing logic or fetch from API)
+    setAllMaterials(MOCK_MATERIALS);
 
-  }, [userClassId]);
+  }, [userClassId, currentUser.classId]);
 
   // Filter Materials for this student's class
   const classMaterials = useMemo(() => {
@@ -179,15 +164,32 @@ export const StudentClass: React.FC<StudentClassProps> = ({ currentUser }) => {
       setCurrentQuestionIndex(0);
   };
 
-  const handleSubmitQuiz = () => {
-    setShowSubmitConfirm(false);
-    setViewState('dashboard');
-    // Calculate simple stats
-    const totalQ = selectedAssignment?.questions?.length || 0;
-    const answered = Object.keys(quizAnswers).length;
-    
-    alert(`Nộp bài thành công!\nBạn đã trả lời ${answered}/${totalQ} câu hỏi.\nKết quả sẽ được giáo viên chấm và cập nhật sau.`);
-    // Here you would typically perform an API call to save results
+  const handleSubmitQuiz = async () => {
+    if (!selectedAssignment) return;
+
+    try {
+        await api.post(`/assignments/${selectedAssignment.id}/submit`, {
+            studentId: currentUser.id,
+            answers: quizAnswers
+        });
+
+        setShowSubmitConfirm(false);
+        setViewState('dashboard');
+        
+        // Calculate simple stats
+        const totalQ = selectedAssignment?.questions?.length || 0;
+        const answered = Object.keys(quizAnswers).length;
+        
+        alert(`Nộp bài thành công!\nBạn đã trả lời ${answered}/${totalQ} câu hỏi.\nKết quả sẽ được giáo viên chấm và cập nhật sau.`);
+        
+        // Refresh assignments to update status (if we had logic to show submitted)
+        // For now, maybe just locally mark it?
+        setAllAssignments(prev => prev.map(a => a.id === selectedAssignment.id ? { ...a, status: 'submitted' } : a));
+
+    } catch (error) {
+        console.error("Submit failed", error);
+        alert("Nộp bài thất bại. Vui lòng thử lại.");
+    }
   };
 
   const toggleFlag = (qId: string) => {

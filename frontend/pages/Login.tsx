@@ -52,7 +52,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
       const response = await api.post('/auth/login', { username, password, role });
       const { access_token, user } = response.data;
       
-      localStorage.setItem('access_token', access_token);
+      sessionStorage.setItem('access_token', access_token);
       
       // Transform backend user to frontend user type if needed
       // Backend user: { id, username, role, teacher: { id, ... }, student: { id, ... } }
@@ -67,7 +67,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
         classId: user.student?.classId
       };
 
-      localStorage.setItem('user_data', JSON.stringify(frontendUser));
+      sessionStorage.setItem('user_data', JSON.stringify(frontendUser));
       onLogin(frontendUser);
     } catch (err: any) {
       console.error('Login failed', err);

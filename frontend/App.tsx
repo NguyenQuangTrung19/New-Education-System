@@ -28,11 +28,11 @@ import { MOCK_NOTIFICATIONS } from './constants';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return !!localStorage.getItem('access_token');
+    return !!sessionStorage.getItem('access_token');
   });
   
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    const savedUser = localStorage.getItem('user_data');
+    const savedUser = sessionStorage.getItem('user_data');
     if (savedUser) {
       try {
         return JSON.parse(savedUser);
@@ -47,11 +47,11 @@ const App: React.FC = () => {
   const [showWelcome, setShowWelcome] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(() => {
-    return localStorage.getItem('app_current_page') || 'dashboard';
+    return sessionStorage.getItem('app_current_page') || 'dashboard';
   });
   
   const [navParams, setNavParams] = useState<any>(() => {
-    const savedParams = localStorage.getItem('app_nav_params');
+    const savedParams = sessionStorage.getItem('app_nav_params');
     try {
         return savedParams ? JSON.parse(savedParams) : null;
     } catch {
@@ -79,10 +79,10 @@ const App: React.FC = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user_data');
-    localStorage.removeItem('app_current_page');
-    localStorage.removeItem('app_nav_params');
+    sessionStorage.removeItem('access_token');
+    sessionStorage.removeItem('user_data');
+    sessionStorage.removeItem('app_current_page');
+    sessionStorage.removeItem('app_nav_params');
     
     setIsAuthenticated(false);
     setCurrentUser(null);
@@ -95,21 +95,21 @@ const App: React.FC = () => {
     setShowWelcome(false);
     if (targetPage && typeof targetPage === 'string') {
       setCurrentPage(targetPage);
-      localStorage.setItem('app_current_page', targetPage);
+      sessionStorage.setItem('app_current_page', targetPage);
     }
   };
 
   // Close sidebar on mobile when navigating
   const handleNavigate = (page: string, params?: any) => {
     setCurrentPage(page);
-    localStorage.setItem('app_current_page', page);
+    sessionStorage.setItem('app_current_page', page);
     
     if (params) {
       setNavParams(params);
-      localStorage.setItem('app_nav_params', JSON.stringify(params));
+      sessionStorage.setItem('app_nav_params', JSON.stringify(params));
     } else {
       setNavParams(null); // Clear params if not provided
-      localStorage.removeItem('app_nav_params');
+      sessionStorage.removeItem('app_nav_params');
     }
     
     if (window.innerWidth < 768) {
@@ -120,7 +120,7 @@ const App: React.FC = () => {
   // Handle User Update from Profile Page
   const handleUpdateUser = (updatedUser: User) => {
     setCurrentUser(updatedUser);
-    localStorage.setItem('user_data', JSON.stringify(updatedUser)); // Keep storage in sync
+    sessionStorage.setItem('user_data', JSON.stringify(updatedUser)); // Keep storage in sync
   };
 
   // Notification Handlers

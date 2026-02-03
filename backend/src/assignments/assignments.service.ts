@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { UpdateAssignmentDto } from './dto/update-assignment.dto';
+import { SubmitAssignmentDto } from './dto/submit-assignment.dto';
+import { GradeSubmissionDto } from './dto/grade-submission.dto';
 
 @Injectable()
 export class AssignmentsService {
@@ -58,5 +60,56 @@ export class AssignmentsService {
     return this.prisma.assignment.delete({
       where: { id },
     });
+  }
+
+  async submit(assignmentId: string, submitDto: SubmitAssignmentDto) {
+    const { studentId, answers } = submitDto;
+
+    // Check if assignment exists
+    const assignment = await this.prisma.assignment.findUnique({
+        where: { id: assignmentId }
+    });
+    if (!assignment) {
+        throw new Error('Assignment not found');
+    }
+
+    // Check if submission exists
+    const existing = await this.prisma.assignmentSubmission.findFirst({
+        where: {
+            assignmentId,
+            studentId
+        }
+    });
+
+    if (existing) {
+        return this.prisma.assignmentSubmission.update({
+            where: { id: existing.id },
+            data: {
+                answers,
+                submittedAt: new Date(),
+                status: 'submitted'
+            }
+        });
+    }
+
+    return this.prisma.assignmentSubmission.create({
+        data: {
+            assignmentId,
+            studentId,
+            answers,
+            status: 'submitted'
+        }
+    });
+  }
+
+  async grade(submissionId: string, gradeDto: GradeSubmissionDto) {
+      return this.prisma.assignmentSubmission.update({
+          where: { id: submissionId },
+          data: {
+              score: gradeDto.score,
+              feedback: gradeDto.feedback,
+              status: 'graded'
+          }
+      });
   }
 }

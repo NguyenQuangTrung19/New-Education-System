@@ -46,8 +46,19 @@ interface StoredAssignment extends NewAssignment {
   createdAt: string;
 }
 
+interface Submission {
+    id: string;
+    studentId: string;
+    student: { user: { name: string, email: string } };
+    submittedAt: string;
+    status: 'pending' | 'submitted' | 'late' | 'graded';
+    score?: number;
+    feedback?: string;
+    answers?: any;
+}
+
 export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentUser }) => {
-  const [view, setView] = useState<'list' | 'create'>('list');
+  const [view, setView] = useState<'list' | 'create' | 'submissions'>('list');
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
   
   // -- API State --
@@ -107,6 +118,13 @@ export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentU
   // Action State
   const [pendingAction, setPendingAction] = useState<'publish' | 'edit_access' | 'delete'>('publish');
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  // Submission View State
+  const [currentAssignmentForSubmissions, setCurrentAssignmentForSubmissions] = useState<StoredAssignment | null>(null);
+  const [submissionsList, setSubmissionsList] = useState<Submission[]>([]);
+  const [gradingSubmission, setGradingSubmission] = useState<Submission | null>(null);
+  const [gradeForm, setGradeForm] = useState({ score: 0, feedback: '' });
+  const [showGradeModal, setShowGradeModal] = useState(false);
 
   // Initial Empty State
   const initialAssignmentState: NewAssignment = {
@@ -395,13 +413,74 @@ export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentU
       alert(`Đang xuất kết quả bài tập "${assignmentTitle}" dưới dạng ${type.toUpperCase()}...\nFile sẽ tự động tải xuống sau giây lát.`);
   };
 
+  const handleViewSubmissions = async (e: React.MouseEvent, assignment: StoredAssignment) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setLoading(true);
+      try {
+          // Fetch specific assignment with submissions
+          // Assuming backend findOne includes submissions
+          const { data } = await api.get(`/assignments/${assignment.id}`);
+          // submissions might be inside data.submissions
+          const subs = data.submissions || [];
+          setSubmissionsList(subs);
+          setCurrentAssignmentForSubmissions(assignment);
+          setView('submissions');
+      } catch (error) {
+          console.error("Failed to load submissions", error);
+          alert("Không thể tải danh sách bài làm.");
+      } finally {
+          setLoading(false);
+      }
+  };
+
+  const openGradeModal = (sub: Submission) => {
+      setGradingSubmission(sub);
+      setGradeForm({
+          score: sub.score || 0,
+          feedback: sub.feedback || ''
+      });
+      setShowGradeModal(true);
+  };
+
+  const handleGradeSubmit = async () => {
+      if (!gradingSubmission) return;
+      try {
+          await api.patch(`assignments/submissions/${gradingSubmission.id}/grade`, {
+              score: Number(gradeForm.score),
+              feedback: gradeForm.feedback
+          });
+
+          // Update local list
+          setSubmissionsList(prev => prev.map(s => s.id === gradingSubmission.id ? {
+              ...s,
+              score: Number(gradeForm.score),
+              feedback: gradeForm.feedback,
+              status: 'graded'
+          } : s));
+
+          setShowGradeModal(false);
+          setGradingSubmission(null);
+          alert("Đã chấm điểm thành công!");
+      } catch (error) {
+          console.error("Grade failed", error);
+          alert("Lỗi khi lưu điểm.");
+      }
+  };
+
   // ... (Keep existing UI render helpers and main return)
   // Re-using existing renderQuestionEditor, view conditions, etc. 
   // Just ensuring imports and validateForm logic are updated.
 
   const renderQuestionEditor = () => {
     const q = newAssignment.questions[activeQuestionIndex];
-    if (!q) return null;
+    if (!q) {
+      return (
+        <div className="flex flex-col items-center justify-center p-8 text-center bg-gray-50 rounded-xl border border-dashed border-gray-300 h-64">
+           <p className="text-gray-500 font-medium">Select a question to edit content</p>
+        </div>
+      );
+    }
 
     return (
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 h-full flex flex-col">
@@ -611,6 +690,14 @@ export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentU
                               </div>
                               
                               <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                                  <button 
+                                      type="button"
+                                      onClick={(e) => handleViewSubmissions(e, asg)}
+                                      className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors z-50 relative cursor-pointer"
+                                      title="Xem danh sách nộp bài"
+                                  >
+                                      <Users className="h-4 w-4" />
+                                  </button>
                                   <button 
                                       type="button"
                                       onClick={(e) => handleEditRequest(e, asg)}

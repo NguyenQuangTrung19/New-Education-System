@@ -17,6 +17,8 @@ const common_1 = require("@nestjs/common");
 const assignments_service_1 = require("./assignments.service");
 const create_assignment_dto_1 = require("./dto/create-assignment.dto");
 const update_assignment_dto_1 = require("./dto/update-assignment.dto");
+const submit_assignment_dto_1 = require("./dto/submit-assignment.dto");
+const grade_submission_dto_1 = require("./dto/grade-submission.dto");
 let AssignmentsController = class AssignmentsController {
     assignmentsService;
     constructor(assignmentsService) {
@@ -36,6 +38,12 @@ let AssignmentsController = class AssignmentsController {
     }
     remove(id) {
         return this.assignmentsService.remove(id);
+    }
+    submit(id, submitDto) {
+        return this.assignmentsService.submit(id, submitDto);
+    }
+    grade(submissionId, gradeDto) {
+        return this.assignmentsService.grade(submissionId, gradeDto);
     }
 };
 exports.AssignmentsController = AssignmentsController;
@@ -74,6 +82,22 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], AssignmentsController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Post)(':id/submit'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, submit_assignment_dto_1.SubmitAssignmentDto]),
+    __metadata("design:returntype", void 0)
+], AssignmentsController.prototype, "submit", null);
+__decorate([
+    (0, common_1.Patch)('submissions/:submissionId/grade'),
+    __param(0, (0, common_1.Param)('submissionId')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, grade_submission_dto_1.GradeSubmissionDto]),
+    __metadata("design:returntype", void 0)
+], AssignmentsController.prototype, "grade", null);
 exports.AssignmentsController = AssignmentsController = __decorate([
     (0, common_1.Controller)('assignments'),
     __metadata("design:paramtypes", [assignments_service_1.AssignmentsService])

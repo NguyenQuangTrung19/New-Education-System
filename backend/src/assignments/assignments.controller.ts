@@ -2,6 +2,8 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { AssignmentsService } from './assignments.service';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { UpdateAssignmentDto } from './dto/update-assignment.dto';
+import { SubmitAssignmentDto } from './dto/submit-assignment.dto';
+import { GradeSubmissionDto } from './dto/grade-submission.dto';
 
 @Controller('assignments')
 export class AssignmentsController {
@@ -30,5 +32,15 @@ export class AssignmentsController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.assignmentsService.remove(id);
+  }
+
+  @Post(':id/submit')
+  submit(@Param('id') id: string, @Body() submitDto: SubmitAssignmentDto) {
+      return this.assignmentsService.submit(id, submitDto);
+  }
+
+  @Patch('submissions/:submissionId/grade')
+  grade(@Param('submissionId') submissionId: string, @Body() gradeDto: GradeSubmissionDto) {
+      return this.assignmentsService.grade(submissionId, gradeDto);
   }
 }
