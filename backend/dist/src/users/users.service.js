@@ -12,10 +12,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const password_service_1 = require("../common/password.service");
 let UsersService = class UsersService {
     prisma;
-    constructor(prisma) {
+    passwordService;
+    constructor(prisma, passwordService) {
         this.prisma = prisma;
+        this.passwordService = passwordService;
     }
     async findOne(username) {
         return this.prisma.user.findUnique({
@@ -27,8 +30,15 @@ let UsersService = class UsersService {
         });
     }
     async createUser(data) {
+        const plainPassword = data.password;
+        const hashedPassword = await this.passwordService.hashPassword(plainPassword);
+        const encryptedPassword = this.passwordService.encryptPassword(plainPassword);
         return this.prisma.user.create({
-            data,
+            data: {
+                ...data,
+                password: hashedPassword,
+                passwordEncrypted: encryptedPassword,
+            },
         });
     }
     async findById(id) {
@@ -37,21 +47,43 @@ let UsersService = class UsersService {
         });
     }
     async updatePassword(id, password) {
+        const hashedPassword = await this.passwordService.hashPassword(password);
+        const encryptedPassword = this.passwordService.encryptPassword(password);
         return this.prisma.user.update({
             where: { id },
-            data: { password }
+            data: { password: hashedPassword, passwordEncrypted: encryptedPassword }
         });
     }
     async getUserCredentials(id) {
-        return this.prisma.user.findUnique({
+        const user = await this.prisma.user.findUnique({
             where: { id },
-            select: { password: true }
+            select: { passwordEncrypted: true }
         });
+        if (!user?.passwordEncrypted) {
+            return { password: null };
+        }
+        const password = this.passwordService.decryptPassword(user.passwordEncrypted);
+        return { password };
+    }
+    async verifyPassword(id, plainPassword) {
+        const user = await this.prisma.user.findUnique({
+            where: { id },
+            select: { password: true, passwordEncrypted: true }
+        });
+        if (!user?.password)
+            return false;
+        const isValid = await this.passwordService.verifyPassword(plainPassword, user.password);
+        if (!isValid && !user.passwordEncrypted && user.password === plainPassword) {
+            await this.updatePassword(id, plainPassword);
+            return true;
+        }
+        return isValid;
     }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        password_service_1.PasswordService])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

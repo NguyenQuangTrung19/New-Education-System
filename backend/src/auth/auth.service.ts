@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 
@@ -11,23 +11,15 @@ export class AuthService {
 
   async validateUser(username: string, pass: string, role: string): Promise<any> {
     const user = await this.usersService.findOne(username);
-    // In a real app, use bcrypt.compare(pass, user.password)
-    // Also validate if the user's role matches the requested role
-    if (user && user.password === pass && user.role === role) {
-      const { password, ...result } = user;
+    if (user && await this.usersService.verifyPassword(user.id, pass) && user.role === role) {
+      const { password, passwordEncrypted, ...result } = user;
       return result;
     }
     return null;
   }
 
   async verifyPassword(userId: string, pass: string): Promise<boolean> {
-      // Find user by ID
-      const user = await this.usersService.findById(userId);
-      
-      if (user && user.password === pass) {
-          return true;
-      }
-      return false;
+      return this.usersService.verifyPassword(userId, pass);
   }
 
   async login(user: any) {

@@ -2,9 +2,10 @@
 import React, { useState, useRef } from 'react';
 import { User, UserRole } from '../types';
 import { 
-  User as UserIcon, Mail, Phone, MapPin, Camera, Lock, 
+  User as UserIcon, Mail, Phone, MapPin, Camera, Lock, Key,
   Shield, Check, X, Save, Edit2, AlertCircle 
 } from 'lucide-react';
+import api from '../src/api/client';
 
 interface ProfileProps {
   user: User;
@@ -16,6 +17,13 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser }) => {
   const [securityModalOpen, setSecurityModalOpen] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [error, setError] = useState('');
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -48,9 +56,10 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser }) => {
     setPasswordInput('');
   };
 
-  const handleFinalSave = () => {
-    // Mock password check
-    if (passwordInput === 'password') {
+  const handleFinalSave = async () => {
+    setError('');
+    try {
+      await api.post('/auth/verify-password', { password: passwordInput });
       const updatedUser: User = {
         ...user,
         name: formData.name,
@@ -60,8 +69,41 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser }) => {
       onUpdateUser(updatedUser);
       setSecurityModalOpen(false);
       setIsEditing(false);
-    } else {
+    } catch (err) {
       setError('Incorrect password. Please try again.');
+    }
+  };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError('');
+    if (newPassword.length < 8) {
+      setPasswordError('Password must be at least 8 characters.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New password and confirmation do not match.');
+      return;
+    }
+    if (currentPassword === newPassword) {
+      setPasswordError('New password must be different from current password.');
+      return;
+    }
+    try {
+      setPasswordLoading(true);
+      await api.patch('/users/me/password', { currentPassword, newPassword });
+      setPasswordSuccess(true);
+      setTimeout(() => {
+        setPasswordSuccess(false);
+        setPasswordModalOpen(false);
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      }, 1200);
+    } catch (err) {
+      setPasswordError('Failed to update password. Please try again.');
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
@@ -141,6 +183,12 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser }) => {
                    <span className="text-gray-400 font-medium">Disabled</span>
                 </div>
              </div>
+             <button
+               onClick={() => setPasswordModalOpen(true)}
+               className="mt-5 w-full py-2.5 flex items-center justify-center gap-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-500/30"
+             >
+               <Key className="w-4 h-4" /> Change Password
+             </button>
           </div>
         </div>
 
@@ -289,6 +337,82 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser }) => {
                  </div>
               </div>
            </div>
+        </div>
+      )}
+
+      {passwordModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-scale-in">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Key className="w-8 h-8 text-indigo-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">Change Password</h3>
+              <p className="text-gray-500 mt-2">Update your password securely.</p>
+            </div>
+
+            {passwordSuccess ? (
+              <div className="flex flex-col items-center justify-center py-6 text-emerald-600">
+                <Check className="w-10 h-10 mb-2" />
+                <p className="font-medium">Password updated successfully.</p>
+              </div>
+            ) : (
+              <form onSubmit={handlePasswordReset} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Current Password</label>
+                  <input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">New Password</label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Confirm New Password</label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                  />
+                </div>
+                {passwordError && (
+                  <div className="flex items-center text-red-500 text-sm">
+                    <AlertCircle className="w-4 h-4 mr-1" /> {passwordError}
+                  </div>
+                )}
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPasswordModalOpen(false)}
+                    className="flex-1 py-3 text-gray-600 font-medium bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={passwordLoading || !currentPassword || !newPassword || !confirmPassword}
+                    className={`flex-1 py-3 text-white font-bold rounded-xl shadow-md transition-colors ${
+                      passwordLoading || !currentPassword || !newPassword || !confirmPassword
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-indigo-600 hover:bg-indigo-700'
+                    }`}
+                  >
+                    {passwordLoading ? 'Saving...' : 'Save Password'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
         </div>
       )}
     </div>

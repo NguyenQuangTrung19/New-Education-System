@@ -13,12 +13,15 @@ exports.StudentsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const id_generator_service_1 = require("../common/id-generator.service");
+const password_service_1 = require("../common/password.service");
 let StudentsService = class StudentsService {
     prisma;
     idGenerator;
-    constructor(prisma, idGenerator) {
+    passwordService;
+    constructor(prisma, idGenerator, passwordService) {
         this.prisma = prisma;
         this.idGenerator = idGenerator;
+        this.passwordService = passwordService;
     }
     async findAll() {
         return this.prisma.student.findMany({
@@ -52,7 +55,9 @@ let StudentsService = class StudentsService {
     }
     async create(createStudentDto) {
         const { username, password, name, email, classId, ...studentData } = createStudentDto;
-        const hashedPassword = password || 'student123';
+        const plainPassword = password || 'student123';
+        const hashedPassword = await this.passwordService.hashPassword(plainPassword);
+        const encryptedPassword = this.passwordService.encryptPassword(plainPassword);
         return this.prisma.$transaction(async (prisma) => {
             const enrollmentYear = studentData.enrollmentYear || new Date().getFullYear();
             const studentId = await this.idGenerator.generateStudentId(enrollmentYear);
@@ -60,6 +65,7 @@ let StudentsService = class StudentsService {
                 data: {
                     username,
                     password: hashedPassword,
+                    passwordEncrypted: encryptedPassword,
                     name,
                     email,
                     role: 'STUDENT',
@@ -72,6 +78,7 @@ let StudentsService = class StudentsService {
                     classId: classId || null,
                     enrollmentYear,
                     address: studentData.address,
+                    gender: studentData.gender,
                     dateOfBirth: studentData.dateOfBirth ? new Date(studentData.dateOfBirth) : null,
                     gpa: studentData.gpa || 0.0,
                     guardianName: studentData.guardianName,
@@ -79,6 +86,8 @@ let StudentsService = class StudentsService {
                     guardianCitizenId: studentData.guardianCitizenId,
                     guardianJob: studentData.guardianJob,
                     guardianYearOfBirth: studentData.guardianYearOfBirth,
+                    semesterEvaluation: studentData.semesterEvaluation,
+                    notes: studentData.notes ?? [],
                 },
             });
             return { ...student, user };
@@ -98,9 +107,13 @@ let StudentsService = class StudentsService {
                 });
             }
         }
+        const normalizedStudentData = {
+            ...studentData,
+            dateOfBirth: studentData.dateOfBirth ? new Date(studentData.dateOfBirth) : undefined,
+        };
         return this.prisma.student.update({
             where: { id },
-            data: studentData,
+            data: normalizedStudentData,
         });
     }
     async remove(id) {
@@ -117,6 +130,7 @@ exports.StudentsService = StudentsService;
 exports.StudentsService = StudentsService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        id_generator_service_1.IdGeneratorService])
+        id_generator_service_1.IdGeneratorService,
+        password_service_1.PasswordService])
 ], StudentsService);
 //# sourceMappingURL=students.service.js.map

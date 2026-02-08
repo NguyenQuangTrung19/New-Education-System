@@ -1,5 +1,11 @@
 import { IsString, IsEmail, IsNotEmpty, IsOptional, 
-  IsNumber, Min, IsUUID } from 'class-validator';
+  IsNumber, IsArray, IsDateString, IsInt, Min, Max, MinLength, IsEnum } from 'class-validator';
+
+export enum Gender {
+  Male = 'Male',
+  Female = 'Female',
+  Other = 'Other',
+}
 
 export class CreateStudentDto {
   @IsString()
@@ -15,7 +21,12 @@ export class CreateStudentDto {
 
   @IsOptional()
   @IsString()
+  @MinLength(8)
   password?: string; // Optional, can generate default
+
+  @IsEnum(Gender)
+  @IsOptional()
+  gender?: Gender;
 
   @IsString()
   @IsOptional()
@@ -24,6 +35,16 @@ export class CreateStudentDto {
   @IsNumber()
   @IsOptional()
   enrollmentYear?: number;
+
+  @IsDateString()
+  @IsOptional()
+  dateOfBirth?: string;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  @Max(10)
+  gpa?: number;
 
   @IsString()
   @IsOptional()
@@ -40,6 +61,27 @@ export class CreateStudentDto {
   @IsString()
   @IsOptional()
   guardianPhone?: string;
+
+  @IsString()
+  @IsOptional()
+  guardianCitizenId?: string;
+
+  @IsInt()
+  @IsOptional()
+  guardianYearOfBirth?: number;
+
+  @IsString()
+  @IsOptional()
+  guardianJob?: string;
+
+  @IsString()
+  @IsOptional()
+  semesterEvaluation?: string;
+
+  @IsArray()
+  @IsOptional()
+  @IsString({ each: true })
+  notes?: string[];
 }
 
 export class UpdateStudentDto {
@@ -51,13 +93,27 @@ export class UpdateStudentDto {
   @IsOptional()
   email?: string;
 
+  @IsEnum(Gender)
+  @IsOptional()
+  gender?: Gender;
+
   @IsString()
   @IsOptional()
   classId?: string;
 
   @IsNumber()
   @IsOptional()
+  @Min(0)
+  @Max(10)
   gpa?: number;
+
+  @IsNumber()
+  @IsOptional()
+  enrollmentYear?: number;
+
+  @IsDateString()
+  @IsOptional()
+  dateOfBirth?: string;
   
   @IsString()
   @IsOptional()
@@ -66,4 +122,33 @@ export class UpdateStudentDto {
   @IsString()
   @IsOptional()
   phone?: string; // usually on User but simplified here
+
+  @IsString()
+  @IsOptional()
+  guardianName?: string;
+
+  @IsString()
+  @IsOptional()
+  guardianPhone?: string;
+
+  @IsString()
+  @IsOptional()
+  guardianCitizenId?: string;
+
+  @IsInt()
+  @IsOptional()
+  guardianYearOfBirth?: number;
+
+  @IsString()
+  @IsOptional()
+  guardianJob?: string;
+
+  @IsString()
+  @IsOptional()
+  semesterEvaluation?: string;
+
+  @IsArray()
+  @IsOptional()
+  @IsString({ each: true })
+  notes?: string[];
 }

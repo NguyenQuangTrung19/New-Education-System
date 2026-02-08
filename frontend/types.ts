@@ -27,9 +27,10 @@ export interface Student {
   password?: string; // Mật khẩu
   email: string;
   dateOfBirth: string; // YYYY-MM-DD
+  gender?: 'Male' | 'Female' | 'Other';
   enrollmentYear: number; // Năm vào học
   classId: string; // Lớp hiện tại
-  gpa: number; // Điểm TB hiện tại
+  gpa: number; // Điểm TB hiện tại (thang 10)
   address: string; // Địa chỉ
   
   // Guardian Info

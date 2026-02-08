@@ -130,11 +130,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
           avatarUrl: s.user?.avatarUrl
         }));
 
-        const mappedTeachers = tRes.data.map((t: any) => ({
-          ...t,
-          name: t.user?.name || 'Unknown',
-          email: t.user?.email || ''
-        }));
+        const mappedTeachers = tRes.data;
         
         // Classes usually don't need flattening but relations might differ
         setStudentsData(mappedStudents);
@@ -253,21 +249,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
            {/* Assignment Stats - Using Soft Mint/Coral for status */}
            <div className="md:col-span-2 bg-white rounded-3xl shadow-soft border border-slate-100 p-8 flex flex-col justify-between">
               <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-bold text-slate-800 text-xl flex items-center"><BookOpen className="h-6 w-6 mr-3 text-glacier-lake"/> Assignment Status</h3>
-                  <button onClick={() => onNavigate('student-class')} className="text-sm font-bold text-glacier-lake hover:bg-primary-50 px-4 py-2 rounded-xl transition-colors">View All</button>
+                  <h3 className="font-bold text-slate-800 text-xl flex items-center"><BookOpen className="h-6 w-6 mr-3 text-glacier-lake"/> {t('dashboard.assignments.status')}</h3>
+                  <button onClick={() => onNavigate('student-class')} className="text-sm font-bold text-glacier-lake hover:bg-primary-50 px-4 py-2 rounded-xl transition-colors">{t('dashboard.assignments.viewAll')}</button>
               </div>
               <div className="grid grid-cols-3 gap-6">
                  <div className="bg-orange-50 rounded-2xl p-5 text-center border border-orange-100 hover:shadow-md transition-shadow">
                     <p className="text-4xl font-black text-orange-400 mb-1">{assignmentStats.pending}</p>
-                    <p className="text-xs text-orange-600 font-bold uppercase tracking-wider">Pending</p>
+                    <p className="text-xs text-orange-600 font-bold uppercase tracking-wider">{t('dashboard.assignments.pending')}</p>
                  </div>
                  <div className="bg-emerald-50 rounded-2xl p-5 text-center border border-emerald-100 hover:shadow-md transition-shadow">
                     <p className="text-4xl font-black text-soft-mint mb-1">{assignmentStats.submitted}</p>
-                    <p className="text-xs text-emerald-600 font-bold uppercase tracking-wider">Done</p>
+                    <p className="text-xs text-emerald-600 font-bold uppercase tracking-wider">{t('dashboard.assignments.done')}</p>
                  </div>
                  <div className="bg-rose-50 rounded-2xl p-5 text-center border border-rose-100 hover:shadow-md transition-shadow">
                     <p className="text-4xl font-black text-muted-coral mb-1">{assignmentStats.late}</p>
-                    <p className="text-xs text-rose-600 font-bold uppercase tracking-wider">Late</p>
+                    <p className="text-xs text-rose-600 font-bold uppercase tracking-wider">{t('dashboard.assignments.late')}</p>
                  </div>
               </div>
            </div>
@@ -283,18 +279,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
                   <div>
                      <div className="flex items-center gap-2 mb-1 opacity-80">
                         <Calendar className="h-5 w-5"/>
-                        <span className="text-sm font-bold uppercase tracking-wide">Next Up</span>
+                        <span className="text-sm font-bold uppercase tracking-wide">{t('dashboard.timetable.nextUp')}</span>
                      </div>
                      <p className="text-white/80 text-sm font-medium">Monday, Period 1</p>
                   </div>
                   
                   <div className="py-6">
                      <h2 className="text-3xl font-black leading-tight mb-2">
-                        {nextLesson ? MOCK_SUBJECTS.find(s=>s.id === nextLesson.subjectId)?.name : 'Free Period'}
+                        {nextLesson ? MOCK_SUBJECTS.find(s=>s.id === nextLesson.subjectId)?.name : t('dashboard.timetable.freePeriod')}
                      </h2>
                      <div className="flex items-center gap-2 text-white bg-white/10 w-fit px-3 py-1 rounded-lg backdrop-blur-sm border border-white/20">
                         <School className="h-4 w-4"/> 
-                        <span className="font-mono text-sm">Room {nextLesson?.room || 'N/A'}</span>
+                        <span className="font-mono text-sm">{t('dashboard.timetable.room')} {nextLesson?.room || 'N/A'}</span>
                      </div>
                   </div>
                   
@@ -302,7 +298,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
                     onClick={() => onNavigate('timetable')} 
                     className="bg-white text-glacier-dark w-full py-3.5 rounded-xl font-bold text-sm hover:bg-gray-50 transition shadow-lg flex items-center justify-center gap-2"
                   >
-                     View Timetable <ArrowRight className="h-4 w-4"/>
+                     {t('dashboard.timetable.viewTimetable')} <ArrowRight className="h-4 w-4"/>
                   </button>
               </div>
            </div>
@@ -315,7 +311,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
                  <div className="p-2 bg-yellow-50 rounded-xl text-yellow-500 border border-yellow-100">
                     <Trophy className="h-6 w-6" />
                  </div>
-                 <h3 className="text-xl font-bold text-slate-900">Academic Leaderboard</h3>
+                 <h3 className="text-xl font-bold text-slate-900">{t('dashboard.leaderboard.title')}</h3>
               </div>
               <div className="bg-slate-50 p-1.5 rounded-xl flex text-sm font-bold border border-slate-100">
                  {['class', 'grade', 'school'].map((scope) => (
@@ -324,7 +320,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
                        onClick={() => setLeaderboardScope(scope as any)}
                        className={`px-5 py-2 rounded-lg transition-all capitalize ${leaderboardScope === scope ? 'bg-white text-glacier-dark shadow-sm ring-1 ring-black/5' : 'text-slate-400 hover:text-slate-600'}`}
                     >
-                       {scope}
+                       {t(`dashboard.leaderboard.${scope}` as any)}
                     </button>
                  ))}
               </div>
@@ -334,10 +330,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
               <table className="w-full text-left border-collapse">
                  <thead className="bg-slate-50 text-xs uppercase font-extrabold text-slate-400 tracking-wider">
                     <tr>
-                       <th className="px-6 py-4 text-center w-20">Rank</th>
-                       <th className="px-6 py-4">Student</th>
-                       <th className="px-6 py-4 text-center">Class</th>
-                       <th className="px-6 py-4 text-right">GPA</th>
+                       <th className="px-6 py-4 text-center w-20">{t('dashboard.leaderboard.rank')}</th>
+                       <th className="px-6 py-4">{t('dashboard.leaderboard.student')}</th>
+                       <th className="px-6 py-4 text-center">{t('dashboard.leaderboard.class')}</th>
+                       <th className="px-6 py-4 text-right">{t('dashboard.leaderboard.gpa')}</th>
                     </tr>
                  </thead>
                  <tbody className="divide-y divide-slate-100 bg-white">
@@ -356,7 +352,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
                                 </div>
                              </td>
                              <td className="px-6 py-4">
-                                <div className="font-bold text-slate-800 text-sm">{student.name} {isMe && <span className="ml-2 text-xs font-medium text-glacier-lake bg-primary-100 px-2 py-0.5 rounded-full">You</span>}</div>
+                                <div className="font-bold text-slate-800 text-sm">{student.name} {isMe && <span className="ml-2 text-xs font-medium text-glacier-lake bg-primary-100 px-2 py-0.5 rounded-full">{t('dashboard.leaderboard.you')}</span>}</div>
                              </td>
                              <td className="px-6 py-4 text-center text-sm font-medium text-slate-500">
                                 {MOCK_CLASSES.find(c => c.id === student.classId)?.name}
@@ -386,10 +382,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
           <div className="relative z-10 flex flex-col md:flex-row justify-between items-end gap-6">
               <div className="space-y-2">
                   <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/20 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider text-white mb-2">
-                      <Sparkles className="h-3 w-3" /> Dashboard Overview
+                      <Sparkles className="h-3 w-3" /> {t('dashboard.welcome.overview')}
                   </div>
-                  <h2 className="text-4xl md:text-5xl font-black tracking-tight">Welcome back, {currentUser?.name}</h2>
-                  <p className="text-sky-100 text-lg font-medium max-w-xl">Have a productive day managing the {SCHOOL_INFO.name} ecosystem.</p>
+                  <h2 className="text-4xl md:text-5xl font-black tracking-tight">{t('dashboard.welcome.message')} {currentUser?.name}</h2>
+                  <p className="text-sky-100 text-lg font-medium max-w-xl">{t('dashboard.welcome.subtitle').replace('{school}', SCHOOL_INFO.name)}</p>
               </div>
               <div className="bg-white/10 backdrop-blur-md border border-white/10 px-5 py-3 rounded-2xl flex items-center gap-3">
                   <Calendar className="h-5 w-5 text-white" />
@@ -404,14 +400,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
         <StatCard title={t('dashboard.totalStudents')} value={totalStudents.toLocaleString()} icon={Users} theme="glacier" trend="up" trendValue="12%" />
         <StatCard title={t('dashboard.totalTeachers')} value={totalTeachers} icon={GraduationCap} theme="mint" subtext={`${MOCK_SUBJECTS.length} Departments`} />
         <StatCard title={t('dashboard.activeClasses')} value={totalClasses} icon={School} theme="coral" subtext={`~${Math.round(totalStudents / totalClasses)} per class`} />
-        <StatCard title="School Avg GPA" value={avgGpa} icon={Award} theme="lavender" trend="up" trendValue="0.2 pts" />
+        <StatCard title={t('dashboard.stats.avgGpa')} value={avgGpa} icon={Award} theme="lavender" trend="up" trendValue="0.2 pts" />
       </div>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
          {[
-             { label: 'Add Teacher', sub: 'Manage Faculty', icon: PlusCircle, color: 'text-glacier-lake', bg: 'bg-primary-50', link: 'teachers' },
-             { label: 'Enrol Student', sub: 'Admissions', icon: BookUser, color: 'text-soft-mint', bg: 'bg-emerald-50', link: 'students' },
+             { label: t('dashboard.actions.addTeacher'), sub: t('dashboard.actions.manageFaculty'), icon: PlusCircle, color: 'text-glacier-lake', bg: 'bg-primary-50', link: 'teachers' },
+             { label: t('dashboard.actions.enrolStudent'), sub: t('dashboard.actions.admissions'), icon: BookUser, color: 'text-soft-mint', bg: 'bg-emerald-50', link: 'students' },
          ].map((action, idx) => (
              <button 
                 key={idx}
@@ -434,13 +430,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
         {/* Chart Area */}
         <div className="lg:col-span-2 bg-white p-8 rounded-3xl shadow-soft border border-slate-100 flex flex-col">
           <div className="flex justify-between items-center mb-8">
-              <h3 className="text-xl font-bold text-slate-900">Weekly Performance</h3>
+              <h3 className="text-xl font-bold text-slate-900">{t('dashboard.charts.weeklyPerformance')}</h3>
               <select className="bg-slate-50 border-none text-sm font-bold text-slate-600 rounded-lg p-2 cursor-pointer focus:ring-0">
-                  <option>Last 4 Weeks</option>
-                  <option>Last Semester</option>
+                  <option>{t('dashboard.charts.last4Weeks')}</option>
+                  <option>{t('dashboard.charts.lastSemester')}</option>
               </select>
           </div>
-          <div className="flex-1 min-h-[320px]">
+          <div className="h-[320px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={weeklyPerformanceData}>
                 <defs>
@@ -464,10 +460,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
         
         {/* Distribution Chart */}
         <div className="bg-white p-8 rounded-3xl shadow-soft border border-slate-100 flex flex-col">
-          <h3 className="text-xl font-bold text-slate-900 mb-2">{t('dashboard.studentDist')}</h3>
-          <p className="text-xs text-slate-400 font-medium mb-6">Gender distribution across all grades</p>
+          <h3 className="text-xl font-bold text-slate-900 mb-2">{t('dashboard.charts.genderDistribution')}</h3>
+          <p className="text-xs text-slate-400 font-medium mb-6">{t('dashboard.charts.genderSubtitle')}</p>
           
-          <div className="flex-1 min-h-[250px] relative">
+          <div className="h-[250px] w-full relative">
              <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie 
@@ -491,7 +487,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
             {/* Center Text */}
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
                <span className="text-4xl font-black text-slate-800 tracking-tighter">{totalStudents}</span>
-               <span className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mt-1">Students</span>
+               <span className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mt-1">{t('dashboard.chart.students')}</span>
             </div>
           </div>
         </div>

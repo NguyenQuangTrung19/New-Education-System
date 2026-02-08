@@ -22,18 +22,14 @@ let AuthService = class AuthService {
     }
     async validateUser(username, pass, role) {
         const user = await this.usersService.findOne(username);
-        if (user && user.password === pass && user.role === role) {
-            const { password, ...result } = user;
+        if (user && await this.usersService.verifyPassword(user.id, pass) && user.role === role) {
+            const { password, passwordEncrypted, ...result } = user;
             return result;
         }
         return null;
     }
     async verifyPassword(userId, pass) {
-        const user = await this.usersService.findById(userId);
-        if (user && user.password === pass) {
-            return true;
-        }
-        return false;
+        return this.usersService.verifyPassword(userId, pass);
     }
     async login(user) {
         const payload = { username: user.username, sub: user.id, role: user.role };

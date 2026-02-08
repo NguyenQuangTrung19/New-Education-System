@@ -114,7 +114,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
   }, [initialClassId]);
 
   if (currentUser.role !== UserRole.TEACHER) {
-      return <div className="p-8 text-center text-red-500">Access Denied. Teachers only.</div>;
+      return <div className="p-8 text-center text-red-500">{t('myClasses.accessDenied')}</div>;
   }
 
   // --- Helper Functions ---
@@ -353,7 +353,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
       setHasUnsavedChanges(false);
       setPendingAction(null);
       setIsSecurityModalOpen(false);
-      alert("Grades successfully updated!");
+      alert(t('myClasses.alerts.gradesUpdated'));
   };
 
   const executeFeedbackSubmission = () => {
@@ -374,7 +374,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
       setFeedbackModalOpen(false);
       setPendingAction(null);
       setIsSecurityModalOpen(false);
-      alert(t('myClasses.evaluations.saved') || "Feedback signed and submitted successfully.");
+      alert(t('myClasses.alerts.feedbackSubmitted'));
   };
 
   // The Action Trigger (Checks session)
@@ -414,7 +414,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
           if (pendingAction === 'grades') commitGrades();
           if (pendingAction === 'feedback') executeFeedbackSubmission();
       } else {
-          setSecurityError("Incorrect password.");
+          setSecurityError(t('myClasses.alerts.incorrectPassword'));
       }
   };
 
@@ -557,19 +557,19 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
                   <div>
                       <h2 className="text-3xl font-bold mb-2 flex items-center">
                           {totalPending > 0 ? <AlertTriangle className="h-8 w-8 mr-3" /> : <CheckCircle className="h-8 w-8 mr-3" />}
-                          {totalPending > 0 ? 'Action Required' : 'All Caught Up!'}
+                          {totalPending > 0 ? t('myClasses.dashboard.actionRequired') : t('myClasses.dashboard.allCaughtUp')}
                       </h2>
                       <p className="text-white/90 text-lg">
                           {totalPending > 0 
-                            ? `You have ${totalPending} finished lessons waiting for your signature in the teaching journal this week.` 
-                            : 'You have signed all teaching journals for completed lessons this week. Great job!'}
+                            ? t('myClasses.dashboard.pendingMessage').replace('{count}', totalPending.toString())
+                            : t('myClasses.dashboard.allCaughtUpMessage')}
                       </p>
                   </div>
                   
                   {/* Stats Circle */}
                   <div className="bg-white/20 backdrop-blur-md rounded-full h-32 w-32 flex flex-col items-center justify-center border-4 border-white/30 shrink-0 shadow-inner">
                       <span className="text-4xl font-bold">{totalPending}</span>
-                      <span className="text-xs uppercase font-bold tracking-wider">Pending</span>
+                      <span className="text-xs uppercase font-bold tracking-wider">{t('myClasses.dashboard.pendingLabel')}</span>
                   </div>
               </div>
 
@@ -591,7 +591,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
                                   </div>
                                   <div className="text-left">
                                       <p className="font-bold text-sm">{item.className}</p>
-                                      <p className="text-xs text-gray-500">Unsigned Lessons</p>
+                                      <p className="text-xs text-gray-500">{t('myClasses.dashboard.unsignedLessons')}</p>
                                   </div>
                               </div>
                               <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-orange-500 transition-colors" />
@@ -623,7 +623,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
                   >
                       {classPending > 0 && (
                           <div className="absolute top-0 right-0 z-10 bg-rose-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl shadow-sm animate-pulse">
-                              {classPending} Pending Signatures
+                              {classPending} {t('myClasses.dashboard.pendingSignatures')}
                           </div>
                       )}
 
@@ -634,14 +634,14 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
                           <h4 className="text-white font-bold text-2xl tracking-tight">{cls.name}</h4>
                           {isHomeroomClass && (
                               <span className="bg-white/20 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center">
-                                  <Home className="h-3 w-3 mr-1" /> Homeroom
+                                  <Home className="h-3 w-3 mr-1" /> {t('myClasses.dashboard.homeroom')}
                               </span>
                           )}
                       </div>
                       
                       <div className="p-5 flex-1 flex flex-col">
                           <div className="mb-4">
-                              <p className="text-xs font-bold text-gray-400 uppercase mb-1">Subject</p>
+                              <p className="text-xs font-bold text-gray-400 uppercase mb-1">{t('myClasses.dashboard.subject')}</p>
                               <p className="text-gray-900 font-medium truncate">{subjectName}</p>
                           </div>
                           
@@ -655,7 +655,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
                           </div>
 
                           <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between text-indigo-600 text-sm font-bold group-hover:text-indigo-800 transition-colors">
-                              <span>Go to Workspace</span>
+                              <span>{t('myClasses.dashboard.goToWorkspace')}</span>
                               <ArrowRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
                           </div>
                       </div>
@@ -663,7 +663,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
               )})}
               {myClasses.length === 0 && (
                   <div className="col-span-3 text-center py-12 bg-white rounded-xl border border-dashed border-gray-300 text-gray-500">
-                      No assigned classes found.
+                      {t('myClasses.dashboard.noClasses')}
                   </div>
               )}
            </div>
@@ -688,7 +688,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
                     )}
                     <span className="text-sm font-normal text-gray-500 bg-white px-2 py-1 rounded border border-gray-200">{selectedClass?.room}</span>
                 </h2>
-                <p className="text-sm text-indigo-600 font-medium">Subject: {MOCK_SUBJECTS.find(s=>s.id === currentSubjectId)?.name || 'N/A'}</p>
+                <p className="text-sm text-indigo-600 font-medium">{t('myClasses.dashboard.subject')}: {MOCK_SUBJECTS.find(s=>s.id === currentSubjectId)?.name || 'N/A'}</p>
             </div>
             
             {/* View Switcher / Navigation */}
@@ -740,7 +740,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
                             <thead className="bg-gray-50 sticky top-0 z-20 border-b border-gray-200 shadow-sm">
                                 <tr className="text-xs uppercase font-bold text-gray-500 tracking-wider">
                                     <th className="px-6 py-4 sticky left-0 bg-gray-50 z-30 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] w-64 border-r border-gray-200">
-                                        Student
+                                        {t('myClasses.student')}
                                     </th>
                                     <th className="px-4 py-4 text-center w-32 bg-blue-50/50 border-r border-blue-100">{t('myClasses.oral')} (x1)</th>
                                     <th className="px-4 py-4 text-center min-w-[240px] bg-indigo-50/50 border-r border-indigo-100">{t('myClasses.15min')} (x1)</th>

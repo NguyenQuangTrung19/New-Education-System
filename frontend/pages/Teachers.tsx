@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { MOCK_TEACHERS, MOCK_CLASSES, MOCK_SUBJECTS } from '../constants';
-import { Teacher, User, UserRole } from '../types';
+import { MOCK_TEACHERS, MOCK_CLASSES } from '../constants';
+import { Teacher, User, UserRole, ClassGroup } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { 
   Search, Plus, Mail, Phone, BookOpen, Eye, X, 
   Clock, Users, GraduationCap, Check, User as UserIcon, MessageSquare, Send, 
-  MapPin, Calendar, CreditCard, Lock, Trash2, Pencil, ChevronRight, Briefcase, EyeOff, ShieldCheck, AlertTriangle, Key
+  MapPin, Calendar, CreditCard, Lock, Trash2, Pencil, ChevronRight, Briefcase, EyeOff, ShieldCheck, AlertTriangle, Key, Download
 } from 'lucide-react';
 import { calculateAge, isValidPhone, isValidCitizenId, toTitleCase } from '../utils';
 import api from '../src/api/client';
 import ReAuthModal from '../components/ReAuthModal';
 import PasswordManagementModal from '../components/PasswordManagementModal';
 import CredentialRevealModal from '../components/CredentialRevealModal';
+import ExcelImportModal from '../components/ExcelImportModal';
 
 interface TeachersProps {
   currentUser: User | null;
@@ -147,7 +148,9 @@ const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({ teacher, onClos
                              </div>
                               <div>
                                  <label className="text-xs text-gray-400 font-medium uppercase block mb-1">{t('teacher.gender')}</label>
-                                 <div className="text-sm font-medium text-gray-900">{teacher.gender}</div>
+                                 <div className="text-sm font-medium text-gray-900">
+                                     {t(`common.${(teacher.gender || 'Male').toLowerCase()}`)}
+                                 </div>
                              </div>
                          </div>
                      </div>
@@ -313,12 +316,12 @@ const SlideOverForm: React.FC<SlideOverFormProps & { isLoading?: boolean }> = ({
                      </div>
                      <div className="space-y-4">
                         <div>
-                           <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Full Name <span className="text-red-500">*</span></label>
+                           <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('student.name')} <span className="text-red-500">*</span></label>
                            <input type="text" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" placeholder="e.g. Sarah Connor" value={formTeacher.name} onChange={e => setFormTeacher({...formTeacher, name: e.target.value})} disabled={isLoading} />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                              <div>
-                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Username <span className="text-red-500">*</span></label>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('teacher.username')} <span className="text-red-500">*</span></label>
                                 <input 
                                     type="text" 
                                     required 
@@ -329,20 +332,20 @@ const SlideOverForm: React.FC<SlideOverFormProps & { isLoading?: boolean }> = ({
                                 />
                              </div>
                              <div>
-                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Join Year</label>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('teacher.joinYear')}</label>
                                 <input type="number" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.joinYear} onChange={e => setFormTeacher({...formTeacher, joinYear: parseInt(e.target.value) || new Date().getFullYear()})} disabled={isLoading} />
                              </div>
                         </div>
                         {!isEditing && (
                         <div>
-                             <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Password <span className="text-red-500">*</span></label>
+                             <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('teacher.password')} <span className="text-red-500">*</span></label>
                              <input type="password" placeholder="••••••" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.password} onChange={e => setFormTeacher({...formTeacher, password: e.target.value})} disabled={isLoading} />
                         </div>
                         )}
                         {isEditing && (
                              <div className="flex items-end">
                                  <button type="button" onClick={onChangePassword} className="w-full py-2.5 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors text-sm font-bold flex items-center justify-center" disabled={isLoading}>
-                                     <Key className="h-4 w-4 mr-2" /> Change Password
+                                     <Key className="h-4 w-4 mr-2" /> {t('common.changePassword')}
                                  </button>
                              </div>
                         )}
@@ -358,32 +361,32 @@ const SlideOverForm: React.FC<SlideOverFormProps & { isLoading?: boolean }> = ({
                      <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                              <div>
-                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Date of Birth <span className="text-red-500">*</span></label>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('teacher.dob')} <span className="text-red-500">*</span></label>
                                 <input type="date" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.dateOfBirth ? new Date(formTeacher.dateOfBirth).toISOString().split('T')[0] : ''} onChange={e => setFormTeacher({...formTeacher, dateOfBirth: e.target.value})} disabled={isLoading} />
                              </div>
                              <div>
-                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Gender</label>
-                                <select className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.gender} onChange={e => setFormTeacher({...formTeacher, gender: e.target.value as any})} disabled={isLoading}>
-                                   <option value="Male">Male</option>
-                                   <option value="Female">Female</option>
-                                   <option value="Other">Other</option>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('teacher.gender')}</label>
+                                 <select className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.gender} onChange={e => setFormTeacher({...formTeacher, gender: e.target.value as any})} disabled={isLoading}>
+                                   <option value="Male">{t('common.male')}</option>
+                                   <option value="Female">{t('common.female')}</option>
+                                   <option value="Other">{t('common.other')}</option>
                                 </select>
                              </div>
                         </div>
                         <div>
-                           <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Citizen ID (12 số) <span className="text-red-500">*</span></label>
+                           <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('teacher.citizenId')} (12 số) <span className="text-red-500">*</span></label>
                            <input type="text" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.citizenId} onChange={e => setFormTeacher({...formTeacher, citizenId: e.target.value})} disabled={isLoading} />
                         </div>
                         <div>
-                           <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Email <span className="text-red-500">*</span></label>
+                           <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('teacher.email')} <span className="text-red-500">*</span></label>
                            <input type="email" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.email} onChange={e => setFormTeacher({...formTeacher, email: e.target.value})} disabled={isLoading} />
                         </div>
                         <div>
-                           <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Phone <span className="text-red-500">*</span></label>
+                           <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('teacher.phone')} <span className="text-red-500">*</span></label>
                            <input type="tel" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" placeholder="0xxxxxxxxx" value={formTeacher.phone} onChange={e => setFormTeacher({...formTeacher, phone: e.target.value})} disabled={isLoading} />
                         </div>
                         <div>
-                           <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Address</label>
+                           <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('teacher.address')}</label>
                            <input type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.address} onChange={e => setFormTeacher({...formTeacher, address: e.target.value})} disabled={isLoading} />
                         </div>
                      </div>
@@ -396,13 +399,13 @@ const SlideOverForm: React.FC<SlideOverFormProps & { isLoading?: boolean }> = ({
                         <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide">{t('teachers.form.expertise')}</h3>
                      </div>
                      <div>
-                        <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Subjects</label>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('teacher.subjects')}</label>
                         <select 
                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none mb-3"
                            onChange={(e) => { handleAddSubject(e.target.value); e.target.value = ''; }}
                            disabled={isLoading}
                         >
-                           <option value="">+ Add Subject</option>
+                           <option value="">+ {t('common.addSubject')}</option>
                            {availableSubjects.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
                         <div className="flex flex-wrap gap-2">
@@ -430,7 +433,7 @@ const SlideOverForm: React.FC<SlideOverFormProps & { isLoading?: boolean }> = ({
                   {isLoading ? (
                     <>
                         <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                        Saving...
+                        {t('common.saving')}
                     </>
                   ) : (
                     <>
@@ -452,6 +455,8 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
   const { t } = useLanguage();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(true);
+  const [classes, setClasses] = useState<ClassGroup[]>([]);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -541,29 +546,31 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
   };
 
   const isAdmin = currentUser?.role === UserRole.ADMIN;
-  const availableSubjects = Array.from(new Set(MOCK_SUBJECTS.map(s => s.name)));
+  const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
 
-  // Fetch Teachers
-  const fetchTeachers = async () => {
+  // Fetch Teachers & Subjects
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/teachers');
-      const mapped = res.data.map((t: any) => ({
-         ...t,
-         name: t.user?.name || 'Unknown',
-         email: t.user?.email || '',
-         username: t.user?.username || '',
-      }));
-      setTeachers(mapped);
+      const [teachersRes, subjectsRes] = await Promise.all([
+         api.get('/teachers'),
+         api.get('/subjects')
+      ]);
+      setTeachers(teachersRes.data);
+      
+      // Extract subject names for the dropdown
+      const subjectNames = subjectsRes.data.map((s: any) => s.name);
+      setAvailableSubjects(subjectNames);
+
     } catch (e) {
-      console.error("Failed to fetch teachers", e);
+      console.error("Failed to fetch data", e);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchTeachers();
+    fetchData();
   }, []);
 
   const filteredTeachers = teachers.filter(t => 
@@ -683,7 +690,7 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
             const response = await api.patch(`/teachers/${editingTeacher.id}`, teacherData);
             // RELOAD DATA FROM SERVER TO ENSURE CONSISTENCY
             // This prevents "partial update" bugs where the backend response lacks relations (like User).
-            await fetchTeachers();
+            await fetchData();
             
             // Still update selectedTeacher if it's open, but fetchTeachers might reset list, so we must be careful.
             // Actually, fetchTeachers updates 'teachers' state. 
@@ -695,7 +702,7 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
             // simpler: Just refetch.
         } else {
             const response = await api.post('/teachers', teacherData);
-             await fetchTeachers();
+             await fetchData();
         }
         setTimeout(() => {
             setIsFormOpen(false);
@@ -739,9 +746,18 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
                 />
              </div>
              {isAdmin && (
-             <button onClick={handleOpenAdd} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-indigo-500/30 transition-all flex items-center whitespace-nowrap">
-                <Plus className="h-5 w-5 mr-2" /> {t('teachers.add')}
-             </button>
+             <div className="flex gap-2">
+                 <button 
+                  onClick={() => setIsImportModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition shadow-lg hover:shadow-emerald-500/30 transform hover:-translate-y-0.5"
+                 >
+                  <Download className="h-5 w-5" />
+                  <span className="hidden sm:inline font-bold">{t('import.title')}</span>
+                 </button>
+                 <button onClick={handleOpenAdd} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-indigo-500/30 transition-all flex items-center whitespace-nowrap">
+                   <Plus className="h-5 w-5 mr-2" /> {t('teachers.add')}
+                 </button>
+             </div>
              )}
         </div>
       </div>
@@ -871,6 +887,13 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
         isOpen={revealModalOpen}
         onClose={() => setRevealModalOpen(false)}
         credentials={revealedCredentials}
+      />
+
+      <ExcelImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        type="teachers"
+        onSuccess={fetchData}
       />
 
       {isSubmitting && (

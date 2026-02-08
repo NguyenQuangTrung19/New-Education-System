@@ -4,17 +4,8 @@ export declare class CreateAssignmentDto {
     subjectId: string;
     teacherId: string;
     classIds?: string[];
-    dueDate: string | Date;
+    dueDate: string;
     duration?: number;
     password?: string;
     questions?: any;
-}
-export declare class UpdateAssignmentDto {
-    title?: string;
-    description?: string;
-    dueDate?: string | Date;
-    duration?: number;
-    password?: string;
-    questions?: any;
-    status?: 'pending' | 'submitted' | 'late' | 'graded';
 }

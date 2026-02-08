@@ -16,7 +16,7 @@ type InfoTab = 'about' | 'contact' | 'credit';
 export const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const { t } = useLanguage();
   const [role, setRole] = useState<UserRole>(UserRole.ADMIN);
-  const [username, setUsername] = useState('sarah.connor');
+  const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('password123');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -30,15 +30,14 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setRole(newRole);
     // Pre-fill for demo purposes based on seed data
     if (newRole === UserRole.TEACHER) {
-      setUsername('sarah.connor');
+      setUsername('gv.nguyenvanan');
       setPassword('password123');
     } else if (newRole === UserRole.STUDENT) {
-      setUsername('alice.j');
+      setUsername('hs.lethimai');
       setPassword('password123');
     } else {
-        // Admin user not seeded yet, fallback
       setUsername('admin');
-      setPassword('password');
+      setPassword('password123');
     }
     setError(null);
   };

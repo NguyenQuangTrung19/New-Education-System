@@ -265,12 +265,12 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
                   </td>
                   <td className="px-6 py-4">
                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">
-                        Grade {cls.gradeLevel}
+                        {t('class.grade')} {cls.gradeLevel}
                      </span>
                   </td>
                   <td className="px-6 py-4">
                      <div>
-                        <span className="font-bold text-gray-900 text-sm">{cls.studentCount} Total</span>
+                        <span className="font-bold text-gray-900 text-sm">{cls.studentCount} {t('teachers.modal.students')}</span>
                         <div className="text-xs flex gap-2 mt-0.5">
                             <span className="text-blue-500 font-medium">{cls.maleStudentCount} M</span>
                             <span className="text-pink-500 font-medium">{cls.femaleStudentCount} F</span>
@@ -284,7 +284,7 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
                      <div className="flex items-center gap-3">
                         <div className="text-center">
                             <div className="text-xs text-gray-400 uppercase font-bold">GPA</div>
-                            <div className={`font-bold text-sm ${cls.averageGpa >= 3.5 ? 'text-emerald-600' : 'text-gray-700'}`}>{cls.averageGpa}</div>
+                            <div className={`font-bold text-sm ${cls.averageGpa >= 8.0 ? 'text-emerald-600' : 'text-gray-700'}`}>{cls.averageGpa}</div>
                         </div>
                         <div className="h-8 w-px bg-gray-200"></div>
                         <div className="text-center">
@@ -397,7 +397,7 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({ editingClass, formClass, 
                       <div>
                          <label className="block text-xs font-semibold text-gray-500 mb-1">{t('class.homeroomTeacher')}</label>
                           <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white" value={formClass.teacherId} onChange={e => setFormClass({...formClass, teacherId: e.target.value})}>
-                             <option value="">Select Homeroom Teacher</option>
+                             <option value="">{t('timetable.selectTeacher')}</option>
                              {teachers.map(t => <option key={t.id} value={t.id}>{t.name} ({t.subjects?.join(', ') || 'N/A'})</option>)}
                           </select>
                       </div>
@@ -417,7 +417,7 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({ editingClass, formClass, 
                           </div>
                           <div>
                              <label className="block text-xs font-semibold text-gray-500 mb-1">{t('class.avgGpa')}</label>
-                             <input type="number" step="0.1" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" value={formClass.averageGpa} onChange={e => setFormClass({...formClass, averageGpa: parseFloat(e.target.value)})} />
+                             <input type="number" step="0.1" max="10" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" value={formClass.averageGpa} onChange={e => setFormClass({...formClass, averageGpa: parseFloat(e.target.value)})} />
                           </div>
                           <div>
                              <label className="block text-xs font-semibold text-gray-500 mb-1">{t('class.male')}</label>
@@ -561,10 +561,10 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ classGroup, onClose
                        {/* Right: Info & Notes */}
                        <div className="space-y-6">
                            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                               <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">Information</h3>
+                               <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">{t('common.information')}</h3>
                                <div className="space-y-4">
                                    <div>
-                                       <label className="text-xs text-gray-500 font-bold uppercase block mb-1">Homeroom Teacher</label>
+                                       <label className="text-xs text-gray-500 font-bold uppercase block mb-1">{t('class.homeroomTeacher')}</label>
                                        <div className="flex items-center gap-2">
                                            <div className="h-8 w-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
                                                {teacherName.charAt(0)}
@@ -573,7 +573,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ classGroup, onClose
                                        </div>
                                    </div>
                                    <div>
-                                       <label className="text-xs text-gray-500 font-bold uppercase block mb-1">Description</label>
+                                       <label className="text-xs text-gray-500 font-bold uppercase block mb-1">{t('class.description')}</label>
                                        <p className="text-sm text-gray-600 italic">{classGroup.description}</p>
                                    </div>
                                </div>
@@ -582,7 +582,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ classGroup, onClose
                            <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
                               <div className="px-6 py-4 border-b border-gray-200 bg-gray-100/50 flex items-center gap-2">
                                   <MessageSquare className="h-4 w-4 text-gray-500" />
-                                  <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Notes</h3>
+                                  <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">{t('teachers.modal.notes')}</h3>
                               </div>
                               <div className="p-6">
                                   <div className="space-y-2 mb-4 max-h-40 overflow-y-auto custom-scrollbar">

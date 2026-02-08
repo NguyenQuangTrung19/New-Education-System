@@ -1,38 +1,63 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { IdGeneratorService } from '../common/id-generator.service';
+import { PasswordService } from '../common/password.service';
 
 @Injectable()
 export class TeachersService {
   constructor(
     private prisma: PrismaService,
-    private idGenerator: IdGeneratorService
+    private idGenerator: IdGeneratorService,
+    private passwordService: PasswordService
   ) {}
 
   async findAll() {
-    return this.prisma.teacher.findMany({
+    const teachers = await this.prisma.teacher.findMany({
       include: {
         user: { select: { name: true, email: true, avatarUrl: true, username: true } },
         classes: true,
       }
     });
+
+    return teachers.map(teacher => {
+      const { user, ...rest } = teacher;
+      return {
+        ...rest,
+        name: user.name,
+        email: user.email,
+        username: user.username,
+        avatarUrl: user.avatarUrl,
+      };
+    });
   }
 
   async findOne(id: string) {
-    return this.prisma.teacher.findUnique({
+    const teacher = await this.prisma.teacher.findUnique({
       where: { id },
       include: {
-        user: true,
+        user: { select: { name: true, email: true, avatarUrl: true, username: true } },
         classes: true,
         teachingAssignments: { include: { subject: true, class: true } },
-        
       }
     });
+
+    if (!teacher) return null;
+
+    const { user, ...rest } = teacher;
+    return {
+      ...rest,
+      name: user.name,
+      email: user.email,
+      username: user.username,
+      avatarUrl: user.avatarUrl,
+    };
   }
   async create(createTeacherDto: any) {
     const { username, password, name, email, subjects, ...teacherData } = createTeacherDto;
     
-    const hashedPassword = password || 'teacher123';
+    const plainPassword = password || 'teacher123';
+    const hashedPassword = await this.passwordService.hashPassword(plainPassword);
+    const encryptedPassword = this.passwordService.encryptPassword(plainPassword);
 
     return this.prisma.$transaction(async (prisma) => {
       const joinYear = teacherData.joinYear || new Date().getFullYear();
@@ -42,6 +67,7 @@ export class TeachersService {
         data: {
           username, 
           password: hashedPassword,
+          passwordEncrypted: encryptedPassword,
           name,
           email,
           role: 'TEACHER',
@@ -60,6 +86,8 @@ export class TeachersService {
           dateOfBirth: teacherData.dateOfBirth ? new Date(teacherData.dateOfBirth) : null,
           // subjects logic would go here, simplified for now
           subjects: subjects || [],
+          classesAssigned: teacherData.classesAssigned ?? 0,
+          notes: teacherData.notes ?? [],
         },
       });
       
@@ -68,9 +96,8 @@ export class TeachersService {
   }
 
   async update(id: string, updateTeacherDto: any) {
-     // Destructure to separate User fields, Teacher fields, and fields to IGNORE (username, password, id, notes)
-     // notes is sent by frontend but not in Teacher schema
-     const { name, email, username, password, user, id: _id, notes, ...teacherData } = updateTeacherDto;
+     // Destructure to separate User fields, Teacher fields, and fields to IGNORE (username, password, id)
+     const { name, email, username, password, user, id: _id, ...teacherData } = updateTeacherDto;
      
      if (name || email) {
         const teacher = await this.prisma.teacher.findUnique({ where: { id } });
@@ -82,9 +109,14 @@ export class TeachersService {
         }
      }
 
+     const normalizedTeacherData = {
+       ...teacherData,
+       dateOfBirth: teacherData.dateOfBirth ? new Date(teacherData.dateOfBirth) : undefined,
+     };
+
      return this.prisma.teacher.update({
        where: { id },
-       data: teacherData,
+       data: normalizedTeacherData,
      });
   }
 

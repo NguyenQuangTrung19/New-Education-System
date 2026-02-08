@@ -21,6 +21,7 @@ export declare class ScheduleController {
                 username: string;
                 email: string;
                 password: string;
+                passwordEncrypted: string | null;
                 name: string;
                 role: import(".prisma/client").$Enums.UserRole;
                 avatarUrl: string | null;
@@ -35,13 +36,16 @@ export declare class ScheduleController {
             gender: import(".prisma/client").$Enums.Gender | null;
             dateOfBirth: Date | null;
             joinYear: number | null;
+            department: string | null;
             subjects: string[];
             classesAssigned: number;
+            notes: string[];
             userId: string;
         }) | null;
         class: {
             id: string;
             name: string;
+            notes: string[];
             gradeLevel: number;
             room: string | null;
             academicYear: string;
@@ -49,13 +53,17 @@ export declare class ScheduleController {
             description: string | null;
             averageGpa: number;
             currentWeeklyScore: number;
+            studentCount: number;
+            maleStudentCount: number;
+            femaleStudentCount: number;
+            weeklyScoreHistory: import("@prisma/client/runtime/library").JsonValue;
         };
         subject: {
             id: string;
             name: string;
+            department: string | null;
             description: string | null;
             code: string;
-            department: string | null;
         };
     } & {
         id: string;
@@ -74,6 +82,7 @@ export declare class ScheduleController {
                 username: string;
                 email: string;
                 password: string;
+                passwordEncrypted: string | null;
                 name: string;
                 role: import(".prisma/client").$Enums.UserRole;
                 avatarUrl: string | null;
@@ -88,13 +97,16 @@ export declare class ScheduleController {
             gender: import(".prisma/client").$Enums.Gender | null;
             dateOfBirth: Date | null;
             joinYear: number | null;
+            department: string | null;
             subjects: string[];
             classesAssigned: number;
+            notes: string[];
             userId: string;
         }) | null;
         class: {
             id: string;
             name: string;
+            notes: string[];
             gradeLevel: number;
             room: string | null;
             academicYear: string;
@@ -102,13 +114,17 @@ export declare class ScheduleController {
             description: string | null;
             averageGpa: number;
             currentWeeklyScore: number;
+            studentCount: number;
+            maleStudentCount: number;
+            femaleStudentCount: number;
+            weeklyScoreHistory: import("@prisma/client/runtime/library").JsonValue;
         };
         subject: {
             id: string;
             name: string;
+            department: string | null;
             description: string | null;
             code: string;
-            department: string | null;
         };
     } & {
         id: string;

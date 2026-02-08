@@ -1,21 +1,38 @@
-export class CreateAssignmentDto {
-  title: string;
-  description?: string;
-  subjectId: string;
-  teacherId: string; // If admin creates, they specify teacher. If teacher creates, we can use their ID.
-  classIds?: string[];
-  dueDate: string | Date;
-  duration?: number;
-  password?: string;
-  questions?: any;
-}
+import { IsArray, IsDateString, IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
 
-export class UpdateAssignmentDto {
-  title?: string;
+export class CreateAssignmentDto {
+  @IsString()
+  @IsNotEmpty()
+  title: string;
+
+  @IsString()
+  @IsOptional()
   description?: string;
-  dueDate?: string | Date;
+
+  @IsString()
+  @IsNotEmpty()
+  subjectId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  teacherId: string; // If admin creates, they specify teacher. If teacher creates, we can use their ID.
+
+  @IsArray()
+  @IsOptional()
+  classIds?: string[];
+
+  @IsDateString()
+  dueDate: string;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
   duration?: number;
+
+  @IsString()
+  @IsOptional()
   password?: string;
+
+  @IsOptional()
   questions?: any;
-  status?: 'pending' | 'submitted' | 'late' | 'graded'; // Not really on assignment but on submission
 }

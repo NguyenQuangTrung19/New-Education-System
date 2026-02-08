@@ -414,7 +414,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
       
       const idNum = parseInt(student.id.replace(/\D/g, '')) || 0;
       let score = student.gpa;
-      if (frame === 'semester') score = Math.min(4.0, Math.max(0, student.gpa + (idNum % 5 - 2) * 0.1));
+      if (frame === 'semester') score = Math.min(10.0, Math.max(0, student.gpa + (idNum % 5 - 2) * 0.1));
       else if (frame === 'month') score = Math.min(100, 80 + (idNum % 20)); 
       else if (frame === 'week') score = Math.min(100, 70 + (idNum % 30));
       return parseFloat(score.toFixed(2));

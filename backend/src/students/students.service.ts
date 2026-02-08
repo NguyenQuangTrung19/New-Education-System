@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { IdGeneratorService } from '../common/id-generator.service';
+import { PasswordService } from '../common/password.service';
 
 @Injectable()
 export class StudentsService {
   constructor(
     private prisma: PrismaService,
-    private idGenerator: IdGeneratorService
+    private idGenerator: IdGeneratorService,
+    private passwordService: PasswordService
   ) {}
 
   async findAll() {
@@ -45,7 +47,9 @@ export class StudentsService {
     const { username, password, name, email, classId, ...studentData } = createStudentDto;
     
     // Hash password or set default
-    const hashedPassword = password || 'student123'; // In real app, hash this!
+    const plainPassword = password || 'student123';
+    const hashedPassword = await this.passwordService.hashPassword(plainPassword);
+    const encryptedPassword = this.passwordService.encryptPassword(plainPassword);
 
     return this.prisma.$transaction(async (prisma) => {
       const enrollmentYear = studentData.enrollmentYear || new Date().getFullYear();
@@ -55,6 +59,7 @@ export class StudentsService {
         data: {
           username, 
           password: hashedPassword, 
+          passwordEncrypted: encryptedPassword,
           name,
           email,
           role: 'STUDENT',
@@ -69,6 +74,7 @@ export class StudentsService {
           enrollmentYear,
           // Add other fields as necessary from dto
           address: studentData.address,
+          gender: studentData.gender,
           dateOfBirth: studentData.dateOfBirth ? new Date(studentData.dateOfBirth) : null,
           gpa: studentData.gpa || 0.0,
           guardianName: studentData.guardianName,
@@ -76,6 +82,8 @@ export class StudentsService {
           guardianCitizenId: studentData.guardianCitizenId,
           guardianJob: studentData.guardianJob,
           guardianYearOfBirth: studentData.guardianYearOfBirth,
+          semesterEvaluation: studentData.semesterEvaluation,
+          notes: studentData.notes ?? [],
         },
       });
       
@@ -100,9 +108,14 @@ export class StudentsService {
       }
     }
 
+    const normalizedStudentData = {
+      ...studentData,
+      dateOfBirth: studentData.dateOfBirth ? new Date(studentData.dateOfBirth) : undefined,
+    };
+
     return this.prisma.student.update({
       where: { id },
-      data: studentData,
+      data: normalizedStudentData,
     });
   }
 

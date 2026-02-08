@@ -6,7 +6,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { 
   Search, Plus, Mail, BookOpen, Eye, X, GraduationCap, Check, User as UserIcon, 
   MessageSquare, Send, Filter, Award, Calendar, MapPin, Phone, 
-  Briefcase, CreditCard, Lock, History, UserCheck, Trash2, Pencil, ChevronDown, EyeOff, ShieldCheck, AlertTriangle
+  Briefcase, CreditCard, Lock, History, UserCheck, Trash2, Pencil, ChevronDown, EyeOff, ShieldCheck, AlertTriangle, Download
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { calculateAge, isValidPhone, isValidCitizenId, toTitleCase } from '../utils';
@@ -14,6 +14,7 @@ import api from '../src/api/client';
 import ReAuthModal from '../components/ReAuthModal';
 import PasswordManagementModal from '../components/PasswordManagementModal';
 import CredentialRevealModal from '../components/CredentialRevealModal';
+import ExcelImportModal from '../components/ExcelImportModal';
 
 interface StudentsProps {
   currentUser: User | null;
@@ -98,11 +99,12 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
                       <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                          <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">{t('students.modal.details')}</h3>
                          <div className="space-y-3 text-sm">
-                            <div className="flex justify-between"><span className="text-gray-500">Date of Birth</span> <span className="font-medium text-gray-900">{student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString('vi-VN') : 'N/A'} ({calculateAge(student.dateOfBirth)} years old)</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500">Enrollment Year</span> <span className="font-medium text-gray-900">{student.enrollmentYear}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500">Email</span> <span className="font-medium text-gray-900 break-all">{student.email}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500">Address</span> <span className="font-medium text-gray-900 text-right max-w-[200px] truncate">{student.address || 'N/A'}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500">Username</span> <span className="font-mono text-gray-700 bg-gray-100 px-2 rounded">{student.username}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">{t('student.dob')}</span> <span className="font-medium text-gray-900">{student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString('vi-VN') : 'N/A'} ({calculateAge(student.dateOfBirth)} {t('student.yearsOld')})</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">{t('student.gender')}</span> <span className="font-medium text-gray-900">{student.gender ? (student.gender === 'Male' ? t('common.male') : student.gender === 'Female' ? t('common.female') : t('common.other')) : 'N/A'}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">{t('student.enrollmentYear')}</span> <span className="font-medium text-gray-900">{student.enrollmentYear}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">{t('student.email')}</span> <span className="font-medium text-gray-900 break-all">{student.email}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">{t('student.address')}</span> <span className="font-medium text-gray-900 text-right max-w-[200px] truncate">{student.address || 'N/A'}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">{t('student.username')}</span> <span className="font-mono text-gray-700 bg-gray-100 px-2 rounded">{student.username}</span></div>
                          </div>
                       </div>
 
@@ -112,11 +114,11 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
                             <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">{t('student.guardianInfo')}</h3>
                          </div>
                          <div className="space-y-3 text-sm">
-                            <div className="flex justify-between"><span className="text-gray-500">Name</span> <span className="font-bold text-gray-900">{student.guardianName}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500">Relation</span> <span className="font-medium text-gray-900">Parent/Guardian</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500">Phone</span> <span className="font-medium text-indigo-600">{student.guardianPhone}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500">Job</span> <span className="font-medium text-gray-900">{student.guardianJob}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500">Citizen ID</span> <span className="font-medium text-gray-900">{student.guardianCitizenId}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">{t('student.guardianName')}</span> <span className="font-bold text-gray-900">{student.guardianName}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">{t('student.relation')}</span> <span className="font-medium text-gray-900">{t('student.parentGuardian')}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">{t('student.guardianPhone')}</span> <span className="font-medium text-indigo-600">{student.guardianPhone}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">{t('student.guardianJob')}</span> <span className="font-medium text-gray-900">{student.guardianJob}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">{t('student.guardianCitizenId')}</span> <span className="font-medium text-gray-900">{student.guardianCitizenId}</span></div>
                          </div>
                       </div>
                    </div>
@@ -133,7 +135,7 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
                               <div className="p-6">
                                   <div className="flex items-center justify-between mb-4">
                                       <div>
-                                          <p className="text-xs text-gray-500 font-medium uppercase mb-1">Username</p>
+                                          <p className="text-xs text-gray-500 font-medium uppercase mb-1">{t('student.username')}</p>
                                           <p className="font-mono font-bold text-gray-800 bg-gray-100 px-2 py-1 rounded text-sm">{student.username}</p>
                                       </div>
                                       <div className="h-8 w-px bg-gray-200 mx-2"></div>
@@ -159,7 +161,7 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
                                   <LineChart data={chartData}>
                                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
                                       <XAxis dataKey="year" tick={{fontSize: 10}} axisLine={false} tickLine={false} />
-                                      <YAxis domain={[0, 4]} hide />
+                                      <YAxis domain={[0, 10]} hide />
                                       <Tooltip contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 10px rgba(0,0,0,0.1)'}} />
                                       <Line type="monotone" dataKey="gpa" stroke="#4f46e5" strokeWidth={3} dot={{r: 4, fill: '#4f46e5', strokeWidth: 2, stroke: '#fff'}} />
                                   </LineChart>
@@ -178,14 +180,14 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
                       <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
                           <div className="px-6 py-4 border-b border-gray-200 bg-gray-100/50 flex items-center gap-2">
                               <MessageSquare className="h-4 w-4 text-gray-500" />
-                              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Notes</h3>
+                              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">{t('common.notes')}</h3>
                           </div>
                           <div className="p-6">
                               <div className="space-y-2 mb-4 max-h-32 overflow-y-auto custom-scrollbar">
                                   {student.notes?.map((n, i) => (
                                       <div key={i} className="p-2.5 bg-white text-xs text-gray-600 rounded border border-gray-100 shadow-sm">{n}</div>
                                   ))}
-                                  {(!student.notes || student.notes.length === 0) && <p className="text-xs text-gray-400 italic">No notes.</p>}
+                                  {(!student.notes || student.notes.length === 0) && <p className="text-xs text-gray-400 italic">{t('common.noNotes')}</p>}
                               </div>
                               {canEdit && (
                               <div className="flex gap-2">
@@ -194,7 +196,7 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
                                       value={noteInput} 
                                       onChange={(e) => setNoteInput(e.target.value)} 
                                       onKeyDown={(e) => e.key === 'Enter' && (onAddNote(student.id, noteInput), setNoteInput(''))} 
-                                      placeholder="Add note..." 
+                                      placeholder={t('common.addNote')}
                                       className="flex-1 w-full min-w-0 text-xs border border-gray-300 bg-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 shadow-sm outline-none text-gray-700" 
                                   />
                                   <button onClick={() => { onAddNote(student.id, noteInput); setNoteInput(''); }} className="p-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 shadow-sm shrink-0 flex items-center justify-center"><Send className="h-3 w-3" /></button>
@@ -226,7 +228,7 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({
             <div className="px-6 py-6 bg-indigo-600 text-white shrink-0 shadow-md flex justify-between items-start">
                 <div>
                    <h2 className="text-xl font-bold">{editingStudent ? t('students.form.edit') : t('students.form.new')}</h2>
-                   <p className="text-indigo-100 text-sm mt-1">Complete the academic & personal profile</p>
+                   <p className="text-indigo-100 text-sm mt-1">{t('student.form.subtitle')}</p>
                 </div>
                 <button onClick={onClose} className="text-indigo-100 hover:text-white"><X className="h-6 w-6" /></button>
             </div>
@@ -238,7 +240,7 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({
                   {formErrors.length > 0 && (
                       <div className="bg-red-50 border border-red-200 rounded-xl p-4 animate-shake">
                           <h4 className="flex items-center text-red-700 font-bold text-sm mb-2">
-                              <AlertTriangle className="h-4 w-4 mr-2" /> Vui lòng kiểm tra lại:
+                              <AlertTriangle className="h-4 w-4 mr-2" /> {t('student.form.validationTitle')}
                           </h4>
                           <ul className="list-disc list-inside text-xs text-red-600 space-y-1">
                               {formErrors.map((err, idx) => <li key={idx}>{err}</li>)}
@@ -254,26 +256,26 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({
                      </div>
                      <div className="grid grid-cols-2 gap-4">
                         <div>
-                             <label className="block text-xs font-semibold text-gray-500 mb-1">Student ID</label>
+                             <label className="block text-xs font-semibold text-gray-500 mb-1">{t('student.id')}</label>
                              <input type="text" disabled value={formStudent.id} className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm text-gray-500 cursor-not-allowed" />
                         </div>
                         <div>
-                             <label className="block text-xs font-semibold text-gray-500 mb-1">Enrollment Year</label>
+                             <label className="block text-xs font-semibold text-gray-500 mb-1">{t('student.enrollmentYear')}</label>
                              <input type="number" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm outline-none" value={formStudent.enrollmentYear} onChange={e => setFormStudent({...formStudent, enrollmentYear: parseInt(e.target.value) || 2024})} />
                         </div>
                         <div className="col-span-2">
                              <label className="block text-xs font-semibold text-gray-500 mb-1">Class</label>
                              <div className="relative">
                                 <select className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm outline-none appearance-none" value={formStudent.classId} onChange={e => setFormStudent({...formStudent, classId: e.target.value})}>
-                                    <option value="">No Class</option>
+                                    <option value="">{t('student.noClass')}</option>
                                     {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                 </select>
                                 <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
                              </div>
                         </div>
                         <div>
-                             <label className="block text-xs font-semibold text-gray-500 mb-1">Current GPA</label>
-                             <input type="number" step="0.1" max="4" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm outline-none" value={formStudent.gpa} onChange={e => setFormStudent({...formStudent, gpa: parseFloat(e.target.value) || 0})} />
+                             <label className="block text-xs font-semibold text-gray-500 mb-1">Current GPA (0-10)</label>
+                             <input type="number" step="0.1" max="10" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm outline-none" value={formStudent.gpa} onChange={e => setFormStudent({...formStudent, gpa: parseFloat(e.target.value) || 0})} />
                         </div>
                      </div>
                   </div>
@@ -282,7 +284,7 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({
                   <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
                      <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100">
                         <Lock className="h-4 w-4 text-indigo-500"/>
-                        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide">Account</h3>
+                        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide">{t('student.form.account')}</h3>
                      </div>
                      <div className="space-y-3">
                          <div>
@@ -300,25 +302,33 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({
                   <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
                      <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100">
                         <UserIcon className="h-4 w-4 text-indigo-500"/>
-                        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide">Personal</h3>
+                        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide">{t('student.form.personal')}</h3>
                      </div>
                      <div className="space-y-3">
                         <div>
-                            <label className="block text-xs font-semibold text-gray-500 mb-1">Full Name <span className="text-red-500">*</span></label>
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">{t('student.name')} <span className="text-red-500">*</span></label>
                             <input type="text" required className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm outline-none" value={formStudent.name} onChange={e => setFormStudent({...formStudent, name: e.target.value})} />
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="block text-xs font-semibold text-gray-500 mb-1">Date of Birth <span className="text-red-500">*</span></label>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1">{t('student.dob')} <span className="text-red-500">*</span></label>
                                 <input type="date" required className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm outline-none" value={formStudent.dateOfBirth ? new Date(formStudent.dateOfBirth).toISOString().split('T')[0] : ''} onChange={e => setFormStudent({...formStudent, dateOfBirth: e.target.value})} />
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold text-gray-500 mb-1">Email <span className="text-red-500">*</span></label>
-                                <input type="email" required className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm outline-none" value={formStudent.email} onChange={e => setFormStudent({...formStudent, email: e.target.value})} />
+                                <label className="block text-xs font-semibold text-gray-500 mb-1">{t('student.gender')} <span className="text-red-500">*</span></label>
+                                <select className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm outline-none" value={formStudent.gender || 'Male'} onChange={e => setFormStudent({...formStudent, gender: e.target.value as any})}>
+                                    <option value="Male">{t('common.male')}</option>
+                                    <option value="Female">{t('common.female')}</option>
+                                    <option value="Other">{t('common.other')}</option>
+                                </select>
                             </div>
                         </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">{t('student.email')} <span className="text-red-500">*</span></label>
+                            <input type="email" required className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm outline-none" value={formStudent.email} onChange={e => setFormStudent({...formStudent, email: e.target.value})} />
+                        </div>
                          <div>
-                            <label className="block text-xs font-semibold text-gray-500 mb-1">Address</label>
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">{t('student.address')}</label>
                             <input type="text" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm outline-none" value={formStudent.address} onChange={e => setFormStudent({...formStudent, address: e.target.value})} />
                          </div>
                      </div>
@@ -328,28 +338,28 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({
                   <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
                      <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100">
                         <UserCheck className="h-4 w-4 text-indigo-500"/>
-                        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide">Guardian</h3>
+                        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide">{t('student.form.guardian')}</h3>
                      </div>
                      <div className="space-y-3">
                         <div className="grid grid-cols-2 gap-3">
                             <div className="col-span-2">
-                                <label className="block text-xs font-semibold text-gray-500 mb-1">Guardian Name <span className="text-red-500">*</span></label>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1">{t('student.guardianName')} <span className="text-red-500">*</span></label>
                                 <input type="text" required className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm outline-none" value={formStudent.guardianName} onChange={e => setFormStudent({...formStudent, guardianName: e.target.value})} />
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold text-gray-500 mb-1">Phone <span className="text-red-500">*</span></label>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1">{t('student.guardianPhone')} <span className="text-red-500">*</span></label>
                                 <input type="tel" required className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm outline-none" placeholder="0xxxxxxxxx" value={formStudent.guardianPhone} onChange={e => setFormStudent({...formStudent, guardianPhone: e.target.value})} />
                             </div>
                              <div>
-                                <label className="block text-xs font-semibold text-gray-500 mb-1">Year of Birth</label>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1">{t('student.guardianYOB')}</label>
                                 <input type="number" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm outline-none" value={formStudent.guardianYearOfBirth} onChange={e => setFormStudent({...formStudent, guardianYearOfBirth: parseInt(e.target.value)})} />
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold text-gray-500 mb-1">Job</label>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1">{t('student.guardianJob')}</label>
                                 <input type="text" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm outline-none" value={formStudent.guardianJob} onChange={e => setFormStudent({...formStudent, guardianJob: e.target.value})} />
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold text-gray-500 mb-1">Citizen ID (12 số) <span className="text-red-500">*</span></label>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1">{t('student.guardianCitizenId')} <span className="text-red-500">*</span></label>
                                 <input type="text" required className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm outline-none" value={formStudent.guardianCitizenId} onChange={e => setFormStudent({...formStudent, guardianCitizenId: e.target.value})} />
                             </div>
                         </div>
@@ -395,6 +405,7 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
   // Credential Reveal State
   const [revealModalOpen, setRevealModalOpen] = useState(false);
   const [revealedCredentials, setRevealedCredentials] = useState<{ name: string; username: string; password?: string } | null>(null);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const handleOpenPasswordManage = (student: Student, action: string = 'CHANGE') => {
       // Close detail modal if open for VIEW
@@ -535,35 +546,37 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
   const validateStudentForm = (data: Partial<Student>): string[] => {
       const errors: string[] = [];
 
-      // Required fields (Address is optional)
-      if (!data.name?.trim()) errors.push("Họ tên không được để trống.");
-      if (!data.username?.trim()) errors.push("Tên đăng nhập không được để trống.");
-      if (!editingStudent && !data.password?.trim()) errors.push("Mật khẩu không được để trống.");
-      if (!data.dateOfBirth) errors.push("Ngày sinh không được để trống.");
-      if (!data.email?.trim()) errors.push("Email không được để trống.");
-      if (!data.guardianName?.trim()) errors.push("Tên người giám hộ không được để trống.");
-      if (!data.guardianPhone?.trim()) errors.push("SĐT người giám hộ không được để trống.");
-      if (!data.guardianCitizenId?.trim()) errors.push("CCCD người giám hộ không được để trống.");
+       // Required fields (Address is optional)
+       if (!data.name?.trim()) errors.push(`${t('student.name')} ${t('student.validation.required')}`);
+       if (!data.username?.trim()) errors.push(`${t('student.username')} ${t('student.validation.required')}`);
+       if (!editingStudent && !data.password?.trim()) errors.push(`${t('student.password')} ${t('student.validation.required')}`);
+       if (!data.dateOfBirth) errors.push(`${t('student.dob')} ${t('student.validation.required')}`);
+       if (!data.email?.trim()) errors.push(`${t('student.email')} ${t('student.validation.required')}`);
+       if (!data.guardianName?.trim()) errors.push(`${t('student.guardianName')} ${t('student.validation.required')}`);
+       if (!data.guardianPhone?.trim()) errors.push(`${t('student.guardianPhone')} ${t('student.validation.required')}`);
+       if (!data.guardianCitizenId?.trim()) errors.push(`${t('student.guardianCitizenId')} ${t('student.validation.required')}`);
 
-      // Age Validation (10 - 20)
-      if (data.dateOfBirth) {
-          const age = calculateAge(data.dateOfBirth);
-          if (age < 10 || age > 20) {
-              errors.push(`Tuổi học sinh phải từ 10 đến 20 (Hiện tại: ${age} tuổi).`);
-          }
-      }
+       // Age Validation (10 - 20)
+       if (data.dateOfBirth) {
+           const age = calculateAge(data.dateOfBirth);
+           // Custom logic typically requires custom messages or constructing them. 
+           // For simplicity, we assume the key covers the main rule.
+           if (age < 10 || age > 20) {
+              errors.push(`${t('student.validation.age')} (Current: ${age})`);
+           }
+       }
 
-      // Phone Validation
-      if (data.guardianPhone && !isValidPhone(data.guardianPhone)) {
-          errors.push("SĐT người giám hộ phải bắt đầu bằng số 0 và có đủ 10 số.");
-      }
+       // Phone Validation
+       if (data.guardianPhone && !isValidPhone(data.guardianPhone)) {
+           errors.push(t('student.validation.phone'));
+       }
 
-      // Citizen ID Validation
-      if (data.guardianCitizenId && !isValidCitizenId(data.guardianCitizenId)) {
-          errors.push("CCCD người giám hộ phải có đủ 12 số.");
-      }
+       // Citizen ID Validation
+       if (data.guardianCitizenId && !isValidCitizenId(data.guardianCitizenId)) {
+           errors.push(t('student.validation.citizenId'));
+       }
 
-      return errors;
+       return errors;
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -606,7 +619,7 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
         setIsFormOpen(false);
     } catch (error) {
         console.error("Failed to save student", error);
-        alert("Failed to save student. Please try again.");
+        alert(t('common.error'));
     } finally {
         setIsSubmitting(false);
     }
@@ -642,9 +655,18 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
           <p className="text-gray-500 mt-1">{t('students.subtitle')}</p>
         </div>
         {isAdmin && (
-        <button onClick={handleOpenAdd} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-indigo-500/30 transition-all flex items-center whitespace-nowrap">
-            <Plus className="h-5 w-5 mr-2" /> {t('students.add')}
-        </button>
+        <div className="flex gap-2">
+            <button 
+                onClick={() => setIsImportModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition shadow-lg hover:shadow-emerald-500/30 transform hover:-translate-y-0.5"
+            >
+                <Download className="h-5 w-5" />
+                <span className="hidden sm:inline font-bold">{t('import.title')}</span>
+            </button>
+            <button onClick={handleOpenAdd} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-indigo-500/30 transition-all flex items-center whitespace-nowrap">
+                <Plus className="h-5 w-5 mr-2" /> {t('students.add')}
+            </button>
+        </div>
         )}
       </div>
 
@@ -704,10 +726,10 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
                     </td>
                     <td className="px-6 py-4">
                         <div className="flex items-center gap-1.5">
-                           <span className={`font-bold text-sm ${student.gpa >= 3.5 ? 'text-emerald-600' : student.gpa >= 2.5 ? 'text-indigo-600' : 'text-orange-600'}`}>
+                           <span className={`font-bold text-sm ${student.gpa >= 8.0 ? 'text-emerald-600' : student.gpa >= 6.5 ? 'text-indigo-600' : 'text-orange-600'}`}>
                              {student.gpa.toFixed(1)}
                            </span>
-                           <span className="text-xs text-gray-400">/ 4.0</span>
+                           <span className="text-xs text-gray-400">/ 10.0</span>
                         </div>
                     </td>
                     <td className="px-6 py-4">
@@ -784,6 +806,13 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
         onClose={() => setRevealModalOpen(false)}
         credentials={revealedCredentials}
       />
+      <ExcelImportModal 
+        isOpen={isImportModalOpen} 
+        onClose={() => setIsImportModalOpen(false)} 
+        type="students" 
+        onSuccess={fetchStudents} 
+      />
+
     </div>
   );
 };

@@ -1,19 +1,26 @@
 import { UsersService } from './users.service';
+import { AdminUpdatePasswordDto, ChangeOwnPasswordDto } from './dto/password.dto';
 export declare class UsersController {
     private usersService;
     constructor(usersService: UsersService);
-    updatePassword(req: any, id: string, password: string): Promise<{
+    changeOwnPassword(req: any, body: ChangeOwnPasswordDto): Promise<{
+        success: boolean;
+    }>;
+    updatePassword(id: string, body: AdminUpdatePasswordDto): Promise<{
         id: string;
         username: string;
         email: string;
         password: string;
+        passwordEncrypted: string | null;
         name: string;
         role: import(".prisma/client").$Enums.UserRole;
         avatarUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
     }>;
-    getCredentials(req: any, id: string): Promise<{
+    getCredentials(id: string): Promise<{
+        password: null;
+    } | {
         password: string;
-    } | null>;
+    }>;
 }

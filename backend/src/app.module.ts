@@ -9,12 +9,23 @@ import { TeachersModule } from './teachers/teachers.module';
 import { ClassesModule } from './classes/classes.module';
 import { AssignmentsModule } from './assignments/assignments.module';
 import { SubjectsModule } from './subjects/subjects.module';
-import { ScheduleModule } from './schedule/schedule.module';
 import { CommonModule } from './common/common.module';
 
+import { ImportsModule } from './imports/imports.module';
+
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, StudentsModule, TeachersModule, ClassesModule, AssignmentsModule, SubjectsModule, ScheduleModule, CommonModule],
-  controllers: [AppController],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    UsersModule,
+    StudentsModule,
+    TeachersModule,
+    ClassesModule,
+    SubjectsModule,
+    AssignmentsModule,
+    CommonModule,
+    ImportsModule,
+  ],controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}

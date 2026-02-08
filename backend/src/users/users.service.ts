@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { User, Prisma } from '@prisma/client';
+import { PasswordService } from '../common/password.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private passwordService: PasswordService
+  ) {}
 
   async findOne(username: string): Promise<User | null> {
     return this.prisma.user.findUnique({
@@ -17,8 +21,15 @@ export class UsersService {
   }
 
   async createUser(data: Prisma.UserCreateInput): Promise<User> {
+    const plainPassword = data.password;
+    const hashedPassword = await this.passwordService.hashPassword(plainPassword);
+    const encryptedPassword = this.passwordService.encryptPassword(plainPassword);
     return this.prisma.user.create({
-      data,
+      data: {
+        ...data,
+        password: hashedPassword,
+        passwordEncrypted: encryptedPassword,
+      },
     });
   }
 
@@ -29,16 +40,37 @@ export class UsersService {
   }
 
   async updatePassword(id: string, password: string) {
+    const hashedPassword = await this.passwordService.hashPassword(password);
+    const encryptedPassword = this.passwordService.encryptPassword(password);
     return this.prisma.user.update({
         where: { id },
-        data: { password }
+        data: { password: hashedPassword, passwordEncrypted: encryptedPassword }
     });
   }
 
   async getUserCredentials(id: string) {
-    return this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id },
-      select: { password: true }
+      select: { passwordEncrypted: true }
     });
+    if (!user?.passwordEncrypted) {
+      return { password: null };
+    }
+    const password = this.passwordService.decryptPassword(user.passwordEncrypted);
+    return { password };
+  }
+
+  async verifyPassword(id: string, plainPassword: string): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: { password: true, passwordEncrypted: true }
+    });
+    if (!user?.password) return false;
+    const isValid = await this.passwordService.verifyPassword(plainPassword, user.password);
+    if (!isValid && !user.passwordEncrypted && user.password === plainPassword) {
+      await this.updatePassword(id, plainPassword);
+      return true;
+    }
+    return isValid;
   }
 }

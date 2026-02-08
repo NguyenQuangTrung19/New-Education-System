@@ -68,6 +68,53 @@ const App: React.FC = () => {
 
   const { t } = useLanguage();
 
+  const isPageAllowed = (page: string, role?: UserRole) => {
+    if (!role) return false;
+    const allowed: Record<UserRole, string[]> = {
+      [UserRole.ADMIN]: [
+        'dashboard',
+        'teachers',
+        'students',
+        'classes',
+        'subjects',
+        'timetable',
+        'leaderboard',
+        'notifications',
+        'admin-tuition',
+        'profile',
+        'settings'
+      ],
+      [UserRole.TEACHER]: [
+        'dashboard',
+        'my-classes',
+        'teacher-assignments',
+        'teacher-resources',
+        'teachers',
+        'students',
+        'classes',
+        'subjects',
+        'timetable',
+        'leaderboard',
+        'notifications',
+        'profile',
+        'settings'
+      ],
+      [UserRole.STUDENT]: [
+        'dashboard',
+        'student-class',
+        'timetable',
+        'student-results',
+        'tuition',
+        'leaderboard',
+        'rules',
+        'notifications',
+        'profile',
+        'settings'
+      ]
+    };
+    return allowed[role].includes(page);
+  };
+
   // Auth flow
   const handleLogin = async (user: User) => {
     // Ideally we fetch the full profile here to ensure we have all relations
@@ -101,6 +148,13 @@ const App: React.FC = () => {
 
   // Close sidebar on mobile when navigating
   const handleNavigate = (page: string, params?: any) => {
+    if (!isPageAllowed(page, currentUser?.role)) {
+      setCurrentPage('dashboard');
+      sessionStorage.setItem('app_current_page', 'dashboard');
+      setNavParams(null);
+      sessionStorage.removeItem('app_nav_params');
+      return;
+    }
     setCurrentPage(page);
     sessionStorage.setItem('app_current_page', page);
     
@@ -145,6 +199,9 @@ const App: React.FC = () => {
   }
 
   const renderContent = () => {
+    if (!isPageAllowed(currentPage, currentUser?.role)) {
+      return <Dashboard onNavigate={handleNavigate} notifications={notifications} currentUser={currentUser} />;
+    }
     switch (currentPage) {
       case 'dashboard': return <Dashboard onNavigate={handleNavigate} notifications={notifications} currentUser={currentUser} />;
       case 'teachers': return <Teachers currentUser={currentUser} />;

@@ -8,19 +8,39 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var SubjectsService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SubjectsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 let SubjectsService = class SubjectsService {
+    static { SubjectsService_1 = this; }
     prisma;
     constructor(prisma) {
         this.prisma = prisma;
     }
+    static DEPARTMENTS = [
+        'Tổ Toán - Tin',
+        'Tổ Ngữ Văn',
+        'Tổ Khoa học Tự nhiên',
+        'Tổ Khoa học Xã hội',
+        'Tổ Ngoại ngữ',
+        'Tổ Năng khiếu / Nghệ thuật',
+        'Tổ Công nghệ',
+        'Tổ Tổng hợp / Văn phòng'
+    ];
+    getDepartments() {
+        return SubjectsService_1.DEPARTMENTS;
+    }
     create(createSubjectDto) {
-        const { notes, ...data } = createSubjectDto;
+        const { name, code, department, description } = createSubjectDto;
         return this.prisma.subject.create({
-            data: data
+            data: {
+                name,
+                code,
+                department,
+                description,
+            },
         });
     }
     findAll() {
@@ -40,10 +60,15 @@ let SubjectsService = class SubjectsService {
         });
     }
     update(id, updateSubjectDto) {
-        const { notes, ...data } = updateSubjectDto;
+        const { name, code, department, description } = updateSubjectDto;
         return this.prisma.subject.update({
             where: { id },
-            data: data,
+            data: {
+                name,
+                code,
+                department,
+                description,
+            },
         });
     }
     remove(id) {
@@ -53,7 +78,7 @@ let SubjectsService = class SubjectsService {
     }
 };
 exports.SubjectsService = SubjectsService;
-exports.SubjectsService = SubjectsService = __decorate([
+exports.SubjectsService = SubjectsService = SubjectsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], SubjectsService);

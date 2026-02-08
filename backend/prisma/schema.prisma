@@ -54,6 +54,7 @@ model User {
   id        String   @id @default(uuid())
   username  String   @unique
   password  String
+  passwordEncrypted String?
   email     String   @unique
   name      String
   role      UserRole
@@ -80,8 +81,10 @@ model Teacher {
   gender          Gender?
   dateOfBirth     DateTime?
   joinYear        Int?
+  department      String?
   subjects        String[]
   classesAssigned Int      @default(0)
+  notes           String[] @default([])
   
   classes             ClassGroup[]
   teachingAssignments TeachingAssignment[]
@@ -96,6 +99,7 @@ model Student {
   user                User     @relation(fields: [userId], references: [id])
   
   dateOfBirth         DateTime?
+  gender              Gender?
   enrollmentYear      Int
   classId             String?
   class               ClassGroup? @relation(fields: [classId], references: [id])
@@ -139,6 +143,11 @@ model ClassGroup {
   description        String?
   averageGpa         Float @default(0.0)
   currentWeeklyScore Float @default(100.0)
+  studentCount       Int   @default(0)
+  maleStudentCount   Int   @default(0)
+  femaleStudentCount Int   @default(0)
+  weeklyScoreHistory Json  @default("[]")
+  notes              String[] @default([])
 }
 
 model Subject {

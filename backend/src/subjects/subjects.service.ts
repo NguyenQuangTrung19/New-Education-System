@@ -7,10 +7,30 @@ import { UpdateSubjectDto } from './dto/update-subject.dto';
 export class SubjectsService {
   constructor(private prisma: PrismaService) {}
 
+  public static readonly DEPARTMENTS = [
+    'Tổ Toán - Tin',
+    'Tổ Ngữ Văn',
+    'Tổ Khoa học Tự nhiên',
+    'Tổ Khoa học Xã hội',
+    'Tổ Ngoại ngữ',
+    'Tổ Năng khiếu / Nghệ thuật',
+    'Tổ Công nghệ',
+    'Tổ Tổng hợp / Văn phòng'
+  ];
+
+  getDepartments() {
+    return SubjectsService.DEPARTMENTS;
+  }
+
   create(createSubjectDto: any) {
-    const { notes, ...data } = createSubjectDto;
+    const { name, code, department, description } = createSubjectDto;
     return this.prisma.subject.create({
-      data: data
+      data: {
+        name,
+        code,
+        department,
+        description,
+      },
     });
   }
 
@@ -34,10 +54,15 @@ export class SubjectsService {
   }
 
   update(id: string, updateSubjectDto: any) {
-    const { notes, ...data } = updateSubjectDto;
+    const { name, code, department, description } = updateSubjectDto;
     return this.prisma.subject.update({
       where: { id },
-      data: data,
+      data: {
+        name,
+        code,
+        department,
+        description,
+      },
     });
   }
 

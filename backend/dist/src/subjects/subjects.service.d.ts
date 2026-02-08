@@ -2,12 +2,14 @@ import { PrismaService } from '../prisma/prisma.service';
 export declare class SubjectsService {
     private prisma;
     constructor(prisma: PrismaService);
+    static readonly DEPARTMENTS: string[];
+    getDepartments(): string[];
     create(createSubjectDto: any): import(".prisma/client").Prisma.Prisma__SubjectClient<{
         id: string;
         name: string;
+        department: string | null;
         description: string | null;
         code: string;
-        department: string | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     findAll(): import(".prisma/client").Prisma.PrismaPromise<({
         homeworks: {
@@ -27,9 +29,9 @@ export declare class SubjectsService {
     } & {
         id: string;
         name: string;
+        department: string | null;
         description: string | null;
         code: string;
-        department: string | null;
     })[]>;
     findOne(id: string): import(".prisma/client").Prisma.Prisma__SubjectClient<({
         teachingAssignments: ({
@@ -39,6 +41,7 @@ export declare class SubjectsService {
                     username: string;
                     email: string;
                     password: string;
+                    passwordEncrypted: string | null;
                     name: string;
                     role: import(".prisma/client").$Enums.UserRole;
                     avatarUrl: string | null;
@@ -53,8 +56,10 @@ export declare class SubjectsService {
                 gender: import(".prisma/client").$Enums.Gender | null;
                 dateOfBirth: Date | null;
                 joinYear: number | null;
+                department: string | null;
                 subjects: string[];
                 classesAssigned: number;
+                notes: string[];
                 userId: string;
             };
         } & {
@@ -81,22 +86,22 @@ export declare class SubjectsService {
     } & {
         id: string;
         name: string;
+        department: string | null;
         description: string | null;
         code: string;
-        department: string | null;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
     update(id: string, updateSubjectDto: any): import(".prisma/client").Prisma.Prisma__SubjectClient<{
         id: string;
         name: string;
+        department: string | null;
         description: string | null;
         code: string;
-        department: string | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     remove(id: string): import(".prisma/client").Prisma.Prisma__SubjectClient<{
         id: string;
         name: string;
+        department: string | null;
         description: string | null;
         code: string;
-        department: string | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
 }

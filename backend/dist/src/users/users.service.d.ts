@@ -1,8 +1,10 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { User, Prisma } from '@prisma/client';
+import { PasswordService } from '../common/password.service';
 export declare class UsersService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private passwordService;
+    constructor(prisma: PrismaService, passwordService: PasswordService);
     findOne(username: string): Promise<User | null>;
     createUser(data: Prisma.UserCreateInput): Promise<User>;
     findById(id: string): Promise<User | null>;
@@ -11,6 +13,7 @@ export declare class UsersService {
         username: string;
         email: string;
         password: string;
+        passwordEncrypted: string | null;
         name: string;
         role: import(".prisma/client").$Enums.UserRole;
         avatarUrl: string | null;
@@ -18,6 +21,9 @@ export declare class UsersService {
         updatedAt: Date;
     }>;
     getUserCredentials(id: string): Promise<{
+        password: null;
+    } | {
         password: string;
-    } | null>;
+    }>;
+    verifyPassword(id: string, plainPassword: string): Promise<boolean>;
 }

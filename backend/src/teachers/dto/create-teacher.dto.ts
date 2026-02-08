@@ -1,5 +1,6 @@
 import { IsString, IsEmail, IsNotEmpty, IsOptional, 
-  IsNumber, IsArray } from 'class-validator';
+  IsNumber, IsArray, IsEnum, IsDateString, IsInt, MinLength } from 'class-validator';
+import { Gender } from '@prisma/client';
 
 export class CreateTeacherDto {
   @IsString()
@@ -15,11 +16,16 @@ export class CreateTeacherDto {
 
   @IsOptional()
   @IsString()
+  @MinLength(8)
   password?: string;
 
   @IsArray()
   @IsOptional()
   subjects?: string[]; // Simplified for now, handling relations is complex
+
+  @IsInt()
+  @IsOptional()
+  classesAssigned?: number;
 
   @IsNumber()
   @IsOptional()
@@ -32,6 +38,23 @@ export class CreateTeacherDto {
   @IsString()
   @IsOptional()
   phone?: string;
+
+  @IsString()
+  @IsOptional()
+  citizenId?: string;
+
+  @IsEnum(Gender)
+  @IsOptional()
+  gender?: Gender;
+
+  @IsDateString()
+  @IsOptional()
+  dateOfBirth?: string;
+
+  @IsArray()
+  @IsOptional()
+  @IsString({ each: true })
+  notes?: string[];
 }
 
 export class UpdateTeacherDto {
@@ -47,6 +70,14 @@ export class UpdateTeacherDto {
   @IsOptional()
   subjects?: string[];
 
+  @IsInt()
+  @IsOptional()
+  classesAssigned?: number;
+
+  @IsNumber()
+  @IsOptional()
+  joinYear?: number;
+
   @IsString()
   @IsOptional()
   address?: string;
@@ -54,4 +85,21 @@ export class UpdateTeacherDto {
   @IsString()
   @IsOptional()
   phone?: string;
+
+  @IsString()
+  @IsOptional()
+  citizenId?: string;
+
+  @IsEnum(Gender)
+  @IsOptional()
+  gender?: Gender;
+
+  @IsDateString()
+  @IsOptional()
+  dateOfBirth?: string;
+
+  @IsArray()
+  @IsOptional()
+  @IsString({ each: true })
+  notes?: string[];
 }

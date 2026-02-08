@@ -17,6 +17,10 @@ const common_1 = require("@nestjs/common");
 const subjects_service_1 = require("./subjects.service");
 const create_subject_dto_1 = require("./dto/create-subject.dto");
 const update_subject_dto_1 = require("./dto/update-subject.dto");
+const passport_1 = require("@nestjs/passport");
+const roles_decorator_1 = require("../auth/roles.decorator");
+const roles_guard_1 = require("../auth/roles.guard");
+const client_1 = require("@prisma/client");
 let SubjectsController = class SubjectsController {
     subjectsService;
     constructor(subjectsService) {
@@ -24,6 +28,9 @@ let SubjectsController = class SubjectsController {
     }
     create(createSubjectDto) {
         return this.subjectsService.create(createSubjectDto);
+    }
+    getDepartments() {
+        return this.subjectsService.getDepartments();
     }
     findAll() {
         return this.subjectsService.findAll();
@@ -40,6 +47,8 @@ let SubjectsController = class SubjectsController {
 };
 exports.SubjectsController = SubjectsController;
 __decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -47,12 +56,24 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], SubjectsController.prototype, "create", null);
 __decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN, client_1.UserRole.TEACHER, client_1.UserRole.STUDENT),
+    (0, common_1.Get)('departments'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], SubjectsController.prototype, "getDepartments", null);
+__decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN, client_1.UserRole.TEACHER, client_1.UserRole.STUDENT),
     (0, common_1.Get)(),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], SubjectsController.prototype, "findAll", null);
 __decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN, client_1.UserRole.TEACHER, client_1.UserRole.STUDENT),
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -60,6 +81,8 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], SubjectsController.prototype, "findOne", null);
 __decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
     (0, common_1.Patch)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
@@ -68,6 +91,8 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], SubjectsController.prototype, "update", null);
 __decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),

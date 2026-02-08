@@ -28,6 +28,10 @@ const PasswordManagementModal: React.FC<PasswordManagementModalProps> = ({ isOpe
         return;
     }
     setError('');
+    if (newPassword.length < 8) {
+        setError('M?t kh?u ph?i c? ?t nh?t 8 k? t?.');
+        return;
+    }
     setLoading(true);
 
     try {
@@ -82,7 +86,7 @@ const PasswordManagementModal: React.FC<PasswordManagementModalProps> = ({ isOpe
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Mật khẩu mới</label>
                 <input
-                type="text"
+                type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"

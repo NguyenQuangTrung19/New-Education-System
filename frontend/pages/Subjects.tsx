@@ -37,27 +37,34 @@ export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
 
   const [formSubject, setFormSubject] = useState<Partial<Subject>>(defaultSubjectState);
 
-  // Fetch Subjects
-  const fetchSubjects = async () => {
+  const [availableDepartments, setAvailableDepartments] = useState<string[]>([]);
+
+  // Fetch Subjects & Departments
+  const fetchData = async () => {
     try {
-        const { data } = await api.get('/subjects');
+        const [subjectsRes, departmentsRes] = await Promise.all([
+          api.get('/subjects'),
+          api.get('/subjects/departments')
+        ]);
+        
         // Backend returns subjects. We need to map or ensure format.
         // Backend doesn't return averageGpaHistory yet, so we mock it for UI consistency if needed
-        const mappedData = data.map((s: any) => ({
+        const mappedData = subjectsRes.data.map((s: any) => ({
             ...s,
             averageGpaHistory: s.averageGpaHistory || [],
             notes: s.notes || []
         }));
         setSubjects(mappedData);
+        setAvailableDepartments(departmentsRes.data);
     } catch (error) {
-        console.error("Failed to fetch subjects", error);
+        console.error("Failed to fetch data", error);
     } finally {
         setLoading(false);
     }
   };
 
   React.useEffect(() => {
-    fetchSubjects();
+    fetchData();
   }, []);
 
   const filteredSubjects = subjects.filter(s => 
@@ -257,6 +264,7 @@ export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
             setFormSubject={setFormSubject}
             onClose={() => setIsFormOpen(false)}
             onSave={handleSave}
+            availableDepartments={availableDepartments}
         />
       )}
     </div>
@@ -271,9 +279,10 @@ interface SlideOverFormProps {
     setFormSubject: (val: Partial<Subject>) => void;
     onClose: () => void;
     onSave: (e: React.FormEvent) => void;
+    availableDepartments: string[];
 }
 
-const SlideOverForm: React.FC<SlideOverFormProps> = ({ editingSubject, formSubject, setFormSubject, onClose, onSave }) => {
+const SlideOverForm: React.FC<SlideOverFormProps> = ({ editingSubject, formSubject, setFormSubject, onClose, onSave, availableDepartments }) => {
     const { t } = useLanguage();
     return createPortal(
     <div className="fixed inset-0 z-[100] overflow-hidden w-screen h-screen">
@@ -308,12 +317,10 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({ editingSubject, formSubje
                           <div>
                              <label className="block text-xs font-semibold text-gray-500 mb-1">{t('subject.department')}</label>
                              <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white" value={formSubject.department} onChange={e => setFormSubject({...formSubject, department: e.target.value})}>
-                                <option value="Natural Sciences">Natural Sciences</option>
-                                <option value="Social Sciences">Social Sciences</option>
-                                <option value="Mathematics">Mathematics</option>
-                                <option value="Arts">Arts</option>
-                                <option value="Humanities">Humanities</option>
-                                <option value="Technology">Technology</option>
+                                <option value="">{t('subject.selectDepartment')}</option>
+                                {availableDepartments.map(dept => (
+                                    <option key={dept} value={dept}>{dept}</option>
+                                ))}
                              </select>
                           </div>
                       </div>

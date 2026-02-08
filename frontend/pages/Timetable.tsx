@@ -13,6 +13,12 @@ interface TimetableProps {
   onNavigate?: (page: string, params?: any) => void;
 }
 
+import { 
+  MOCK_TEACHERS, 
+  MOCK_SUBJECTS, 
+  MOCK_CLASSES 
+} from '../constants';
+
 interface TimeSlot {
   period: number;
   time: string;
@@ -215,7 +221,7 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
     const targetTeacherId = viewMode === 'teacher' ? selectedTeacherId : formData.teacherId;
 
     if (!targetClassId || !targetTeacherId) {
-        alert("Missing Class or Teacher information");
+        alert(t('timetable.missingInfo'));
         return;
     }
 
@@ -246,7 +252,7 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
         setEditingSlot(null);
     } catch(e) {
         console.error("Save slot failed", e);
-        alert("Lưu thất bại!");
+        alert(t('timetable.saveFailed'));
     }
   };
 
@@ -258,7 +264,7 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
           setEditingSlot(null);
       } catch(e) {
           console.error("Delete failed", e);
-          alert("Xóa thất bại!");
+          alert(t('timetable.deleteFailed'));
       }
     }
   };
@@ -292,7 +298,7 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
               <div className="bg-white border-b border-gray-100 p-4 flex justify-between items-center rounded-t-xl">
                   <div>
                       <h3 className="font-bold text-lg text-gray-900">{t('timetable.assignments')}</h3>
-                      <p className="text-sm text-gray-500">Define teaching load per class</p>
+                      <p className="text-sm text-gray-500">{t('timetable.defineLoad')}</p>
                   </div>
                   <button onClick={onClose} className="hover:bg-gray-100 rounded-full p-2 transition-colors"><X className="h-5 w-5 text-gray-500" /></button>
               </div>
@@ -333,8 +339,8 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
                   </table>
               </div>
               <div className="p-4 border-t border-gray-100 bg-gray-50 rounded-b-xl flex justify-between">
-                  {isAdmin ? <button onClick={handleAddAssignment} className="flex items-center text-indigo-600 font-bold text-sm hover:text-indigo-800 px-2 py-1"><Plus className="h-4 w-4 mr-1" /> Add New Assignment</button> : <div></div>}
-                  <button onClick={onClose} className="px-6 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 shadow-md">Done</button>
+                  {isAdmin ? <button onClick={handleAddAssignment} className="flex items-center text-indigo-600 font-bold text-sm hover:text-indigo-800 px-2 py-1"><Plus className="h-4 w-4 mr-1" /> {t('timetable.addAssignment')}</button> : <div></div>}
+                  <button onClick={onClose} className="px-6 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 shadow-md">{t('timetable.done')}</button>
               </div>
           </div>
         </div>
@@ -501,7 +507,7 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
                             onClick={() => onNavigate('my-classes', { classId: classGroup?.id })}
                             className="flex items-center text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-3 py-2 rounded-lg transition-colors w-full justify-center border border-indigo-100"
                         >
-                            <ExternalLink className="h-4 w-4 mr-2" /> Open Class Journal
+                            <ExternalLink className="h-4 w-4 mr-2" /> {t('timetable.openJournal')}
                         </button>
                     )}
                 </div>
@@ -518,14 +524,14 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
          <h3 className={`font-bold text-lg ${session === 'Morning' ? 'text-amber-800' : 'text-indigo-800'}`}>
             {session === 'Morning' ? t('timetable.morning') : t('timetable.afternoon')}
          </h3>
-         {isEditing && <span className="ml-auto text-xs font-bold uppercase text-indigo-600 bg-white px-2 py-1 rounded shadow-sm">Editing Mode</span>}
+         {isEditing && <span className="ml-auto text-xs font-bold uppercase text-indigo-600 bg-white px-2 py-1 rounded shadow-sm">{t('timetable.editingMode')}</span>}
       </div>
 
       <div className="overflow-x-auto">
         <div className="min-w-[900px]">
           <div className="grid grid-cols-6 border-b border-gray-200 bg-gray-50/50">
              <div className="p-4 font-bold text-gray-500 text-xs uppercase text-center border-r border-gray-100 tracking-wider">
-                {t('timetable.period')} / Time
+                {t('timetable.periodTime')}
              </div>
              {days.map((day, idx) => {
                  const date = addDays(currentWeekStart, idx);
@@ -646,13 +652,13 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
                   onClick={() => setViewMode('class')}
                   className={`flex items-center px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'class' ? 'bg-indigo-600 text-white shadow' : 'text-gray-500 hover:bg-gray-50'}`}
                >
-                  <GraduationCap className="h-4 w-4 mr-2" /> By Class
+                  <GraduationCap className="h-4 w-4 mr-2" /> {t('timetable.byClass')}
                </button>
                <button 
                   onClick={() => setViewMode('teacher')}
                   className={`flex items-center px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'teacher' ? 'bg-indigo-600 text-white shadow' : 'text-gray-500 hover:bg-gray-50'}`}
                >
-                  <Users className="h-4 w-4 mr-2" /> By Teacher
+                  <Users className="h-4 w-4 mr-2" /> {t('timetable.byTeacher')}
                </button>
            </div>
            )}
@@ -661,7 +667,7 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
            <div className="flex items-center bg-white rounded-xl border border-gray-200 shadow-sm p-1">
                 <button onClick={() => handleWeekChange('prev')} className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 transition"><ChevronLeft className="h-5 w-5" /></button>
                 <div className="px-4 text-center min-w-[140px]">
-                    <div className="text-[10px] text-gray-400 uppercase font-bold">Week of</div>
+                    <div className="text-[10px] text-gray-400 uppercase font-bold">{t('timetable.weekOf')}</div>
                     <div className="text-sm font-bold text-gray-900 cursor-pointer hover:text-indigo-600" onClick={jumpToToday}>{formatDate(currentWeekStart)}</div>
                 </div>
                 <button onClick={() => handleWeekChange('next')} className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 transition"><ChevronRight className="h-5 w-5" /></button>
@@ -722,7 +728,7 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
                  }`}
                >
                  {isEditing ? <Check className="h-4 w-4 mr-2" /> : <Edit2 className="h-4 w-4 mr-2" />}
-                 {isEditing ? 'Done' : 'Edit'}
+                 {isEditing ? t('timetable.done') : t('common.edit')}
                </button>
            </div>
            )}
@@ -737,7 +743,7 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
       ) : (
         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-dashed border-gray-300">
            <CalendarDays className="h-16 w-16 text-gray-300 mb-4" />
-           <p className="text-gray-500 font-medium">Please select a class or teacher to view schedule</p>
+           <p className="text-gray-500 font-medium">{t('timetable.selectPrompt')}</p>
         </div>
       )}
       

@@ -10,6 +10,8 @@ exports.CommonModule = void 0;
 const common_1 = require("@nestjs/common");
 const id_generator_service_1 = require("./id-generator.service");
 const prisma_module_1 = require("../prisma/prisma.module");
+const password_service_1 = require("./password.service");
+const roles_guard_1 = require("../auth/roles.guard");
 let CommonModule = class CommonModule {
 };
 exports.CommonModule = CommonModule;
@@ -17,8 +19,8 @@ exports.CommonModule = CommonModule = __decorate([
     (0, common_1.Global)(),
     (0, common_1.Module)({
         imports: [prisma_module_1.PrismaModule],
-        providers: [id_generator_service_1.IdGeneratorService],
-        exports: [id_generator_service_1.IdGeneratorService],
+        providers: [id_generator_service_1.IdGeneratorService, password_service_1.PasswordService, roles_guard_1.RolesGuard],
+        exports: [id_generator_service_1.IdGeneratorService, password_service_1.PasswordService, roles_guard_1.RolesGuard],
     })
 ], CommonModule);
 //# sourceMappingURL=common.module.js.map

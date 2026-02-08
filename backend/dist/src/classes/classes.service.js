@@ -48,21 +48,43 @@ let ClassesService = class ClassesService {
         });
     }
     async create(createClassDto) {
-        const { academicYear, ...classData } = createClassDto;
+        const { academicYear, ...validClassData } = createClassDto;
         const year = academicYear || `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
         const classId = await this.idGenerator.generateClassId(year);
         return this.prisma.classGroup.create({
             data: {
                 id: classId,
                 academicYear: year,
-                ...classData
+                name: validClassData.name,
+                gradeLevel: validClassData.gradeLevel,
+                room: validClassData.room,
+                teacherId: validClassData.teacherId || null,
+                description: validClassData.description,
+                averageGpa: validClassData.averageGpa ?? 0,
+                currentWeeklyScore: validClassData.currentWeeklyScore ?? 100,
+                studentCount: validClassData.studentCount ?? 0,
+                maleStudentCount: validClassData.maleStudentCount ?? 0,
+                femaleStudentCount: validClassData.femaleStudentCount ?? 0,
+                weeklyScoreHistory: validClassData.weeklyScoreHistory ?? [],
+                notes: validClassData.notes ?? [],
             }
         });
     }
     async update(id, updateClassDto) {
+        const { ...validUpdateData } = updateClassDto;
+        const normalizedUpdateData = { ...validUpdateData };
+        if (Object.prototype.hasOwnProperty.call(validUpdateData, 'teacherId')) {
+            normalizedUpdateData.teacherId = validUpdateData.teacherId || null;
+        }
+        if (Object.prototype.hasOwnProperty.call(validUpdateData, 'weeklyScoreHistory')) {
+            normalizedUpdateData.weeklyScoreHistory = validUpdateData.weeklyScoreHistory ?? [];
+        }
+        if (Object.prototype.hasOwnProperty.call(validUpdateData, 'notes')) {
+            normalizedUpdateData.notes = validUpdateData.notes ?? [];
+        }
         return this.prisma.classGroup.update({
             where: { id },
-            data: updateClassDto
+            data: normalizedUpdateData
         });
     }
     async remove(id) {

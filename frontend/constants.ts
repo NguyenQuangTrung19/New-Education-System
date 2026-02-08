@@ -29,9 +29,9 @@ const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
 export const MOCK_NOTIFICATIONS: Notification[] = [
   {
     id: 'n1',
-    title: 'School Sports Day 2025',
-    message: 'Join us for the annual sports day! Registration is open for all track and field events.',
-    time: '1 hour ago',
+    title: 'Đại hội Thể thao 2025',
+    message: 'Tham gia đại hội thể thao thường niên! Đăng ký đang mở cho tất cả các môn điền kinh.',
+    time: '1 giờ trước',
     timestamp: oneHourAgo,
     type: 'info',
     read: false,
@@ -39,9 +39,9 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     id: 'n2',
-    title: 'Science Fair Winners',
-    message: 'Congratulations to Class 10A1 for winning the regional Science Fair!',
-    time: '2 hours ago',
+    title: 'Giải Nhất Hội thi Khoa học',
+    message: 'Chúc mừng Lớp 10A1 đã giành giải Nhất trong Hội thi Khoa học cấp Quận!',
+    time: '2 giờ trước',
     timestamp: twoHoursAgo,
     type: 'success',
     read: false,
@@ -49,9 +49,9 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     id: 'n3',
-    title: 'Exam Schedule Released',
-    message: 'The mid-term examination schedule is now available. Please check your timetable.',
-    time: '5 hours ago',
+    title: 'Lịch thi Giữa kỳ',
+    message: 'Lịch thi giữa kỳ đã được công bố. Vui lòng kiểm tra thời khóa biểu của bạn.',
+    time: '5 giờ trước',
     timestamp: fiveHoursAgo,
     type: 'alert',
     read: false,
@@ -59,9 +59,9 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     id: 'n4',
-    title: 'Library Renovation',
-    message: 'The school library will be closed for renovation next week.',
-    time: '1 day ago',
+    title: 'Thông báo Sửa chữa Thư viện',
+    message: 'Thư viện nhà trường sẽ đóng cửa để sửa chữa vào tuần tới.',
+    time: '1 ngày trước',
     timestamp: yesterday,
     type: 'warning',
     read: true,
@@ -71,117 +71,117 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
 export const MOCK_STUDENTS: Student[] = [
   { 
     id: 'S001', 
-    name: 'Alice Johnson', 
-    username: 'alice.j',
+    name: 'Lê Thị Mai', 
+    username: 'hs.lethimai',
     classId: 'C101', 
     enrollmentYear: 2023, 
-    gpa: 3.8, 
-    email: 'alice@edusphere.edu', 
+    gpa: 8.8, 
+    email: 'lethimai@thcsphuoctan.edu.vn', 
     dateOfBirth: '2008-05-15',
-    address: '12 Maple Street, District 1',
-    guardianName: 'Robert Johnson',
+    address: '12 Đường 3/2, Quận 10, TP.HCM',
+    guardianName: 'Lê Văn Hùng',
     guardianCitizenId: '079080001234',
     guardianYearOfBirth: 1980,
-    guardianJob: 'Engineer',
+    guardianJob: 'Kỹ sư xây dựng',
     guardianPhone: '0901234567',
     academicHistory: [
-        { year: '2024-2025', className: 'Grade 9-A', gpa: 3.7 },
-        { year: '2023-2024', className: 'Grade 8-A', gpa: 3.6 }
+        { year: '2024-2025', className: 'Lớp 9A', gpa: 8.7 },
+        { year: '2023-2024', className: 'Lớp 8A', gpa: 8.6 }
     ],
-    notes: ['Consistent honor roll student.', 'Volunteers for peer tutoring.'],
-    semesterEvaluation: 'Alice is a brilliant student who consistently demonstrates a strong understanding of the subject matter. She is also a very helpful classmate.'
+    notes: ['Học sinh giỏi cấp Thành phố.', 'Tích cực tham gia phong trào.'],
+    semesterEvaluation: 'Mai là học sinh ngoan, lễ phép và có thành tích học tập xuất sắc.'
   },
   { 
     id: 'S002', 
-    name: 'Bob Smith', 
-    username: 'bob.smith',
+    name: 'Phạm Văn Minh', 
+    username: 'hs.phamvanminh',
     classId: 'C101', 
     enrollmentYear: 2023, 
-    gpa: 3.2, 
-    email: 'bob@edusphere.edu', 
+    gpa: 8.2, 
+    email: 'phamvanminh@thcsphuoctan.edu.vn', 
     dateOfBirth: '2008-08-20',
-    address: '45 Oak Avenue, District 3',
-    guardianName: 'Mary Smith',
+    address: '45 Nguyễn Trãi, Quận 5, TP.HCM',
+    guardianName: 'Phạm Văn Đức',
     guardianCitizenId: '079082005678',
     guardianYearOfBirth: 1982,
-    guardianJob: 'Nurse',
+    guardianJob: 'Bác sĩ',
     guardianPhone: '0909876543',
     academicHistory: [
-        { year: '2024-2025', className: 'Grade 9-B', gpa: 3.3 },
-        { year: '2023-2024', className: 'Grade 8-B', gpa: 3.4 }
+        { year: '2024-2025', className: 'Lớp 9B', gpa: 8.3 },
+        { year: '2023-2024', className: 'Lớp 8B', gpa: 8.4 }
     ],
-    notes: ['Needs improvement in Math.'],
-    semesterEvaluation: 'Bob has improved significantly this semester, particularly in his participation. However, he needs to focus more on his Math homework.'
+    notes: ['Cần cải thiện môn Ngữ Văn.'],
+    semesterEvaluation: 'Minh có tiến bộ rõ rệt trong học kỳ này, cần phát huy hơn nữa.'
   },
   { 
     id: 'S003', 
-    name: 'Charlie Brown', 
-    username: 'charlie.b',
+    name: 'Trần Bảo Ngọc', 
+    username: 'hs.tranbaongoc',
     classId: 'C102', 
     enrollmentYear: 2023, 
-    gpa: 3.5, 
-    email: 'charlie@edusphere.edu', 
+    gpa: 7.5, 
+    email: 'tranbaongoc@thcsphuoctan.edu.vn', 
     dateOfBirth: '2008-12-10',
-    address: '88 Pine Road, District 2',
-    guardianName: 'David Brown',
+    address: '88 Lê Văn Sỹ, Quận 3, TP.HCM',
+    guardianName: 'Trần Văn Tâm',
     guardianCitizenId: '079075009999',
     guardianYearOfBirth: 1975,
-    guardianJob: 'Architect',
+    guardianJob: 'Kiến trúc sư',
     guardianPhone: '0912345678',
     academicHistory: [
-        { year: '2024-2025', className: 'Grade 9-A', gpa: 3.5 }
+        { year: '2024-2025', className: 'Lớp 9A', gpa: 7.5 }
     ],
     notes: [] 
   },
   { 
     id: 'S004', 
-    name: 'Diana Ross', 
-    username: 'diana.r',
+    name: 'Nguyễn Thị Lan', 
+    username: 'hs.nguyenthilan',
     classId: 'C102', 
     enrollmentYear: 2022, 
-    gpa: 3.9, 
-    email: 'diana@edusphere.edu', 
+    gpa: 9.0, 
+    email: 'nguyenthilan@thcsphuoctan.edu.vn', 
     dateOfBirth: '2007-03-25',
-    address: '101 Star Blvd, District 1',
-    guardianName: 'Evan Ross',
+    address: '101 Hai Bà Trưng, Quận 1, TP.HCM',
+    guardianName: 'Nguyễn Văn Phúc',
     guardianCitizenId: '079070001111',
     guardianYearOfBirth: 1970,
-    guardianJob: 'Musician',
+    guardianJob: 'Nhạc sĩ',
     guardianPhone: '0987654321',
     academicHistory: [
-        { year: '2024-2025', className: 'Grade 10-A', gpa: 3.85 },
-        { year: '2023-2024', className: 'Grade 9-A', gpa: 3.9 }
+        { year: '2024-2025', className: 'Lớp 10A', gpa: 8.9 },
+        { year: '2023-2024', className: 'Lớp 9A', gpa: 9.1 }
     ],
-    notes: ['Excellent leadership skills.'] 
+    notes: ['Kỹ năng lãnh đạo tốt.'] 
   },
 ];
 
 export const MOCK_TEACHERS: Teacher[] = [
   { 
     id: 'GV0001', 
-    username: 'sarah.connor',
-    name: 'Dr. Sarah Connor', 
-    subjects: ['Physics', 'Math'], 
-    email: 'sarah.connor@edusphere.edu', 
-    phone: '+1 555-0101', 
-    address: '123 SkyNet Blvd, Tech City',
+    username: 'gv.nguyenvanan',
+    name: 'Nguyễn Văn An', 
+    subjects: ['Toán học', 'Vật lý'], 
+    email: 'nguyenvanan@thcsphuoctan.edu.vn', 
+    phone: '0901234567', 
+    address: '123 Cách Mạng Tháng 8, P.12, Q.10',
     citizenId: '079185000001',
-    gender: 'Female',
+    gender: 'Male',
     dateOfBirth: '1985-05-12',
     joinYear: 2012,
     classesAssigned: 4, 
-    notes: ['Recommended for Department Head position.', 'Excellent engagement in lab sessions.']
+    notes: ['Đề xuất quy hoạch tổ trưởng chuyên môn.', 'Tích cực trong công tác giảng dạy.']
   },
   { 
     id: 'GV0002', 
-    username: 'alan.grant',
-    name: 'Prof. Alan Grant', 
-    subjects: ['Biology'], 
-    email: 'alan.grant@edusphere.edu', 
-    phone: '+1 555-0102', 
-    address: '45 Dinosaur Park, Isla Nublar',
+    username: 'gv.tranthib',
+    name: 'Trần Thị Bình', 
+    subjects: ['Sinh học'], 
+    email: 'tranthib@thcsphuoctan.edu.vn', 
+    phone: '0901234568', 
+    address: '45 Nguyễn Thị Minh Khai, Q.1',
     citizenId: '079180000022',
-    gender: 'Male',
+    gender: 'Female',
     dateOfBirth: '1980-03-24',
     joinYear: 2016,
     classesAssigned: 3, 
@@ -189,33 +189,33 @@ export const MOCK_TEACHERS: Teacher[] = [
   },
   { 
     id: 'GV0003', 
-    username: 'm.mcgonagall',
-    name: 'Mrs. Minerva McGonagall', 
-    subjects: ['Literature', 'History'], 
-    email: 'minerva@edusphere.edu', 
-    phone: '+1 555-0103', 
-    address: 'Hogwarts Castle, Highlands',
+    username: 'gv.lethic',
+    name: 'Lê Thị Cẩm', 
+    subjects: ['Ngữ văn', 'Lịch sử'], 
+    email: 'lethicam@thcsphuoctan.edu.vn', 
+    phone: '0901234569', 
+    address: '12 Nguyễn Huệ, Q.1',
     citizenId: '079160000333',
     gender: 'Female',
     dateOfBirth: '1960-10-04',
     joinYear: 1989,
     classesAssigned: 5, 
-    notes: ['Strict but fair grading policy.', 'Mentors junior faculty members.']
+    notes: ['Nghiêm khắc nhưng công bằng.', 'Có kinh nghiệm bồi dưỡng học sinh giỏi.']
   },
   { 
     id: 'GV0004', 
-    username: 'w.white',
-    name: 'Mr. Walter White', 
-    subjects: ['Chemistry'], 
-    email: 'walter@edusphere.edu', 
-    phone: '+1 555-0104', 
-    address: '308 Negra Arroyo Lane, Albuquerque',
+    username: 'gv.phamvand',
+    name: 'Phạm Văn Dũng', 
+    subjects: ['Hóa học'], 
+    email: 'phamvandung@thcsphuoctan.edu.vn', 
+    phone: '0901234570', 
+    address: '308 Trần Hưng Đạo, Q.5',
     citizenId: '079175000444',
     gender: 'Male',
     dateOfBirth: '1975-09-07',
     joinYear: 2009,
     classesAssigned: 4, 
-    notes: ['Innovative teaching methods.', 'Requested additional lab equipment.']
+    notes: ['Phương pháp dạy học sáng tạo.', 'Đề xuất mua thêm thiết bị thí nghiệm.']
   },
 ];
 
@@ -224,72 +224,72 @@ export const MOCK_CLASSES: ClassGroup[] = [
     id: 'C101', 
     name: '10A1', 
     gradeLevel: 10, 
-    room: 'Rm 101', 
+    room: 'Phòng 101', 
     academicYear: '2025-2026',
     teacherId: 'GV0003', 
     studentCount: 28,
     maleStudentCount: 12,
     femaleStudentCount: 16,
-    averageGpa: 3.6,
+    averageGpa: 8.6, // Adjusted to 10-scale
     currentWeeklyScore: 98,
     weeklyScoreHistory: [
       { week: 1, score: 95 }, { week: 2, score: 92 }, { week: 3, score: 98 }, { week: 4, score: 96 }
     ],
-    description: 'Advanced stream for Grade 10 students focusing on Humanities.', 
-    notes: ['Projector in room 101 needs service.'] 
+    description: 'Lớp chọn Khối 10 - Ban Khoa học Xã hội.', 
+    notes: ['Máy chiếu phòng 101 cần bảo trì.'] 
   },
   { 
     id: 'C102', 
     name: '10A2', 
     gradeLevel: 10, 
-    room: 'Rm 102', 
+    room: 'Phòng 102', 
     academicYear: '2025-2026',
     teacherId: 'GV0001', 
     studentCount: 26,
     maleStudentCount: 14,
     femaleStudentCount: 12,
-    averageGpa: 3.2,
+    averageGpa: 8.2, // Adjusted
     currentWeeklyScore: 92,
     weeklyScoreHistory: [
       { week: 1, score: 88 }, { week: 2, score: 90 }, { week: 3, score: 92 }, { week: 4, score: 92 }
     ],
-    description: 'General science stream for Grade 10.', 
+    description: 'Lớp Khoa học Tự nhiên cơ bản.', 
     notes: [] 
   },
   { 
     id: 'C103', 
     name: '11A1', 
     gradeLevel: 11, 
-    room: 'Rm 201', 
+    room: 'Phòng 201', 
     academicYear: '2025-2026',
     teacherId: 'GV0004', 
     studentCount: 30,
     maleStudentCount: 15,
     femaleStudentCount: 15,
-    averageGpa: 3.4,
+    averageGpa: 8.4,
     currentWeeklyScore: 88,
     weeklyScoreHistory: [
       { week: 1, score: 90 }, { week: 2, score: 85 }, { week: 3, score: 82 }, { week: 4, score: 88 }
     ],
-    description: 'Pre-university preparation class.', 
-    notes: ['Upcoming field trip permission slips due.'] 
+    description: 'Lớp luyện thi đại học khối A.', 
+    notes: ['Đã thu giấy phép tham quan thực tế.'] 
   },
   { 
     id: 'C104', 
     name: '9A1', 
     gradeLevel: 9, 
-    room: 'Rm 305', 
+    room: 'Phòng 305', 
     academicYear: '2024-2025',
     teacherId: 'GV0002', 
     studentCount: 32,
     maleStudentCount: 18,
     femaleStudentCount: 14,
-    averageGpa: 3.5,
+    averageGpa: 8.5,
     currentWeeklyScore: 95,
     weeklyScoreHistory: [
       { week: 1, score: 92 }, { week: 2, score: 94 }, { week: 3, score: 96 }, { week: 4, score: 95 }
     ],
-    description: 'Graduated class.', 
+    description: 'Lớp đã tốt nghiệp.', 
     notes: [] 
   },
 ];
@@ -297,55 +297,55 @@ export const MOCK_CLASSES: ClassGroup[] = [
 export const MOCK_SUBJECTS: Subject[] = [
   { 
     id: 'SUB1', 
-    name: 'Advanced Mathematics', 
-    code: 'Math', 
-    department: 'Mathematics', 
-    description: 'Calculus, Linear Algebra, and Probability.',
+    name: 'Toán Cao Cấp', 
+    code: 'MATH', 
+    department: 'Tổ Toán - Tin', 
+    description: 'Giải tích, Đại số tuyến tính và Xác suất.',
     averageGpaHistory: [{year: '2022', gpa: 7.2}, {year: '2023', gpa: 7.5}, {year: '2024', gpa: 7.8}],
-    notes: ['New textbook edition adopted for 2024.'] 
+    notes: ['Sách giáo khoa mới áp dụng cho năm 2024.'] 
   },
   { 
     id: 'SUB2', 
-    name: 'Classical Physics', 
-    code: 'Physics', 
-    department: 'Natural Sciences', 
-    description: 'Newtonian mechanics, thermodynamics, and waves.', 
+    name: 'Vật lý Đại cương', 
+    code: 'PHYS', 
+    department: 'Tổ Khoa học Tự nhiên', 
+    description: 'Cơ học Newton, nhiệt động lực học và sóng.', 
     averageGpaHistory: [{year: '2022', gpa: 6.8}, {year: '2023', gpa: 7.0}, {year: '2024', gpa: 7.1}],
     notes: [] 
   },
   { 
     id: 'SUB3', 
-    name: 'Modern Literature', 
-    code: 'Literature', 
-    department: 'Social Sciences', 
-    description: 'Analysis of 20th and 21st-century literary works.', 
+    name: 'Ngữ Văn Hiện Đại', 
+    code: 'LIT', 
+    department: 'Tổ Ngữ Văn', 
+    description: 'Phân tích các tác phẩm văn học thế kỷ 20 và 21.', 
     averageGpaHistory: [{year: '2022', gpa: 7.9}, {year: '2023', gpa: 8.0}, {year: '2024', gpa: 8.2}],
     notes: [] 
   },
   { 
     id: 'SUB4', 
-    name: 'Organic Chemistry', 
-    code: 'Chemistry', 
-    department: 'Natural Sciences', 
-    description: 'Structure, properties, composition, reactions, and preparation of carbon-containing compounds.', 
+    name: 'Hóa Hữu Cơ', 
+    code: 'CHEM', 
+    department: 'Tổ Khoa học Tự nhiên', 
+    description: 'Cấu trúc, tính chất, thành phần và phản ứng của hợp chất hữu cơ.', 
     averageGpaHistory: [{year: '2022', gpa: 7.0}, {year: '2023', gpa: 7.1}, {year: '2024', gpa: 7.4}],
-    notes: ['Lab safety certification required.'] 
+    notes: ['Yêu cầu chứng chỉ an toàn phòng thí nghiệm.'] 
   },
   { 
     id: 'SUB5', 
-    name: 'Biology', 
-    code: 'Biology', 
-    department: 'Natural Sciences', 
-    description: 'Introduction to Biology', 
+    name: 'Sinh học', 
+    code: 'BIO', 
+    department: 'Tổ Khoa học Tự nhiên', 
+    description: 'Giới thiệu về Sinh học đại cương.', 
     averageGpaHistory: [{year: '2022', gpa: 7.4}, {year: '2023', gpa: 7.6}, {year: '2024', gpa: 7.5}],
     notes: [] 
   },
   { 
     id: 'SUB6', 
-    name: 'History', 
-    code: 'History', 
-    department: 'Social Sciences', 
-    description: 'World History', 
+    name: 'Lịch sử', 
+    code: 'HIS', 
+    department: 'Tổ Khoa học Xã hội', 
+    description: 'Lịch sử thế giới và Việt Nam.', 
     averageGpaHistory: [{year: '2022', gpa: 8.1}, {year: '2023', gpa: 8.0}, {year: '2024', gpa: 8.3}],
     notes: [] 
   },
@@ -403,6 +403,8 @@ export const MOCK_ASSIGNMENTS: TeachingAssignment[] = [
     { id: 'ASN008', teacherId: 'GV0003', subjectId: 'SUB6', classId: 'C102', sessionsPerWeek: 2 },
 ];
 
+
+
 export const CHART_DATA_STUDENTS_YEAR = [
   { year: '2019', students: 850 },
   { year: '2020', students: 920 },
@@ -421,7 +423,7 @@ export const MOCK_GRADES: StudentGrade[] = [
   // --- CURRENT SEMESTER (2025-2026, HK1) for Alice (S001) ---
   { 
     studentId: 'S001', subjectId: 'SUB1', oralScore: 9, fifteenMinScores: [8, 9, 8], midTermScore: 9, finalScore: 9.5, average: 9.1,
-    academicYear: '2025-2026', semester: 'HK1', feedback: 'Alice nắm vững kiến thức, tư duy logic tốt. Cần phát huy.'
+    academicYear: '2025-2026', semester: 'HK1', feedback: 'Nắm vững kiến thức, tư duy logic tốt. Cần phát huy.'
   },
   { 
     studentId: 'S001', subjectId: 'SUB2', oralScore: 8, fifteenMinScores: [8, 7], midTermScore: 8.5, finalScore: 9, average: 8.6,
@@ -451,7 +453,7 @@ export const MOCK_GRADES: StudentGrade[] = [
 
 // Mock Feedback
 export const MOCK_FEEDBACK: LessonFeedback[] = [
-  { scheduleId: 'SCH001', date: '2025-01-10', rating: 'A', comment: 'Excellent participation from the class.', signature: 'Signed by Sarah Connor', timestamp: '2025-01-10T08:00:00Z' }
+  { scheduleId: 'SCH001', date: '2025-01-10', rating: 'A', comment: 'Lớp tham gia xây dựng bài rất sôi nổi.', signature: 'Đã ký bởi Nguyễn Văn An', timestamp: '2025-01-10T08:00:00Z' }
 ];
 
 // Mock Attendance (New)
@@ -462,12 +464,12 @@ export const MOCK_ATTENDANCE: AttendanceRecord[] = [
 
 // --- MOCK STUDENT DATA ---
 export const MOCK_ASSIGNMENTS_STUDENT: Assignment[] = [
-  { id: 'AS001', subjectId: 'SUB1', title: 'Calculus Worksheet 3', dueDate: '2025-10-25', status: 'pending' },
-  { id: 'AS002', subjectId: 'SUB1', title: 'Vector Algebra Quiz', dueDate: '2025-10-28', status: 'pending' },
-  { id: 'AS003', subjectId: 'SUB2', title: 'Lab Report: Pendulum', dueDate: '2025-10-22', status: 'submitted' },
-  { id: 'AS004', subjectId: 'SUB3', title: 'Essay: The Great Gatsby', dueDate: '2025-10-20', status: 'graded', grade: 9 },
-  { id: 'AS005', subjectId: 'SUB4', title: 'Organic Compounds Structure', dueDate: '2025-10-30', status: 'pending' },
-  { id: 'AS006', subjectId: 'SUB6', title: 'History Presentation Slides', dueDate: '2025-10-15', status: 'late' },
+  { id: 'AS001', subjectId: 'SUB1', title: 'Bài tập Đại số số 3', dueDate: '2025-10-25', status: 'pending' },
+  { id: 'AS002', subjectId: 'SUB1', title: 'Kiểm tra Vector', dueDate: '2025-10-28', status: 'pending' },
+  { id: 'AS003', subjectId: 'SUB2', title: 'Báo cáo thí nghiệm: Con lắc đơn', dueDate: '2025-10-22', status: 'submitted' },
+  { id: 'AS004', subjectId: 'SUB3', title: 'Tiểu luận: Văn học hiện đại', dueDate: '2025-10-20', status: 'graded', grade: 9 },
+  { id: 'AS005', subjectId: 'SUB4', title: 'Cấu trúc Hợp chất Hữu cơ', dueDate: '2025-10-30', status: 'pending' },
+  { id: 'AS006', subjectId: 'SUB6', title: 'Thuyết trình Lịch sử', dueDate: '2025-10-15', status: 'late' },
 ];
 
 export const MOCK_MATERIALS: LearningMaterial[] = [
@@ -475,8 +477,8 @@ export const MOCK_MATERIALS: LearningMaterial[] = [
     id: 'MAT001', 
     classId: 'C101', 
     subjectId: 'SUB1', 
-    title: 'Calculus Fundamentals PDF', 
-    description: 'Basic introduction to limits and derivatives.',
+    title: 'Tài liệu Giải tích cơ bản', 
+    description: 'Giới thiệu về giới hạn và đạo hàm.',
     type: 'pdf', 
     url: '#', 
     uploadDate: '2025-10-01' 
@@ -485,8 +487,8 @@ export const MOCK_MATERIALS: LearningMaterial[] = [
     id: 'MAT002', 
     classId: 'C101', 
     subjectId: 'SUB2', 
-    title: 'Video: Newton Laws', 
-    description: 'Visual explanation of the three laws of motion.',
+    title: 'Video: Định luật Newton', 
+    description: 'Giải thích trực quan về 3 định luật chuyển động.',
     type: 'video', 
     url: '#', 
     uploadDate: '2025-10-05' 
@@ -495,8 +497,8 @@ export const MOCK_MATERIALS: LearningMaterial[] = [
     id: 'MAT003', 
     classId: 'C101', 
     subjectId: 'SUB3', 
-    title: 'Literary Devices Cheatsheet', 
-    description: 'Quick reference for metaphors, similes, and more.',
+    title: 'Các biện pháp tu từ', 
+    description: 'Bảng tóm tắt các biện pháp so sánh, ẩn dụ...',
     type: 'doc', 
     url: '#', 
     uploadDate: '2025-10-10' 
@@ -506,8 +508,8 @@ export const MOCK_MATERIALS: LearningMaterial[] = [
     id: 'MAT004', 
     classId: 'C102', 
     subjectId: 'SUB2', 
-    title: 'Kinematics Formulas', 
-    description: 'Sheet containing all necessary physics formulas.',
+    title: 'Công thức Động học', 
+    description: 'Tổng hợp các công thức Vật lý cần nhớ.',
     type: 'pdf', 
     url: '#', 
     uploadDate: '2025-10-12' 

@@ -13,34 +13,59 @@ exports.TeachersService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const id_generator_service_1 = require("../common/id-generator.service");
+const password_service_1 = require("../common/password.service");
 let TeachersService = class TeachersService {
     prisma;
     idGenerator;
-    constructor(prisma, idGenerator) {
+    passwordService;
+    constructor(prisma, idGenerator, passwordService) {
         this.prisma = prisma;
         this.idGenerator = idGenerator;
+        this.passwordService = passwordService;
     }
     async findAll() {
-        return this.prisma.teacher.findMany({
+        const teachers = await this.prisma.teacher.findMany({
             include: {
                 user: { select: { name: true, email: true, avatarUrl: true, username: true } },
                 classes: true,
             }
         });
+        return teachers.map(teacher => {
+            const { user, ...rest } = teacher;
+            return {
+                ...rest,
+                name: user.name,
+                email: user.email,
+                username: user.username,
+                avatarUrl: user.avatarUrl,
+            };
+        });
     }
     async findOne(id) {
-        return this.prisma.teacher.findUnique({
+        const teacher = await this.prisma.teacher.findUnique({
             where: { id },
             include: {
-                user: true,
+                user: { select: { name: true, email: true, avatarUrl: true, username: true } },
                 classes: true,
                 teachingAssignments: { include: { subject: true, class: true } },
             }
         });
+        if (!teacher)
+            return null;
+        const { user, ...rest } = teacher;
+        return {
+            ...rest,
+            name: user.name,
+            email: user.email,
+            username: user.username,
+            avatarUrl: user.avatarUrl,
+        };
     }
     async create(createTeacherDto) {
         const { username, password, name, email, subjects, ...teacherData } = createTeacherDto;
-        const hashedPassword = password || 'teacher123';
+        const plainPassword = password || 'teacher123';
+        const hashedPassword = await this.passwordService.hashPassword(plainPassword);
+        const encryptedPassword = this.passwordService.encryptPassword(plainPassword);
         return this.prisma.$transaction(async (prisma) => {
             const joinYear = teacherData.joinYear || new Date().getFullYear();
             const teacherId = await this.idGenerator.generateTeacherId(joinYear);
@@ -48,6 +73,7 @@ let TeachersService = class TeachersService {
                 data: {
                     username,
                     password: hashedPassword,
+                    passwordEncrypted: encryptedPassword,
                     name,
                     email,
                     role: 'TEACHER',
@@ -64,13 +90,15 @@ let TeachersService = class TeachersService {
                     gender: teacherData.gender || 'Male',
                     dateOfBirth: teacherData.dateOfBirth ? new Date(teacherData.dateOfBirth) : null,
                     subjects: subjects || [],
+                    classesAssigned: teacherData.classesAssigned ?? 0,
+                    notes: teacherData.notes ?? [],
                 },
             });
             return { ...teacher, user };
         });
     }
     async update(id, updateTeacherDto) {
-        const { name, email, username, password, user, id: _id, notes, ...teacherData } = updateTeacherDto;
+        const { name, email, username, password, user, id: _id, ...teacherData } = updateTeacherDto;
         if (name || email) {
             const teacher = await this.prisma.teacher.findUnique({ where: { id } });
             if (teacher && teacher.userId) {
@@ -80,9 +108,13 @@ let TeachersService = class TeachersService {
                 });
             }
         }
+        const normalizedTeacherData = {
+            ...teacherData,
+            dateOfBirth: teacherData.dateOfBirth ? new Date(teacherData.dateOfBirth) : undefined,
+        };
         return this.prisma.teacher.update({
             where: { id },
-            data: teacherData,
+            data: normalizedTeacherData,
         });
     }
     async remove(id) {
@@ -113,6 +145,7 @@ exports.TeachersService = TeachersService;
 exports.TeachersService = TeachersService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        id_generator_service_1.IdGeneratorService])
+        id_generator_service_1.IdGeneratorService,
+        password_service_1.PasswordService])
 ], TeachersService);
 //# sourceMappingURL=teachers.service.js.map
