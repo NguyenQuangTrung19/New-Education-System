@@ -10,6 +10,7 @@ import { ClassesModule } from './classes/classes.module';
 import { AssignmentsModule } from './assignments/assignments.module';
 import { SubjectsModule } from './subjects/subjects.module';
 import { CommonModule } from './common/common.module';
+import { ScheduleModule } from './schedule/schedule.module';
 
 import { ImportsModule } from './imports/imports.module';
 
@@ -25,6 +26,7 @@ import { ImportsModule } from './imports/imports.module';
     AssignmentsModule,
     CommonModule,
     ImportsModule,
+    ScheduleModule,
   ],controllers: [AppController],
   providers: [AppService],
 })

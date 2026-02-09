@@ -1,0 +1,272 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", sans-serif;
+
+  --color-glacier-lake: var(--color-primary);
+  --color-glacier-light: var(--color-primary-light);
+  --color-glacier-dark: var(--color-primary-dark);
+  
+  --color-ice-white: var(--bg-body);
+  
+  --color-soft-mint: #88D8B0;
+  --color-muted-coral: #FF8E85;
+  --color-lavender-mist: #B5B9D9;
+
+  /* Map standard colors to variables */
+  --color-primary-50: var(--bg-indigo-50);
+  --color-primary-100: var(--bg-indigo-100);
+  --color-primary-200: #BFDBEE;
+  --color-primary-300: #9AC6E4;
+  --color-primary-400: var(--color-primary);
+  --color-primary-500: var(--color-primary);
+  --color-primary-600: var(--color-primary-dark);
+  --color-primary-700: #4A7290;
+  --color-primary-900: #2E4A60;
+
+  --color-indigo-50: var(--bg-indigo-50);
+  --color-indigo-100: var(--bg-indigo-100);
+  --color-indigo-500: var(--color-primary);
+  --color-indigo-600: var(--color-primary-dark);
+  --color-indigo-700: #4A7290;
+
+  --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  --shadow-glow: 0 0 15px var(--color-primary-light);
+  --shadow-neon: 0 0 10px var(--color-primary), 0 0 20px var(--color-primary-dark);
+}
+
+:root {
+  /* --- DEFAULT THEME (GLACIER / LIGHT) --- */
+  --bg-body: #F0EEE9; 
+  --bg-card: #FFFFFF;
+  
+  /* FIX: Sidebar dùng gradient màu chủ đạo để chữ trắng nổi bật */
+  --bg-sidebar: linear-gradient(160deg, var(--color-primary), var(--color-primary-dark));
+  
+  /* Primary Colors Defaults (Glacier) */
+  --color-primary: #80B1D3;
+  --color-primary-dark: #5D8BAE;
+  --color-primary-light: #B8E7EA;
+
+  /* Text Colors - Light Mode */
+  --text-main: #334155;      /* Slate 700 */
+  --text-heading: #1E293B;   /* Slate 800 */
+  --text-muted: #64748B;     /* Slate 500 */
+  --border-color: #E2E8F0;
+
+  /* Semantic Colors */
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+
+  /* Utility mapping */
+  --bg-indigo-50: #F0F9FF;
+  --bg-indigo-100: #E0F2FE;
+  --bg-amber-50: #FFFBEB; /* Default Amber 50 */
+}
+
+/* --- MIDNIGHT THEME OVERRIDES --- */
+[data-theme='midnight'] {
+  /* 1. Nền & Khối */
+  --bg-body: #0F172A; /* Slate 900 */
+  
+  /* Card dùng Glassmorphism tối */
+  --bg-card: rgba(30, 41, 59, 0.75); 
+  
+  /* Sidebar: Màu tối đặc */
+  --bg-sidebar: #020617; 
+
+  /* 2. Text Colors (High Contrast) */
+  --text-main: #E2E8F0;      /* Slate 200 */
+  --text-heading: #F0F9FF;   /* Sky 50 */
+  --text-muted: #94A3B8;     /* Slate 400 */
+  
+  /* Border */
+  --border-color: rgba(148, 163, 184, 0.2);
+
+  /* 3. Utility Overrides */
+  --bg-indigo-50: rgba(56, 189, 248, 0.15);
+  --bg-indigo-100: rgba(56, 189, 248, 0.25);
+  --bg-amber-50: rgba(251, 191, 36, 0.15); /* Amber translucent */
+}
+
+/* --- BASE STYLES --- */
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: var(--bg-body);
+  color: var(--text-main);
+  transition: background-color 0.4s ease, color 0.3s ease;
+}
+
+/* --- COMPONENT CLASSES --- */
+
+/* Card Component - Auto adapt */
+.bg-white {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Add blur for midnight cards */
+[data-theme='midnight'] .bg-white {
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+/* Headings & Text Overrides for Midnight */
+/* Chỉ áp dụng đè màu khi ở chế độ Midnight để tránh lỗi trắng ở chế độ Light */
+[data-theme='midnight'] h1, 
+[data-theme='midnight'] h2, 
+[data-theme='midnight'] h3, 
+[data-theme='midnight'] h4, 
+[data-theme='midnight'] h5, 
+[data-theme='midnight'] h6, 
+[data-theme='midnight'] .font-bold, 
+[data-theme='midnight'] .font-semibold {
+  color: var(--text-heading) !important;
+}
+
+[data-theme='midnight'] .text-gray-900,
+[data-theme='midnight'] .text-slate-900,
+[data-theme='midnight'] .text-gray-800,
+[data-theme='midnight'] .text-slate-800,
+[data-theme='midnight'] .text-black {
+  color: #F8FAFC !important;
+}
+
+[data-theme='midnight'] .text-gray-700,
+[data-theme='midnight'] .text-slate-700,
+[data-theme='midnight'] .text-gray-600,
+[data-theme='midnight'] .text-slate-600 {
+  color: #E2E8F0 !important;
+}
+
+[data-theme='midnight'] .text-gray-500,
+[data-theme='midnight'] .text-slate-500,
+[data-theme='midnight'] .text-gray-400 {
+  color: #94A3B8 !important;
+}
+
+/* Semantic Text Colors in Dark Mode */
+/* Indigo (Afternoon Session, Links) */
+[data-theme='midnight'] .text-indigo-600,
+[data-theme='midnight'] .text-indigo-700,
+[data-theme='midnight'] .text-indigo-800,
+[data-theme='midnight'] .text-indigo-900 {
+  color: #A5B4FC !important; /* Indigo 300 - Light Purple */
+}
+
+/* Amber (Morning Session, Warnings) */
+[data-theme='midnight'] .text-amber-600,
+[data-theme='midnight'] .text-amber-700,
+[data-theme='midnight'] .text-amber-800,
+[data-theme='midnight'] .text-amber-900 {
+  color: #FCD34D !important; /* Amber 300 - Bright Yellow */
+}
+
+[data-theme='midnight'] .text-emerald-600,
+[data-theme='midnight'] .text-emerald-700,
+[data-theme='midnight'] .text-emerald-800 {
+  color: #6EE7B7 !important; /* Emerald 300 */
+}
+[data-theme='midnight'] .text-blue-600,
+[data-theme='midnight'] .text-blue-700 {
+  color: #93C5FD !important; /* Blue 300 */
+}
+[data-theme='midnight'] .text-rose-600,
+[data-theme='midnight'] .text-rose-700 {
+  color: #FDA4AF !important; /* Rose 300 */
+}
+
+/* Background Overrides for Timetable */
+[data-theme='midnight'] .bg-amber-50 {
+  background-color: var(--bg-amber-50) !important;
+}
+[data-theme='midnight'] .bg-indigo-50 {
+  background-color: var(--bg-indigo-50) !important;
+}
+
+/* Fix Borders in Timetable */
+[data-theme='midnight'] .border-gray-200,
+[data-theme='midnight'] .border-gray-100 {
+  border-color: rgba(148, 163, 184, 0.2) !important;
+}
+[data-theme='midnight'] .border-amber-100 {
+  border-color: rgba(251, 191, 36, 0.2) !important;
+}
+[data-theme='midnight'] .border-indigo-100 {
+  border-color: rgba(99, 102, 241, 0.2) !important;
+}
+
+/* Inputs / Selects */
+input, select, textarea {
+  background-color: var(--bg-body) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-heading) !important;
+}
+
+/* Specific placeholder fix for midnight */
+[data-theme='midnight'] input::placeholder,
+[data-theme='midnight'] textarea::placeholder {
+  color: #64748B !important;
+}
+
+[data-theme='midnight'] input:focus,
+[data-theme='midnight'] select:focus,
+[data-theme='midnight'] textarea:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+}
+
+/* Table Rows in Dark Mode */
+[data-theme='midnight'] tr:hover td {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+[data-theme='midnight'] thead {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+}
+[data-theme='midnight'] thead th {
+  color: #94A3B8 !important;
+}
+
+/* Buttons - Primary */
+.bg-indigo-600 {
+  background-image: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+  background-color: transparent; 
+  color: #FFFFFF !important;
+  border: none;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='midnight'] .bg-indigo-600 {
+  box-shadow: 0 0 15px var(--color-primary-dark);
+}
+
+.bg-indigo-600:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  transition: all 0.2s;
+}
+
+/* Active Menu Item Background */
+.bg-gray-50, .bg-indigo-50 {
+  background-color: var(--bg-indigo-50) !important;
+}
+
+[data-theme='midnight'] .bg-gray-50 {
+   background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}

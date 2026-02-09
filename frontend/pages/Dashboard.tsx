@@ -436,7 +436,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
                   <option>{t('dashboard.charts.lastSemester')}</option>
               </select>
           </div>
-          <div className="h-[320px] w-full">
+          <div className="h-[320px] w-full min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={weeklyPerformanceData}>
                 <defs>
@@ -463,7 +463,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
           <h3 className="text-xl font-bold text-slate-900 mb-2">{t('dashboard.charts.genderDistribution')}</h3>
           <p className="text-xs text-slate-400 font-medium mb-6">{t('dashboard.charts.genderSubtitle')}</p>
           
-          <div className="h-[250px] w-full relative">
+          <div className="h-[250px] w-full relative min-w-0">
              <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie 

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Lock, User as UserIcon, ArrowRight, UserCog, Eye, EyeOff, ShieldCheck, GraduationCap, Info, MapPin, Phone, Globe, X, Code, Heart, History, Award, Facebook, Linkedin, Github, Mail } from 'lucide-react';
+import { Lock, User as UserIcon, ArrowRight, Eye, EyeOff, ShieldCheck, GraduationCap, Info, MapPin, Phone, Globe, X, Code, Heart, History, Award, Facebook, Linkedin, Github, Mail } from 'lucide-react';
 import { User as UserType, UserRole } from '../types';
 import { SCHOOL_INFO } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -52,10 +52,6 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
       const { access_token, user } = response.data;
       
       sessionStorage.setItem('access_token', access_token);
-      
-      // Transform backend user to frontend user type if needed
-      // Backend user: { id, username, role, teacher: { id, ... }, student: { id, ... } }
-      // Frontend User: { id, name, email, role, ... }
       
       const frontendUser: UserType = {
         id: user.teacher?.id || user.student?.id || user.id,
@@ -115,19 +111,19 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <div className="mt-12 px-8 border-b border-gray-100 flex gap-6 overflow-x-auto">
                 <button 
                     onClick={() => setActiveInfoTab('about')}
-                    className={`pb-3 text-sm font-bold transition-all border-b-2 ${activeInfoTab === 'about' ? 'text-indigo-600 border-indigo-600' : 'text-gray-500 border-transparent hover:text-gray-800'}`}
+                    className={`pb-3 text-sm font-bold transition-all border-b-2 ${activeInfoTab === 'about' ? 'text-glacier-dark border-glacier-dark' : 'text-gray-500 border-transparent hover:text-gray-800'}`}
                 >
                     {t('guest.tab.about')}
                 </button>
                 <button 
                     onClick={() => setActiveInfoTab('contact')}
-                    className={`pb-3 text-sm font-bold transition-all border-b-2 ${activeInfoTab === 'contact' ? 'text-indigo-600 border-indigo-600' : 'text-gray-500 border-transparent hover:text-gray-800'}`}
+                    className={`pb-3 text-sm font-bold transition-all border-b-2 ${activeInfoTab === 'contact' ? 'text-glacier-dark border-glacier-dark' : 'text-gray-500 border-transparent hover:text-gray-800'}`}
                 >
                     {t('guest.tab.contact')}
                 </button>
                 <button 
                     onClick={() => setActiveInfoTab('credit')}
-                    className={`pb-3 text-sm font-bold transition-all border-b-2 ${activeInfoTab === 'credit' ? 'text-indigo-600 border-indigo-600' : 'text-gray-500 border-transparent hover:text-gray-800'}`}
+                    className={`pb-3 text-sm font-bold transition-all border-b-2 ${activeInfoTab === 'credit' ? 'text-glacier-dark border-glacier-dark' : 'text-gray-500 border-transparent hover:text-gray-800'}`}
                 >
                     {t('guest.tab.credit')}
                 </button>
@@ -141,7 +137,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     <div className="space-y-6 animate-fade-in">
                         <div className="prose prose-sm max-w-none text-gray-600">
                             <h3 className="flex items-center text-lg font-bold text-gray-900 mb-3">
-                                <History className="h-5 w-5 mr-2 text-indigo-500" /> {t('guest.about.history')}
+                                <History className="h-5 w-5 mr-2 text-glacier-dark" /> {t('guest.about.history')}
                             </h3>
                             <p className="leading-relaxed text-justify mb-4">
                                 {t('guest.about.historyDesc')}
@@ -173,8 +169,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     <div className="space-y-6 animate-fade-in">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                                <div className="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center mb-3">
-                                    <MapPin className="h-5 w-5 text-indigo-600" />
+                                <div className="w-10 h-10 bg-primary-50 rounded-full flex items-center justify-center mb-3">
+                                    <MapPin className="h-5 w-5 text-glacier-dark" />
                                 </div>
                                 <h4 className="font-bold text-gray-900 text-sm uppercase mb-1">{t('guest.contact.address')}</h4>
                                 <p className="text-sm text-gray-600">123 Đường Giáo Dục, Phường Phước Tân, TP. Biên Hòa, Đồng Nai</p>
@@ -195,7 +191,6 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                                 </div>
                                 <h4 className="font-bold text-gray-900 text-sm uppercase mb-1">{t('guest.contact.email')}</h4>
                                 <p className="text-sm text-gray-600">contact@thcsphuoctan.edu.vn</p>
-                                <p className="text-sm text-gray-600">admissions@thcsphuoctan.edu.vn</p>
                             </div>
 
                             <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
@@ -203,7 +198,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                                     <Globe className="h-5 w-5 text-purple-600" />
                                 </div>
                                 <h4 className="font-bold text-gray-900 text-sm uppercase mb-1">{t('guest.contact.social')}</h4>
-                                <p className="text-sm text-indigo-600 hover:underline cursor-pointer">www.thcsphuoctan.edu.vn</p>
+                                <p className="text-sm text-glacier-lake hover:underline cursor-pointer">www.thcsphuoctan.edu.vn</p>
                                 <div className="flex gap-3 mt-2">
                                     <Facebook className="h-5 w-5 text-blue-700 cursor-pointer hover:scale-110 transition-transform" />
                                     <div className="h-5 w-5 bg-red-600 rounded text-white flex items-center justify-center font-bold text-[10px] cursor-pointer hover:scale-110 transition-transform">YT</div>
@@ -225,20 +220,20 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 {activeInfoTab === 'credit' && (
                     <div className="space-y-6 animate-fade-in flex flex-col items-center justify-center py-4">
                         <div className="relative group">
-                            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                            <div className="absolute -inset-1 bg-gradient-to-r from-glacier-lake to-glacier-dark rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
                             <div className="relative h-32 w-32 rounded-full border-4 border-white shadow-xl overflow-hidden">
                                 <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-4xl font-bold text-gray-400">
                                     <UserIcon className="h-16 w-16" />
                                 </div>
                             </div>
-                            <div className="absolute bottom-0 right-0 bg-blue-500 text-white p-1.5 rounded-full border-2 border-white shadow-md">
+                            <div className="absolute bottom-0 right-0 bg-glacier-lake text-white p-1.5 rounded-full border-2 border-white shadow-md">
                                 <Code className="h-4 w-4" />
                             </div>
                         </div>
 
                         <div className="text-center space-y-2">
                             <h3 className="text-2xl font-black text-gray-900">Nguyễn Quang Trung</h3>
-                            <p className="text-indigo-600 font-bold bg-indigo-50 px-3 py-1 rounded-full text-xs inline-block uppercase tracking-wider">{t('guest.credit.role')}</p>
+                            <p className="text-glacier-dark font-bold bg-primary-50 px-3 py-1 rounded-full text-xs inline-block uppercase tracking-wider">{t('guest.credit.role')}</p>
                             <p className="text-gray-500 text-sm max-w-sm mx-auto leading-relaxed">
                                 {t('guest.credit.quote')}
                             </p>
@@ -262,7 +257,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                             <a href="#" className="p-3 bg-blue-50 rounded-full text-blue-600 hover:bg-blue-100 hover:text-blue-800 transition-colors">
                                 <Linkedin className="h-5 w-5" />
                             </a>
-                            <a href="#" className="p-3 bg-indigo-50 rounded-full text-indigo-600 hover:bg-indigo-100 hover:text-indigo-800 transition-colors">
+                            <a href="#" className="p-3 bg-primary-50 rounded-full text-glacier-dark hover:bg-primary-100 transition-colors">
                                 <Mail className="h-5 w-5" />
                             </a>
                         </div>
@@ -352,11 +347,11 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <div className="space-y-2">
               <label className="text-xs font-bold text-white/80 uppercase tracking-wider ml-1">Username</label>
               <div className="relative group">
-                <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors z-10" />
+                <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-glacier-lake transition-colors z-10" />
                 <input
                   type="text"
                   required
-                  className="block w-full pl-12 pr-4 py-3.5 bg-white border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-lg transition-all font-medium"
+                  className="block w-full pl-12 pr-4 py-3.5 bg-white border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-glacier-lake/50 shadow-lg transition-all font-medium"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                 />
@@ -366,18 +361,18 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <div className="space-y-2">
               <label className="text-xs font-bold text-white/80 uppercase tracking-wider ml-1">{t('login.label.password')}</label>
               <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors z-10" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-glacier-lake transition-colors z-10" />
                 <input
                   type={showPassword ? "text" : "password"}
                   required
-                  className="block w-full pl-12 pr-12 py-3.5 bg-white border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-lg transition-all font-medium"
+                  className="block w-full pl-12 pr-12 py-3.5 bg-white border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-glacier-lake/50 shadow-lg transition-all font-medium"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-indigo-600 focus:outline-none z-10"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-glacier-lake focus:outline-none z-10"
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>

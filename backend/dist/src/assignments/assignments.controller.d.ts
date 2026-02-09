@@ -69,9 +69,9 @@ export declare class AssignmentsController {
             score: number | null;
             studentId: string;
             answers: import("@prisma/client/runtime/library").JsonValue | null;
+            feedback: string | null;
             assignmentId: string;
             submittedAt: Date;
-            feedback: string | null;
             status: import(".prisma/client").$Enums.AssignmentStatus;
         }[];
         subject: {
@@ -175,9 +175,9 @@ export declare class AssignmentsController {
             score: number | null;
             studentId: string;
             answers: import("@prisma/client/runtime/library").JsonValue | null;
+            feedback: string | null;
             assignmentId: string;
             submittedAt: Date;
-            feedback: string | null;
             status: import(".prisma/client").$Enums.AssignmentStatus;
         })[];
         subject: {
@@ -234,9 +234,9 @@ export declare class AssignmentsController {
         score: number | null;
         studentId: string;
         answers: import("@prisma/client/runtime/library").JsonValue | null;
+        feedback: string | null;
         assignmentId: string;
         submittedAt: Date;
-        feedback: string | null;
         status: import(".prisma/client").$Enums.AssignmentStatus;
     }>;
     grade(submissionId: string, gradeDto: GradeSubmissionDto): Promise<{
@@ -244,9 +244,9 @@ export declare class AssignmentsController {
         score: number | null;
         studentId: string;
         answers: import("@prisma/client/runtime/library").JsonValue | null;
+        feedback: string | null;
         assignmentId: string;
         submittedAt: Date;
-        feedback: string | null;
         status: import(".prisma/client").$Enums.AssignmentStatus;
     }>;
 }
