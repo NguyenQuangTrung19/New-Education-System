@@ -136,14 +136,14 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 {activeInfoTab === 'about' && (
                     <div className="space-y-6 animate-fade-in">
                         <div className="prose prose-sm max-w-none text-gray-600">
-                            <h3 className="flex items-center text-lg font-bold text-gray-900 mb-3">
+                            <h3 className="flex items-center text-lg font-bold text-[#111827] mb-3">
                                 <History className="h-5 w-5 mr-2 text-glacier-dark" /> {t('guest.about.history')}
                             </h3>
                             <p className="leading-relaxed text-justify mb-4">
                                 {t('guest.about.historyDesc')}
                             </p>
                             
-                            <h3 className="flex items-center text-lg font-bold text-gray-900 mb-3">
+                            <h3 className="flex items-center text-lg font-bold text-[#111827] mb-3">
                                 <Award className="h-5 w-5 mr-2 text-yellow-500" /> {t('guest.about.achievements')}
                             </h3>
                             <ul className="space-y-2 list-none pl-0">
@@ -172,32 +172,32 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                                 <div className="w-10 h-10 bg-primary-50 rounded-full flex items-center justify-center mb-3">
                                     <MapPin className="h-5 w-5 text-glacier-dark" />
                                 </div>
-                                <h4 className="font-bold text-gray-900 text-sm uppercase mb-1">{t('guest.contact.address')}</h4>
-                                <p className="text-sm text-gray-600">123 Đường Giáo Dục, Phường Phước Tân, TP. Biên Hòa, Đồng Nai</p>
+                                <h4 className="font-bold text-[#111827] text-sm uppercase mb-1">{t('guest.contact.address')}</h4>
+                                <p className="text-sm text-[#4b5563]">123 Đường Giáo Dục, Phường Phước Tân, TP. Biên Hòa, Đồng Nai</p>
                             </div>
                             
                             <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                                 <div className="w-10 h-10 bg-emerald-50 rounded-full flex items-center justify-center mb-3">
                                     <Phone className="h-5 w-5 text-emerald-600" />
                                 </div>
-                                <h4 className="font-bold text-gray-900 text-sm uppercase mb-1">{t('guest.contact.hotline')}</h4>
-                                <p className="text-sm text-gray-600 font-medium">(0251) 3999 888</p>
-                                <p className="text-xs text-gray-400 mt-1">{t('guest.contact.support')}</p>
+                                <h4 className="font-bold text-[#111827] text-sm uppercase mb-1">{t('guest.contact.hotline')}</h4>
+                                <p className="text-sm text-[#4b5563] font-medium">(0251) 3999 888</p>
+                                <p className="text-xs text-[#9ca3af] mt-1">{t('guest.contact.support')}</p>
                             </div>
 
                             <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                                 <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center mb-3">
                                     <Mail className="h-5 w-5 text-blue-600" />
                                 </div>
-                                <h4 className="font-bold text-gray-900 text-sm uppercase mb-1">{t('guest.contact.email')}</h4>
-                                <p className="text-sm text-gray-600">contact@thcsphuoctan.edu.vn</p>
+                                <h4 className="font-bold text-[#111827] text-sm uppercase mb-1">{t('guest.contact.email')}</h4>
+                                <p className="text-sm text-[#4b5563]">contact@thcsphuoctan.edu.vn</p>
                             </div>
 
                             <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                                 <div className="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center mb-3">
                                     <Globe className="h-5 w-5 text-purple-600" />
                                 </div>
-                                <h4 className="font-bold text-gray-900 text-sm uppercase mb-1">{t('guest.contact.social')}</h4>
+                                <h4 className="font-bold text-[#111827] text-sm uppercase mb-1">{t('guest.contact.social')}</h4>
                                 <p className="text-sm text-glacier-lake hover:underline cursor-pointer">www.thcsphuoctan.edu.vn</p>
                                 <div className="flex gap-3 mt-2">
                                     <Facebook className="h-5 w-5 text-blue-700 cursor-pointer hover:scale-110 transition-transform" />
@@ -232,21 +232,21 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         </div>
 
                         <div className="text-center space-y-2">
-                            <h3 className="text-2xl font-black text-gray-900">Nguyễn Quang Trung</h3>
-                            <p className="text-glacier-dark font-bold bg-primary-50 px-3 py-1 rounded-full text-xs inline-block uppercase tracking-wider">{t('guest.credit.role')}</p>
-                            <p className="text-gray-500 text-sm max-w-sm mx-auto leading-relaxed">
+                            <h3 className="text-2xl font-black text-[#111827]">Nguyễn Quang Trung</h3>
+                            <p className="text-[#1e3a8a] font-bold bg-white px-3 py-1 rounded-full text-xs inline-block uppercase tracking-wider shadow-sm">{t('guest.credit.role')}</p>
+                            <p className="text-slate-600 text-sm max-w-sm mx-auto leading-relaxed">
                                 {t('guest.credit.quote')}
                             </p>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4 w-full max-w-sm mt-4">
                             <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm text-center">
-                                <p className="text-xs text-gray-400 font-bold uppercase mb-1">{t('guest.credit.version')}</p>
-                                <p className="text-gray-900 font-bold">EduSphere v2.5</p>
+                                <p className="text-xs text-[#9ca3af] font-bold uppercase mb-1">{t('guest.credit.version')}</p>
+                                <p className="text-[#111827] font-bold">EduSphere v2.5</p>
                             </div>
                             <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm text-center">
-                                <p className="text-xs text-gray-400 font-bold uppercase mb-1">{t('guest.credit.tech')}</p>
-                                <p className="text-gray-900 font-bold">React + Tailwind</p>
+                                <p className="text-xs text-[#9ca3af] font-bold uppercase mb-1">{t('guest.credit.tech')}</p>
+                                <p className="text-[#111827] font-bold">React + Tailwind</p>
                             </div>
                         </div>
 
@@ -330,7 +330,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       key={item.r}
                       type="button"
                       onClick={() => handleRoleChange(item.r)}
-                      className={`flex-1 flex items-center justify-center py-2.5 text-xs font-bold rounded-xl transition-all duration-300 relative z-10 ${role === item.r ? 'bg-ice-white text-glacier-dark shadow-lg scale-105' : 'text-white/70 hover:text-white hover:bg-white/5'}`}
+                      className={`flex-1 flex items-center justify-center py-2.5 text-xs font-bold rounded-xl transition-all duration-300 relative z-10 ${role === item.r ? 'bg-slate-900 text-white shadow-lg scale-105 border border-white/10' : 'text-white/70 hover:text-white hover:bg-white/5'}`}
                   >
                       <item.icon className={`h-4 w-4 mr-1.5 ${role === item.r ? 'text-glacier-lake' : ''}`} /> 
                       {item.label}
@@ -417,8 +417,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
         
         {/* Simple Copyright Footer */}
         <div className="text-center mt-8">
-            <p className="text-white/50 text-xs font-medium">
-              © 2024 {SCHOOL_INFO.name}. {t('login.developer')} <span className="text-white/80">Nguyễn Quang Trung</span>
+            <p className="text-[#64748b] text-xs font-medium">
+              © 2024 {SCHOOL_INFO.name}. {t('login.developer')} <span className="text-[#1e293b] font-bold">Nguyễn Quang Trung</span>
             </p>
         </div>
       </div>
