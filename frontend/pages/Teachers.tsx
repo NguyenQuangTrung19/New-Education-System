@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { MOCK_TEACHERS, MOCK_CLASSES } from '../constants';
 import { Teacher, User, UserRole, ClassGroup } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { 
@@ -48,7 +47,7 @@ const calculateExperience = (joinYear: number) => Math.max(0, new Date().getFull
 
 const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({ teacher, onClose, isAdmin, onEdit, onAddNote }) => {
   const { t } = useLanguage();
-  const assignedClasses = MOCK_CLASSES.filter(c => c.teacherId === teacher.id);
+  const assignedClasses: ClassGroup[] = []; // MOCK_CLASSES removed. Implement fetching if needed.
   const totalStudents = assignedClasses.reduce((sum, cls) => sum + cls.studentCount, 0);
   const [noteInput, setNoteInput] = useState('');
   const experience = calculateExperience(teacher.joinYear);

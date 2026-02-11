@@ -1,6 +1,5 @@
 
 import React, { useMemo, useState } from 'react';
-import { MOCK_GRADES, MOCK_SUBJECTS, MOCK_STUDENTS } from '../constants';
 import { User } from '../types';
 import { Award, Star, Calendar, Filter, ChevronDown, MessageSquareQuote } from 'lucide-react';
 
@@ -10,8 +9,8 @@ interface StudentResultsProps {
 
 export const StudentResults: React.FC<StudentResultsProps> = ({ currentUser }) => {
   // --- Data Preparation ---
-  const allStudentGrades = useMemo(() => MOCK_GRADES.filter(g => g.studentId === currentUser.id), [currentUser.id]);
-  const studentInfo = useMemo(() => MOCK_STUDENTS.find(s => s.id === currentUser.id), [currentUser.id]);
+  const allStudentGrades = useMemo(() => [], [currentUser.id]);
+  const studentInfo = useMemo(() => ({ semesterEvaluation: '' }), [currentUser.id]);
 
   // Extract unique Academic Years and Semesters from data
   const availableYears = useMemo(() => {
@@ -42,7 +41,7 @@ export const StudentResults: React.FC<StudentResultsProps> = ({ currentUser }) =
       return (total / validGrades.length).toFixed(1);
   }, [displayedGrades]);
 
-  const getSubjectName = (id: string) => MOCK_SUBJECTS.find(s => s.id === id)?.name || id;
+  const getSubjectName = (id: string) => id;
 
   return (
     <div className="animate-fade-in pb-10">

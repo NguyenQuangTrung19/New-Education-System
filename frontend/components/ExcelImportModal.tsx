@@ -8,7 +8,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 interface ExcelImportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  type: 'students' | 'teachers';
+  type: 'students' | 'teachers' | 'classes';
   onSuccess: () => void;
 }
 
@@ -78,6 +78,15 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onClose, ty
     }
   };
 
+  const getTitle = () => {
+      switch(type) {
+          case 'students': return t('menu.students');
+          case 'teachers': return t('menu.teachers');
+          case 'classes': return t('menu.classes');
+          default: return '';
+      }
+  };
+
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
@@ -88,7 +97,7 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onClose, ty
             <div>
                 <h2 className="text-xl font-bold flex items-center gap-2">
                     <FileSpreadsheet className="h-6 w-6" />
-                    {t('import.title') || 'Import from Excel'} - {type === 'students' ? t('menu.students') : t('menu.teachers')}
+                    {t('import.title') || 'Import from Excel'} - {getTitle()}
                 </h2>
                 <p className="text-indigo-100 text-sm mt-1">{t('import.subtitle') || 'Upload your Excel file to import data in bulk.'}</p>
             </div>

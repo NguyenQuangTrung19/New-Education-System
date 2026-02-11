@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { MOCK_STUDENTS } from '../constants';
 import { Student, User, UserRole, ClassGroup } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { 

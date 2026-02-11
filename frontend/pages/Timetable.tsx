@@ -13,12 +13,6 @@ interface TimetableProps {
   onNavigate?: (page: string, params?: any) => void;
 }
 
-import { 
-  MOCK_TEACHERS, 
-  MOCK_SUBJECTS, 
-  MOCK_CLASSES 
-} from '../constants';
-
 interface TimeSlot {
   period: number;
   time: string;
@@ -274,11 +268,12 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
       setAssignments(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
   };
   const handleAddAssignment = () => {
+      if(teachersList.length === 0 || subjectsList.length === 0 || classesList.length === 0) return;
       const newAssignment: TeachingAssignment = {
           id: `ASN-${Date.now()}`,
-          teacherId: MOCK_TEACHERS[0].id,
-          subjectId: MOCK_SUBJECTS[0].id,
-          classId: MOCK_CLASSES[0].id,
+          teacherId: teachersList[0].id,
+          subjectId: subjectsList[0].id,
+          classId: classesList[0].id,
           sessionsPerWeek: 1
       };
       setAssignments([...assignments, newAssignment]);

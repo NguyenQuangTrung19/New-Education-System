@@ -1,13 +1,6 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { 
-  MOCK_STUDENTS, 
-  MOCK_TEACHERS, 
-  MOCK_CLASSES, 
-  MOCK_SUBJECTS, 
-  MOCK_SCHEDULE,
-  CHART_DATA_GENDER,
-  MOCK_ASSIGNMENTS_STUDENT,
   SCHOOL_INFO
 } from '../constants';
 import { 
@@ -29,7 +22,8 @@ import {
   PieChart, Pie, Cell, Legend, Area, AreaChart
 } from 'recharts';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Notification, User, UserRole } from '../types';
+import { Notification, User, UserRole, ScheduleItem, Subject, ClassGroup } from '../types';
+import api from '../src/api/client';
 
 interface DashboardProps {
   onNavigate: (page: string) => void;
@@ -99,10 +93,6 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, subtext, 
     );
 };
 
-import api from '../src/api/client';
-
-// ... (keep imports)
-
 export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications, currentUser }) => {
   const { t } = useLanguage();
   const isStudent = currentUser?.role === UserRole.STUDENT;
@@ -111,15 +101,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
   const [studentsData, setStudentsData] = useState<any[]>([]);
   const [teachersData, setTeachersData] = useState<any[]>([]);
   const [classesData, setClassesData] = useState<any[]>([]);
+  const [subjectsData, setSubjectsData] = useState<Subject[]>([]);
+  const [scheduleData, setScheduleData] = useState<ScheduleItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [sRes, tRes, cRes] = await Promise.all([
+        const [sRes, tRes, cRes, subRes, schRes] = await Promise.all([
           api.get('/students'),
           api.get('/teachers'),
-          api.get('/classes')
+          api.get('/classes'),
+          api.get('/subjects'),
+          api.get('/schedule')
         ]);
 
         // Transform data to match frontend interfaces (flatten user relation)
@@ -130,15 +124,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
           avatarUrl: s.user?.avatarUrl
         }));
 
-        const mappedTeachers = tRes.data;
-        
-        // Classes usually don't need flattening but relations might differ
         setStudentsData(mappedStudents);
-        setTeachersData(mappedTeachers);
+        setTeachersData(tRes.data);
         setClassesData(cRes.data);
+        setSubjectsData(subRes.data);
+        setScheduleData(schRes.data);
+        
       } catch (error) {
         console.error("Failed to fetch dashboard data", error);
-        // Keep empty to handle gracefully or show error
       } finally {
         setLoading(false);
       }
@@ -153,7 +146,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
   const bannerNotifications = useMemo(() => notifications.filter(n => n.bannerImage), [notifications]);
   
   useEffect(() => {
-    // ... (existing carousel logic)
     if (bannerNotifications.length > 1) {
       const interval = setInterval(() => {
         setCarouselIndex((prev) => (prev + 1) % bannerNotifications.length);
@@ -162,12 +154,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
     }
   }, [bannerNotifications]);
 
-  // Assignment Stats (Using Mock for now as backend assignments module not fully linked yet or empty)
+  // Assignment Stats (Placeholder until Assignments API is fully ready)
   const assignmentStats = useMemo(() => {
     return {
-      pending: MOCK_ASSIGNMENTS_STUDENT.filter(a => a.status === 'pending').length,
-      submitted: MOCK_ASSIGNMENTS_STUDENT.filter(a => a.status === 'submitted' || a.status === 'graded').length,
-      late: MOCK_ASSIGNMENTS_STUDENT.filter(a => a.status === 'late').length
+      pending: 0,
+      submitted: 0,
+      late: 0
     };
   }, []);
 
@@ -176,12 +168,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
   const studentRankings = useMemo(() => {
     if (loading) return [];
     
-    // Fallback to MOCK if empty? No, show real emptiness
     let list = [...studentsData];
-    // ... existing logic but using studentsData ...
-    // Note: currentUser might not map perfectly if ID formats differ between seed and mock
-    // Ignoring complex filtering for now to ensure list renders
-    
+    // In a real app, strict filtering by scope would happen here
+    // For now we just return top 5 by GPA
     return list.sort((a, b) => (b.gpa || 0) - (a.gpa || 0)).slice(0, 5).map((s, idx) => ({ ...s, rank: idx + 1 }));
   }, [leaderboardScope, currentUser, studentsData, loading]);
 
@@ -197,21 +186,30 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
   }, [studentsData, totalStudents]);
   
   const weeklyPerformanceData = useMemo(() => {
-     // Mocking this chart data for now as structure of history might be complex
+     // Placeholder data
     return [1, 2, 3, 4].map(week => ({
       week: `Week ${week}`,
       score: 85 + Math.random() * 10 
     }));
   }, []);
 
-  const genderData = useMemo(() => CHART_DATA_GENDER.map(item => ({ name: item.name, value: item.value })), []);
+  // Compute gender distribution from real data
+  const genderData = useMemo(() => {
+      if(studentsData.length === 0) return [{ name: 'Male', value: 0 }, { name: 'Female', value: 0 }];
+      const male = studentsData.filter(s => s.gender === 'Male').length;
+      const female = studentsData.filter(s => s.gender === 'Female').length;
+      return [
+        { name: 'Male', value: male },
+        { name: 'Female', value: female }
+      ];
+  }, [studentsData]);
   
   // Harmonized Chart Colors: Glacier Lake, Soft Mint, Muted Coral, Lavender
   const COLORS = ['#80B1D3', '#88D8B0', '#FF8E85', '#B5B9D9'];
 
   // --- Student Dashboard Render ---
   if (isStudent) {
-    const nextLesson = MOCK_SCHEDULE.find(s => s.classId === currentUser?.classId && s.day === 'Monday' && s.period === 1); 
+    const nextLesson = scheduleData.find(s => s.classId === currentUser?.classId && s.day === 'Monday' && s.period === 1); 
     
     return (
       <div className="space-y-8 animate-fade-in-up pb-10">
@@ -286,7 +284,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
                   
                   <div className="py-6">
                      <h2 className="text-3xl font-black leading-tight mb-2">
-                        {nextLesson ? MOCK_SUBJECTS.find(s=>s.id === nextLesson.subjectId)?.name : t('dashboard.timetable.freePeriod')}
+                        {nextLesson ? subjectsData.find(s=>s.id === nextLesson.subjectId)?.name : t('dashboard.timetable.freePeriod')}
                      </h2>
                      <div className="flex items-center gap-2 text-white bg-white/10 w-fit px-3 py-1 rounded-lg backdrop-blur-sm border border-white/20">
                         <School className="h-4 w-4"/> 
@@ -355,7 +353,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
                                 <div className="font-bold text-slate-800 text-sm">{student.name} {isMe && <span className="ml-2 text-xs font-medium text-glacier-lake bg-primary-100 px-2 py-0.5 rounded-full">{t('dashboard.leaderboard.you')}</span>}</div>
                              </td>
                              <td className="px-6 py-4 text-center text-sm font-medium text-slate-500">
-                                {MOCK_CLASSES.find(c => c.id === student.classId)?.name}
+                                {classesData.find((c: any) => c.id === student.classId)?.name}
                              </td>
                              <td className="px-6 py-4 text-right font-black text-slate-800">
                                 {student.gpa.toFixed(1)}
@@ -398,8 +396,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard title={t('dashboard.totalStudents')} value={totalStudents.toLocaleString()} icon={Users} theme="glacier" trend="up" trendValue="12%" />
-        <StatCard title={t('dashboard.totalTeachers')} value={totalTeachers} icon={GraduationCap} theme="mint" subtext={`${MOCK_SUBJECTS.length} Departments`} />
-        <StatCard title={t('dashboard.activeClasses')} value={totalClasses} icon={School} theme="coral" subtext={`~${Math.round(totalStudents / totalClasses)} per class`} />
+        <StatCard title={t('dashboard.totalTeachers')} value={totalTeachers} icon={GraduationCap} theme="mint" subtext={`${subjectsData.length} Departments`} />
+        <StatCard title={t('dashboard.activeClasses')} value={totalClasses} icon={School} theme="coral" subtext={`~${totalClasses > 0 ? Math.round(totalStudents / totalClasses) : 0} per class`} />
         <StatCard title={t('dashboard.stats.avgGpa')} value={avgGpa} icon={Award} theme="lavender" trend="up" trendValue="0.2 pts" />
       </div>
 
@@ -487,7 +485,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
             {/* Center Text */}
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
                <span className="text-4xl font-black text-slate-800 tracking-tighter">{totalStudents}</span>
-               <span className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mt-1">{t('dashboard.chart.students')}</span>
+               <span className="text--[10px] text-slate-400 uppercase font-bold tracking-widest mt-1">{t('dashboard.chart.students')}</span>
             </div>
           </div>
         </div>
@@ -495,3 +493,4 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
     </div>
   );
 };
+

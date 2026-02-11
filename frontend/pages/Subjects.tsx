@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import api from '../src/api/client';
-import { MOCK_SUBJECTS, MOCK_TEACHERS } from '../constants';
 import { Subject, Teacher, User, UserRole } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { 
@@ -77,9 +76,7 @@ export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
   // (though backend has teachingAssignments, we might not have loaded them all here)
   const getTeachersForSubject = (subject: Subject): Teacher[] => {
     // In a real app, we might fetch this detail or include it in the getAll response
-    return MOCK_TEACHERS.filter(t => 
-      t.subjects.some(s => s.toLowerCase() === subject.name.toLowerCase() || s.toLowerCase() === subject.code.toLowerCase())
-    );
+    return [];
   };
 
   const handleOpenAdd = () => {

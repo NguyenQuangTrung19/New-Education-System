@@ -1,12 +1,12 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { MOCK_CLASSES, MOCK_TEACHERS } from '../constants';
+
 import { ClassGroup, User, UserRole, Teacher } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { 
   Search, Plus, MapPin, Users, Eye, MoreVertical, X, Check, School, 
-  User as UserIcon, MessageSquare, Send, Calendar, TrendingUp, Award, BarChart2, Pencil, Trash2, Filter, ChevronDown
+  User as UserIcon, MessageSquare, Send, Calendar, TrendingUp, Award, BarChart2, Pencil, Trash2, Filter, ChevronDown, FileSpreadsheet
 } from 'lucide-react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area 
@@ -14,19 +14,22 @@ import {
 import { getCurrentAcademicYear } from '../utils';
 import api from '../src/api/client';
 
+import ExcelImportModal from '../components/ExcelImportModal';
+
 interface ClassesProps {
   currentUser: User | null;
 }
 
 export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
   const { t } = useLanguage();
-  const [classes, setClasses] = useState<ClassGroup[]>(MOCK_CLASSES);
+  const [classes, setClasses] = useState<ClassGroup[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState<ClassGroup | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingClass, setEditingClass] = useState<ClassGroup | null>(null);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const isAdmin = currentUser?.role === UserRole.ADMIN;
 
@@ -70,28 +73,33 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
   }, [formClass.name]);
   
   // Fetch Teachers for Dropdown
-  useEffect(() => {
-      const fetchTeachers = async () => {
-          try {
-              const res = await api.get('/teachers');
-              setTeachers(res.data);
-          } catch (err) {
-              console.error("Failed to fetch teachers", err);
-          }
-      };
-      
-      const fetchClasses = async () => {
-        try {
-            const res = await api.get('/classes');
-            setClasses(res.data);
-        } catch (err) {
-            console.error("Failed to fetch classes", err);
-        }
-      };
+  const fetchTeachers = async () => {
+    try {
+        const res = await api.get('/teachers');
+        setTeachers(res.data);
+    } catch (err) {
+        console.error("Failed to fetch teachers", err);
+    }
+  };
 
+  const fetchClasses = async () => {
+    try {
+        const res = await api.get('/classes');
+        setClasses(res.data);
+    } catch (err) {
+        console.error("Failed to fetch classes", err);
+    }
+  };
+
+  useEffect(() => {
       fetchTeachers();
       fetchClasses();
   }, []);
+
+  const handleImportSuccess = () => {
+      fetchClasses();
+      // Optionally refresh stats or other related data
+  };
 
   const filteredClasses = classes.filter(c => 
     c.academicYear === selectedYear &&
@@ -189,12 +197,6 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
     }
   };
 
-  // --- Components ---
-
-
-
-
-
   return (
     <div className="space-y-8 animate-fade-in pb-10">
       {/* Header Area */}
@@ -204,9 +206,14 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
           <p className="text-gray-500 mt-1">{t('classes.subtitle')}</p>
         </div>
         {isAdmin && (
-        <button onClick={handleOpenAdd} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-indigo-500/30 transition-all flex items-center whitespace-nowrap">
-            <Plus className="h-5 w-5 mr-2" /> {t('classes.add')}
-        </button>
+        <div className="flex gap-3">
+            <button onClick={() => setIsImportModalOpen(true)} className="bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50 px-5 py-2.5 rounded-xl font-medium shadow-sm transition-all flex items-center whitespace-nowrap">
+                <FileSpreadsheet className="h-5 w-5 mr-2" /> {t('import.title') || 'Import'}
+            </button>
+            <button onClick={handleOpenAdd} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-indigo-500/30 transition-all flex items-center whitespace-nowrap">
+                <Plus className="h-5 w-5 mr-2" /> {t('classes.add')}
+            </button>
+        </div>
         )}
       </div>
 
@@ -340,9 +347,18 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
             teachers={teachers}
         />
       )}
+      {isAdmin && (
+        <ExcelImportModal
+            isOpen={isImportModalOpen}
+            onClose={() => setIsImportModalOpen(false)}
+            type="classes"
+            onSuccess={handleImportSuccess}
+        />
+      )}
     </div>
   );
 };
+
 
 // --- Extracted Components ---
 

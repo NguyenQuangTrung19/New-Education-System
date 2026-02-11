@@ -2,7 +2,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { User, SemesterTuition } from '../types';
-import { MOCK_TUITION } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
 import { 
   CreditCard, Calendar, Filter, ChevronDown, CheckCircle, 
@@ -25,10 +24,10 @@ export const Tuition: React.FC<TuitionProps> = ({ currentUser }) => {
   const [tuitionRecords, setTuitionRecords] = useState<SemesterTuition[]>(() => {
       try {
           const saved = localStorage.getItem('tuition_records');
-          return saved ? JSON.parse(saved) : MOCK_TUITION;
+          return saved ? JSON.parse(saved) : [];
       } catch (e) {
           console.error("Error loading tuition records", e);
-          return MOCK_TUITION;
+          return [];
       }
   });
 

@@ -1,7 +1,6 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { MOCK_STUDENTS, MOCK_CLASSES } from '../constants';
 import { Student, User, UserRole } from '../types';
 import { 
   Trophy, Crown, Calendar, ChevronDown, 
@@ -385,17 +384,12 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
   const availableYears = useMemo(() => {
       const years = new Set<string>();
       years.add(currentYear);
-      MOCK_STUDENTS.forEach(s => {
-          s.academicHistory.forEach(h => years.add(h.year));
-      });
       return Array.from(years).sort().reverse().map(y => ({ value: y, label: y }));
   }, []);
 
   // Generate available grades
   const availableGrades = useMemo(() => {
-      const grades = new Set(MOCK_CLASSES.map(c => c.gradeLevel));
-      const list = Array.from(grades).sort((a,b) => a - b).map(g => ({ value: g.toString(), label: `Khối ${g}` }));
-      return [{ value: 'all', label: 'Tất cả Khối' }, ...list];
+      return [{ value: 'all', label: 'Tất cả Khối' }];
   }, []);
 
   const handleYearChange = (year: string) => {
@@ -422,45 +416,9 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
 
   const leaderboardData = useMemo(() => {
       if (rankingType === 'individual') {
-          let data = MOCK_STUDENTS.map(s => {
-              const classInfo = MOCK_CLASSES.find(c => c.id === s.classId);
-              return {
-                  id: s.id,
-                  name: s.name,
-                  subText: classInfo?.name || s.classId,
-                  avatarChar: s.name.charAt(0),
-                  score: getStudentScore(s, timeFrame),
-                  gradeLevel: classInfo?.gradeLevel || 0,
-                  type: 'student',
-                  trend: Math.random() > 0.5 ? 'up' : 'down' // Mock trend
-              };
-          });
-
-          if (selectedGrade !== 'all') {
-              data = data.filter(d => d.gradeLevel === parseInt(selectedGrade));
-          }
-
-          data = data.filter(s => s.score > 0).sort((a, b) => b.score - a.score);
-          return data;
-
+          return [];
       } else {
-          let data = MOCK_CLASSES.map(c => ({
-              id: c.id,
-              name: c.name,
-              subText: `Sĩ số: ${c.studentCount}`,
-              avatarChar: c.gradeLevel.toString(),
-              score: c.averageGpa,
-              gradeLevel: c.gradeLevel,
-              type: 'class',
-              trend: Math.random() > 0.5 ? 'up' : 'same'
-          }));
-
-          if (selectedGrade !== 'all') {
-              data = data.filter(d => d.gradeLevel === parseInt(selectedGrade));
-          }
-
-          data = data.sort((a, b) => b.score - a.score);
-          return data;
+          return [];
       }
   }, [rankingType, selectedGrade, selectedYear, timeFrame]);
 
@@ -488,15 +446,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
   }, [leaderboardData, currentUser, rankingType]);
 
   const hallOfFame = useMemo(() => {
-      const historyMap: Record<string, { name: string, gpa: number, year: string }> = {};
-      MOCK_STUDENTS.forEach(s => {
-          s.academicHistory.forEach(rec => {
-              if (!historyMap[rec.year] || rec.gpa > historyMap[rec.year].gpa) {
-                  historyMap[rec.year] = { name: s.name, gpa: rec.gpa, year: rec.year };
-              }
-          });
-      });
-      return Object.values(historyMap).sort((a, b) => b.year.localeCompare(a.year));
+      return [];
   }, []);
 
   useEffect(() => {

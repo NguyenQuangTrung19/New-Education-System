@@ -24,7 +24,7 @@ import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { UserRole, User, Notification } from './types';
 import { useLanguage } from './contexts/LanguageContext';
-import { MOCK_NOTIFICATIONS } from './constants';
+
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -60,7 +60,7 @@ const App: React.FC = () => {
   });
   
   // Notification State
-  const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   // Sidebar states
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Mobile toggle

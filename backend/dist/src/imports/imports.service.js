@@ -80,6 +80,13 @@ const TEACHER_HEADERS = {
     'address': 'address',
     'subjects': 'subjects'
 };
+const CLASS_HEADERS = {
+    'class_name': 'class_name',
+    'classroom': 'classroom',
+    'academic_year': 'academic_year',
+    'homeroom_teacher': 'homeroom_teacher',
+    'description': 'description'
+};
 let ImportsService = class ImportsService {
     prisma;
     idGenerator;
@@ -92,7 +99,7 @@ let ImportsService = class ImportsService {
     async importData(file, type) {
         if (!file)
             throw new common_1.BadRequestException('No file provided');
-        if (type !== 'students' && type !== 'teachers')
+        if (type !== 'students' && type !== 'teachers' && type !== 'classes')
             throw new common_1.BadRequestException('Invalid import type');
         const workbook = XLSX.read(file.buffer, { type: 'buffer' });
         const sheetName = workbook.SheetNames[0];
@@ -102,7 +109,13 @@ let ImportsService = class ImportsService {
             throw new common_1.BadRequestException('File is empty');
         const firstRow = jsonData[0];
         const headers = Object.keys(firstRow || {});
-        const expectedHeaders = type === 'students' ? Object.keys(STUDENT_HEADERS) : Object.keys(TEACHER_HEADERS);
+        let expectedHeaders = [];
+        if (type === 'students')
+            expectedHeaders = Object.keys(STUDENT_HEADERS);
+        else if (type === 'teachers')
+            expectedHeaders = Object.keys(TEACHER_HEADERS);
+        else
+            expectedHeaders = Object.keys(CLASS_HEADERS);
         const errors = [];
         const validData = [];
         for (let i = 0; i < jsonData.length; i++) {
@@ -199,52 +212,68 @@ let ImportsService = class ImportsService {
         let count = 0;
         await this.prisma.$transaction(async (tx) => {
             for (const item of data) {
-                const defaultPass = await this.passwordService.hashPassword('123456');
-                const encryptedPass = this.passwordService.encryptPassword('123456');
-                const user = await tx.user.create({
-                    data: {
-                        username: item.username,
-                        password: defaultPass,
-                        passwordEncrypted: encryptedPass,
-                        name: item.full_name,
-                        email: item.email || `${item.username}@school.edu`,
-                        role: type === 'students' ? 'STUDENT' : 'TEACHER'
-                    }
-                });
-                if (type === 'students') {
-                    const id = item.student_code || await this.idGenerator.generateStudentId(new Date().getFullYear());
-                    await tx.student.create({
+                if (type === 'classes') {
+                    const id = await this.idGenerator.generateClassId(item.academic_year);
+                    await tx.classGroup.create({
                         data: {
                             id,
-                            userId: user.id,
-                            classId: item.classId,
-                            enrollmentYear: new Date().getFullYear(),
-                            dateOfBirth: new Date(item.dob),
-                            gender: item.gender,
-                            address: item.address,
-                            guardianName: item.guardian_name,
-                            guardianPhone: item.guardian_phone,
-                            guardianCitizenId: item.guardian_citizen_id,
-                            guardianJob: item.guardian_occupation,
-                            guardianYearOfBirth: item.guardian_birth_year,
+                            name: item.class_name,
+                            gradeLevel: item.gradeLevel,
+                            room: item.classroom,
+                            academicYear: item.academic_year,
+                            description: item.description,
+                            teacherId: item.teacherId
                         }
                     });
                 }
                 else {
-                    await tx.teacher.create({
+                    const defaultPass = await this.passwordService.hashPassword('123456');
+                    const encryptedPass = this.passwordService.encryptPassword('123456');
+                    const user = await tx.user.create({
                         data: {
-                            id: `GV${Math.floor(Math.random() * 10000)}`,
-                            userId: user.id,
-                            subjects: item.subjectList,
-                            citizenId: item.citizen_id,
-                            gender: item.gender,
-                            phone: item.phone,
-                            address: item.address,
-                            joinYear: item.start_year,
-                            dateOfBirth: new Date(item.dob),
-                            department: item.departmentId,
+                            username: item.username,
+                            password: defaultPass,
+                            passwordEncrypted: encryptedPass,
+                            name: item.full_name,
+                            email: item.email || `${item.username}@school.edu`,
+                            role: type === 'students' ? 'STUDENT' : 'TEACHER'
                         }
                     });
+                    if (type === 'students') {
+                        const id = item.student_code || await this.idGenerator.generateStudentId(new Date().getFullYear());
+                        await tx.student.create({
+                            data: {
+                                id,
+                                userId: user.id,
+                                classId: item.classId,
+                                enrollmentYear: new Date().getFullYear(),
+                                dateOfBirth: new Date(item.dob),
+                                gender: item.gender,
+                                address: item.address,
+                                guardianName: item.guardian_name,
+                                guardianPhone: item.guardian_phone,
+                                guardianCitizenId: item.guardian_citizen_id,
+                                guardianJob: item.guardian_occupation,
+                                guardianYearOfBirth: item.guardian_birth_year,
+                            }
+                        });
+                    }
+                    else if (type === 'teachers') {
+                        await tx.teacher.create({
+                            data: {
+                                id: `GV${Math.floor(Math.random() * 10000)}`,
+                                userId: user.id,
+                                subjects: item.subjectList,
+                                citizenId: item.citizen_id,
+                                gender: item.gender,
+                                phone: item.phone,
+                                address: item.address,
+                                joinYear: item.start_year,
+                                dateOfBirth: new Date(item.dob),
+                                department: item.departmentId,
+                            }
+                        });
+                    }
                 }
                 count++;
             }

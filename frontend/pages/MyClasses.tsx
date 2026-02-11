@@ -1,7 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { User, ClassGroup, ScheduleItem, Student, StudentGrade, LessonFeedback, UserRole, AttendanceRecord, AttendanceStatus } from '../types';
-import { MOCK_CLASSES, MOCK_SCHEDULE, MOCK_STUDENTS, MOCK_GRADES, MOCK_FEEDBACK, MOCK_SUBJECTS, MOCK_ATTENDANCE } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
 import { 
   BookOpen, Users, MapPin, ChevronLeft, ChevronRight, CheckCircle, 
@@ -63,12 +62,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(getStartOfWeek(new Date()));
 
   // --- GRADING STATE ---
-  const [grades, setGrades] = useState<StudentGrade[]>(() => {
-      return MOCK_GRADES.map(g => ({
-          ...g,
-          average: calculateAverage(g)
-      }));
-  });
+  const [grades, setGrades] = useState<StudentGrade[]>(() => []);
 
   const [tempGrades, setTempGrades] = useState<StudentGrade[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -88,12 +82,10 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
       setHasUnsavedChanges(false);
   }, [grades, selectedClassId]);
 
-  const [feedbacks, setFeedbacks] = useState<LessonFeedback[]>(
-      MOCK_FEEDBACK.map(f => ({ ...f, date: f.date || new Date().toISOString().split('T')[0] }))
-  );
+  const [feedbacks, setFeedbacks] = useState<LessonFeedback[]>([]);
 
   // Attendance State
-  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(MOCK_ATTENDANCE);
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [attendanceModalOpen, setAttendanceModalOpen] = useState(false);
   const [currentAttendanceSession, setCurrentAttendanceSession] = useState<{scheduleId: string, date: string} | null>(null);
   const [tempAttendance, setTempAttendance] = useState<AttendanceRecord[]>([]);
@@ -175,20 +167,12 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
 
   // --- Data Logic ---
 
-  const myClasses = useMemo(() => {
-     const teacherClasses = new Set<string>();
-     MOCK_CLASSES.forEach(c => { if (c.teacherId === currentUser.id) teacherClasses.add(c.id); });
-     MOCK_SCHEDULE.forEach(s => { if (s.teacherId === currentUser.id) teacherClasses.add(s.classId); });
-     return MOCK_CLASSES.filter(c => teacherClasses.has(c.id));
-  }, [currentUser.id]);
+  const myClasses = useMemo(() => [], [currentUser.id]);
 
   const selectedClass = myClasses.find(c => c.id === selectedClassId);
   const isHomeroom = selectedClass?.teacherId === currentUser.id;
 
-  const classStudents = useMemo(() => {
-      if (!selectedClassId) return [];
-      return MOCK_STUDENTS.filter(s => s.classId === selectedClassId);
-  }, [selectedClassId]);
+  const classStudents = useMemo(() => [], [selectedClassId]);
 
   useEffect(() => {
       const evals: Record<string, string> = {};
@@ -200,8 +184,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
 
   const currentSubjectId = useMemo(() => {
       if (!selectedClassId) return null;
-      const schedule = MOCK_SCHEDULE.find(s => s.classId === selectedClassId && s.teacherId === currentUser.id);
-      return schedule ? schedule.subjectId : null;
+      return null;
   }, [selectedClassId, currentUser.id]);
 
   // --- PENDING SIGNATURES LOGIC ---
@@ -211,7 +194,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
       const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
       myClasses.forEach(cls => {
-          const classSchedule = MOCK_SCHEDULE.filter(s => s.classId === cls.id && s.teacherId === currentUser.id);
+          const classSchedule: any[] = [];
           let pendingCount = 0;
 
           // Check for current week (using dashboard state)
@@ -479,7 +462,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
       if (!selectedClassId) return [];
       const dayMap: Record<string, number> = { 'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3, 'Friday': 4 };
       const currentTime = new Date();
-      const templateLessons = MOCK_SCHEDULE.filter(s => s.classId === selectedClassId && s.teacherId === currentUser.id);
+      const templateLessons = [];
       
       return templateLessons.map(lesson => {
           const dayOffset = dayMap[lesson.day];
@@ -608,9 +591,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {myClasses.map(cls => {
                   const isHomeroomClass = cls.teacherId === currentUser.id;
-                  const subjectName = MOCK_SCHEDULE.find(s => s.classId === cls.id && s.teacherId === currentUser.id)?.subjectId 
-                                      ? MOCK_SUBJECTS.find(sub => sub.id === MOCK_SCHEDULE.find(s => s.classId === cls.id && s.teacherId === currentUser.id)?.subjectId)?.name 
-                                      : 'Subject';
+                  const subjectName = 'Subject';
                   
                   // Check if this specific class has pending signatures from our computed list
                   const classPending = pendingSignatures.find(p => p.classId === cls.id)?.count || 0;
@@ -688,7 +669,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
                     )}
                     <span className="text-sm font-normal text-gray-500 bg-white px-2 py-1 rounded border border-gray-200">{selectedClass?.room}</span>
                 </h2>
-                <p className="text-sm text-indigo-600 font-medium">{t('myClasses.dashboard.subject')}: {MOCK_SUBJECTS.find(s=>s.id === currentSubjectId)?.name || 'N/A'}</p>
+                <p className="text-sm text-indigo-600 font-medium">{t('myClasses.dashboard.subject')}: {'N/A'}</p>
             </div>
             
             {/* View Switcher / Navigation */}

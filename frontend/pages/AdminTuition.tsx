@@ -1,8 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { MOCK_CLASSES, MOCK_STUDENTS, MOCK_TUITION } from '../constants';
-import { useLanguage } from '../contexts/LanguageContext';
 import { SemesterTuition, TuitionItem, User, UserRole } from '../types';
+import { useLanguage } from '../contexts/LanguageContext';
 import { 
   CreditCard, Calendar, Filter, ChevronDown, CheckCircle, 
   Receipt, Building, Check, Search, Plus, Save, Users, Layers, AlertCircle
@@ -46,9 +45,9 @@ export const AdminTuition: React.FC<AdminTuitionProps> = ({ currentUser }) => {
   const [tuitionRecords, setTuitionRecords] = useState<SemesterTuition[]>(() => {
       try {
           const saved = localStorage.getItem('tuition_records');
-          return saved ? JSON.parse(saved) : MOCK_TUITION;
+          return saved ? JSON.parse(saved) : [];
       } catch (e) {
-          return MOCK_TUITION;
+          return [];
       }
   });
 
@@ -58,14 +57,11 @@ export const AdminTuition: React.FC<AdminTuitionProps> = ({ currentUser }) => {
 
   // --- COMPUTED DATA ---
   
-  const classList = useMemo(() => MOCK_CLASSES, []);
+  const classList = useMemo(() => [], []);
   
   const filteredStudents = useMemo(() => {
       if (!selectedClassId) return [];
-      return MOCK_STUDENTS.filter(s => 
-          s.classId === selectedClassId && 
-          (s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.id.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
+      return [];
   }, [selectedClassId, searchTerm]);
 
   // Strict Validation Logic

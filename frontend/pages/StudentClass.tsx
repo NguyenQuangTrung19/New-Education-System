@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { MOCK_ASSIGNMENTS_STUDENT, MOCK_MATERIALS, MOCK_SUBJECTS, MOCK_STUDENTS } from '../constants';
+import { Assignment, User, LearningMaterial } from '../types';
 import { 
   FileText, PlayCircle, Link, Download, CheckCircle, Clock, 
   AlertTriangle, Search, Lock, ChevronRight, BookOpen, AlertCircle, 
   Flag, ArrowLeft, Send, Check, Menu, X, Timer, ArrowRight, ChevronLeft
 } from 'lucide-react';
-import { Assignment, User, LearningMaterial } from '../types';
+
 import api from '../src/api/client';
 
 // --- MOCK QUIZ DATA (Fallback) ---
@@ -30,7 +30,7 @@ export const StudentClass: React.FC<StudentClassProps> = ({ currentUser }) => {
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   
   // Get student's classId
-  const studentProfile = useMemo(() => MOCK_STUDENTS.find(s => s.id === currentUser.id), [currentUser.id]);
+  const studentProfile: any = null;
   const userClassId = studentProfile?.classId;
 
   // --- DATA LOADING & MERGING ---
@@ -74,7 +74,7 @@ export const StudentClass: React.FC<StudentClassProps> = ({ currentUser }) => {
     fetchAssignments();
 
     // Load Materials (Keep existing logic or fetch from API)
-    setAllMaterials(MOCK_MATERIALS);
+    setAllMaterials([]);
 
   }, [userClassId, currentUser.classId]);
 
@@ -97,8 +97,8 @@ export const StudentClass: React.FC<StudentClassProps> = ({ currentUser }) => {
   const [isPaletteOpen, setIsPaletteOpen] = useState(false); // Mobile drawer
 
   // --- Helpers ---
-  const getSubjectName = (id: string) => MOCK_SUBJECTS.find(s => s.id === id)?.name || id;
-  const getSubjectCode = (id: string) => MOCK_SUBJECTS.find(s => s.id === id)?.code || id;
+  const getSubjectName = (id: string) => id;
+  const getSubjectCode = (id: string) => id;
 
   // Grouping Logic
   const groupedAssignments = useMemo(() => {

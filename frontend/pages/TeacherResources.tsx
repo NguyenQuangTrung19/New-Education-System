@@ -2,7 +2,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { User, ClassGroup, LearningMaterial } from '../types';
-import { MOCK_CLASSES, MOCK_MATERIALS, MOCK_SCHEDULE } from '../constants';
 import { 
   FolderOpen, Package, Plus, Search, FileText, Video, Link, 
   Download, Trash2, X, UploadCloud, ChevronRight, ArrowLeft,
@@ -224,10 +223,10 @@ export const TeacherResources: React.FC<TeacherResourcesProps> = ({ currentUser 
       try {
           const saved = localStorage.getItem('learning_materials');
           // If no local data, use MOCK_MATERIALS as default base
-          return saved ? JSON.parse(saved) : MOCK_MATERIALS;
+          return saved ? JSON.parse(saved) : [];
       } catch (e) {
           console.error("Data corruption in materials, resetting.", e);
-          return MOCK_MATERIALS;
+          return [];
       }
   });
 
@@ -263,20 +262,7 @@ export const TeacherResources: React.FC<TeacherResourcesProps> = ({ currentUser 
   const [docFormData, setDocFormData] = useState(initialDocState);
 
   // 1. Get Official Classes (Homeroom + Teaching Classes)
-  const officialClasses = useMemo(() => {
-    const homeroomClasses = MOCK_CLASSES.filter(c => c.teacherId === currentUser.id);
-    
-    const teachingClassIds = new Set(
-        MOCK_SCHEDULE
-            .filter(s => s.teacherId === currentUser.id)
-            .map(s => s.classId)
-    );
-    const teachingClasses = MOCK_CLASSES.filter(c => teachingClassIds.has(c.id));
-    
-    const combined = [...homeroomClasses, ...teachingClasses];
-    // Deduplicate
-    return Array.from(new Map(combined.map(item => [item.id, item])).values());
-  }, [currentUser.id]);
+  const officialClasses = useMemo(() => [], []);
 
   // 2. Combine Official + Custom for Display
   const allResourceBoxes = useMemo(() => {
