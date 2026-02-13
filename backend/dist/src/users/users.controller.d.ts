@@ -7,12 +7,12 @@ export declare class UsersController {
         success: boolean;
     }>;
     updatePassword(id: string, body: AdminUpdatePasswordDto): Promise<{
+        name: string;
         id: string;
         username: string;
-        email: string;
         password: string;
         passwordEncrypted: string | null;
-        name: string;
+        email: string;
         role: import(".prisma/client").$Enums.UserRole;
         avatarUrl: string | null;
         createdAt: Date;

@@ -5,8 +5,8 @@ export declare class SubjectsController {
     private readonly subjectsService;
     constructor(subjectsService: SubjectsService);
     create(createSubjectDto: CreateSubjectDto): import(".prisma/client").Prisma.Prisma__SubjectClient<{
-        id: string;
         name: string;
+        id: string;
         department: string | null;
         description: string | null;
         code: string;
@@ -20,16 +20,16 @@ export declare class SubjectsController {
             updatedAt: Date;
             teacherId: string;
             description: string | null;
+            subjectId: string;
             title: string;
             classIds: string[];
             dueDate: Date;
             duration: number | null;
             questions: import("@prisma/client/runtime/library").JsonValue | null;
-            subjectId: string;
         }[];
     } & {
-        id: string;
         name: string;
+        id: string;
         department: string | null;
         description: string | null;
         code: string;
@@ -38,12 +38,12 @@ export declare class SubjectsController {
         teachingAssignments: ({
             teacher: {
                 user: {
+                    name: string;
                     id: string;
                     username: string;
-                    email: string;
                     password: string;
                     passwordEncrypted: string | null;
-                    name: string;
+                    email: string;
                     role: import(".prisma/client").$Enums.UserRole;
                     avatarUrl: string | null;
                     createdAt: Date;
@@ -65,8 +65,8 @@ export declare class SubjectsController {
             };
         } & {
             id: string;
-            teacherId: string;
             classId: string;
+            teacherId: string;
             subjectId: string;
             sessionsPerWeek: number;
         })[];
@@ -77,30 +77,30 @@ export declare class SubjectsController {
             updatedAt: Date;
             teacherId: string;
             description: string | null;
+            subjectId: string;
             title: string;
             classIds: string[];
             dueDate: Date;
             duration: number | null;
             questions: import("@prisma/client/runtime/library").JsonValue | null;
-            subjectId: string;
         }[];
     } & {
-        id: string;
         name: string;
+        id: string;
         department: string | null;
         description: string | null;
         code: string;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
     update(id: string, updateSubjectDto: UpdateSubjectDto): import(".prisma/client").Prisma.Prisma__SubjectClient<{
-        id: string;
         name: string;
+        id: string;
         department: string | null;
         description: string | null;
         code: string;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     remove(id: string): import(".prisma/client").Prisma.Prisma__SubjectClient<{
-        id: string;
         name: string;
+        id: string;
         department: string | null;
         description: string | null;
         code: string;

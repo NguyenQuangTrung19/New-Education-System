@@ -12,8 +12,8 @@ export declare class TeachersService {
         username: string;
         avatarUrl: string | null;
         classes: {
-            id: string;
             name: string;
+            id: string;
             notes: string[];
             gradeLevel: number;
             room: string | null;
@@ -46,8 +46,8 @@ export declare class TeachersService {
         username: string;
         avatarUrl: string | null;
         classes: {
-            id: string;
             name: string;
+            id: string;
             notes: string[];
             gradeLevel: number;
             room: string | null;
@@ -62,9 +62,16 @@ export declare class TeachersService {
             weeklyScoreHistory: import("@prisma/client/runtime/library").JsonValue;
         }[];
         teachingAssignments: ({
-            class: {
-                id: string;
+            subject: {
                 name: string;
+                id: string;
+                department: string | null;
+                description: string | null;
+                code: string;
+            };
+            class: {
+                name: string;
+                id: string;
                 notes: string[];
                 gradeLevel: number;
                 room: string | null;
@@ -78,17 +85,10 @@ export declare class TeachersService {
                 femaleStudentCount: number;
                 weeklyScoreHistory: import("@prisma/client/runtime/library").JsonValue;
             };
-            subject: {
-                id: string;
-                name: string;
-                department: string | null;
-                description: string | null;
-                code: string;
-            };
         } & {
             id: string;
-            teacherId: string;
             classId: string;
+            teacherId: string;
             subjectId: string;
             sessionsPerWeek: number;
         })[];
@@ -107,12 +107,12 @@ export declare class TeachersService {
     } | null>;
     create(createTeacherDto: any): Promise<{
         user: {
+            name: string;
             id: string;
             username: string;
-            email: string;
             password: string;
             passwordEncrypted: string | null;
-            name: string;
+            email: string;
             role: import(".prisma/client").$Enums.UserRole;
             avatarUrl: string | null;
             createdAt: Date;
@@ -146,12 +146,12 @@ export declare class TeachersService {
         userId: string;
     }>;
     remove(id: string): Promise<{
+        name: string;
         id: string;
         username: string;
-        email: string;
         password: string;
         passwordEncrypted: string | null;
-        name: string;
+        email: string;
         role: import(".prisma/client").$Enums.UserRole;
         avatarUrl: string | null;
         createdAt: Date;

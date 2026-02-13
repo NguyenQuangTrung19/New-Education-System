@@ -5,14 +5,14 @@ export declare class StudentsController {
     constructor(studentsService: StudentsService);
     findAll(): Promise<({
         user: {
+            name: string;
             username: string;
             email: string;
-            name: string;
             avatarUrl: string | null;
         };
         class: {
-            id: string;
             name: string;
+            id: string;
             notes: string[];
             gradeLevel: number;
             room: string | null;
@@ -45,20 +45,20 @@ export declare class StudentsController {
     })[]>;
     findOne(id: string): Promise<({
         user: {
+            name: string;
             id: string;
             username: string;
-            email: string;
             password: string;
             passwordEncrypted: string | null;
-            name: string;
+            email: string;
             role: import(".prisma/client").$Enums.UserRole;
             avatarUrl: string | null;
             createdAt: Date;
             updatedAt: Date;
         };
         class: {
-            id: string;
             name: string;
+            id: string;
             notes: string[];
             gradeLevel: number;
             room: string | null;
@@ -81,8 +81,8 @@ export declare class StudentsController {
         }[];
         grades: ({
             subject: {
-                id: string;
                 name: string;
+                id: string;
                 department: string | null;
                 description: string | null;
                 code: string;
@@ -90,30 +90,30 @@ export declare class StudentsController {
         } & {
             id: string;
             academicYear: string;
-            subjectId: string;
             studentId: string;
-            feedback: string | null;
+            subjectId: string;
             semester: string;
             oralScore: number | null;
             fifteenMinScores: number[];
             midTermScore: number | null;
             finalScore: number | null;
             average: number | null;
+            feedback: string | null;
         })[];
         attendance: {
             id: string;
             studentId: string;
-            status: import(".prisma/client").$Enums.AttendanceStatus;
             scheduleId: string | null;
             date: Date;
+            status: import(".prisma/client").$Enums.AttendanceStatus;
             note: string | null;
         }[];
         tuitions: {
             id: string;
             academicYear: string;
             studentId: string;
-            status: import(".prisma/client").$Enums.TuitionSemesterStatus;
             semester: string;
+            status: import(".prisma/client").$Enums.TuitionSemesterStatus;
             totalAmount: number;
             totalPaid: number;
         }[];
@@ -136,12 +136,12 @@ export declare class StudentsController {
     }) | null>;
     create(createStudentDto: CreateStudentDto): Promise<{
         user: {
+            name: string;
             id: string;
             username: string;
-            email: string;
             password: string;
             passwordEncrypted: string | null;
-            name: string;
+            email: string;
             role: import(".prisma/client").$Enums.UserRole;
             avatarUrl: string | null;
             createdAt: Date;
@@ -181,12 +181,12 @@ export declare class StudentsController {
         classId: string | null;
     }>;
     remove(id: string): Promise<{
+        name: string;
         id: string;
         username: string;
-        email: string;
         password: string;
         passwordEncrypted: string | null;
-        name: string;
+        email: string;
         role: import(".prisma/client").$Enums.UserRole;
         avatarUrl: string | null;
         createdAt: Date;

@@ -29,8 +29,8 @@ export declare class ClassesService {
             students: number;
         };
     } & {
-        id: string;
         name: string;
+        id: string;
         notes: string[];
         gradeLevel: number;
         room: string | null;
@@ -47,12 +47,12 @@ export declare class ClassesService {
     findOne(id: string): Promise<({
         teacher: ({
             user: {
+                name: string;
                 id: string;
                 username: string;
-                email: string;
                 password: string;
                 passwordEncrypted: string | null;
-                name: string;
+                email: string;
                 role: import(".prisma/client").$Enums.UserRole;
                 avatarUrl: string | null;
                 createdAt: Date;
@@ -75,12 +75,12 @@ export declare class ClassesService {
         teachingAssignments: ({
             teacher: {
                 user: {
+                    name: string;
                     id: string;
                     username: string;
-                    email: string;
                     password: string;
                     passwordEncrypted: string | null;
-                    name: string;
+                    email: string;
                     role: import(".prisma/client").$Enums.UserRole;
                     avatarUrl: string | null;
                     createdAt: Date;
@@ -101,28 +101,28 @@ export declare class ClassesService {
                 userId: string;
             };
             subject: {
-                id: string;
                 name: string;
+                id: string;
                 department: string | null;
                 description: string | null;
                 code: string;
             };
         } & {
             id: string;
-            teacherId: string;
             classId: string;
+            teacherId: string;
             subjectId: string;
             sessionsPerWeek: number;
         })[];
         scheduleItems: ({
             teacher: ({
                 user: {
+                    name: string;
                     id: string;
                     username: string;
-                    email: string;
                     password: string;
                     passwordEncrypted: string | null;
-                    name: string;
+                    email: string;
                     role: import(".prisma/client").$Enums.UserRole;
                     avatarUrl: string | null;
                     createdAt: Date;
@@ -143,30 +143,30 @@ export declare class ClassesService {
                 userId: string;
             }) | null;
             subject: {
-                id: string;
                 name: string;
+                id: string;
                 department: string | null;
                 description: string | null;
                 code: string;
             };
         } & {
             id: string;
+            classId: string;
+            day: string;
             room: string | null;
             teacherId: string | null;
-            classId: string;
             subjectId: string;
-            day: string;
             period: number;
             session: string;
         })[];
         students: ({
             user: {
+                name: string;
                 id: string;
                 username: string;
-                email: string;
                 password: string;
                 passwordEncrypted: string | null;
-                name: string;
+                email: string;
                 role: import(".prisma/client").$Enums.UserRole;
                 avatarUrl: string | null;
                 createdAt: Date;
@@ -190,8 +190,8 @@ export declare class ClassesService {
             classId: string | null;
         })[];
     } & {
-        id: string;
         name: string;
+        id: string;
         notes: string[];
         gradeLevel: number;
         room: string | null;
@@ -206,8 +206,8 @@ export declare class ClassesService {
         weeklyScoreHistory: import("@prisma/client/runtime/library").JsonValue;
     }) | null>;
     create(createClassDto: CreateClassDto): Promise<{
-        id: string;
         name: string;
+        id: string;
         notes: string[];
         gradeLevel: number;
         room: string | null;
@@ -222,8 +222,8 @@ export declare class ClassesService {
         weeklyScoreHistory: import("@prisma/client/runtime/library").JsonValue;
     }>;
     update(id: string, updateClassDto: UpdateClassDto): Promise<{
-        id: string;
         name: string;
+        id: string;
         notes: string[];
         gradeLevel: number;
         room: string | null;
@@ -238,8 +238,8 @@ export declare class ClassesService {
         weeklyScoreHistory: import("@prisma/client/runtime/library").JsonValue;
     }>;
     remove(id: string): Promise<{
-        id: string;
         name: string;
+        id: string;
         notes: string[];
         gradeLevel: number;
         room: string | null;

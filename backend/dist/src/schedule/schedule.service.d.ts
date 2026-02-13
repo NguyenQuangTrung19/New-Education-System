@@ -6,23 +6,23 @@ export declare class ScheduleService {
     constructor(prisma: PrismaService);
     create(createScheduleDto: CreateScheduleDto): import(".prisma/client").Prisma.Prisma__ScheduleItemClient<{
         id: string;
+        classId: string;
+        day: string;
         room: string | null;
         teacherId: string | null;
-        classId: string;
         subjectId: string;
-        day: string;
         period: number;
         session: string;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     findAll(query?: any): import(".prisma/client").Prisma.PrismaPromise<({
         teacher: ({
             user: {
+                name: string;
                 id: string;
                 username: string;
-                email: string;
                 password: string;
                 passwordEncrypted: string | null;
-                name: string;
+                email: string;
                 role: import(".prisma/client").$Enums.UserRole;
                 avatarUrl: string | null;
                 createdAt: Date;
@@ -42,9 +42,16 @@ export declare class ScheduleService {
             notes: string[];
             userId: string;
         }) | null;
-        class: {
-            id: string;
+        subject: {
             name: string;
+            id: string;
+            department: string | null;
+            description: string | null;
+            code: string;
+        };
+        class: {
+            name: string;
+            id: string;
             notes: string[];
             gradeLevel: number;
             room: string | null;
@@ -58,32 +65,25 @@ export declare class ScheduleService {
             femaleStudentCount: number;
             weeklyScoreHistory: import("@prisma/client/runtime/library").JsonValue;
         };
-        subject: {
-            id: string;
-            name: string;
-            department: string | null;
-            description: string | null;
-            code: string;
-        };
     } & {
         id: string;
+        classId: string;
+        day: string;
         room: string | null;
         teacherId: string | null;
-        classId: string;
         subjectId: string;
-        day: string;
         period: number;
         session: string;
     })[]>;
     findOne(id: string): import(".prisma/client").Prisma.Prisma__ScheduleItemClient<({
         teacher: ({
             user: {
+                name: string;
                 id: string;
                 username: string;
-                email: string;
                 password: string;
                 passwordEncrypted: string | null;
-                name: string;
+                email: string;
                 role: import(".prisma/client").$Enums.UserRole;
                 avatarUrl: string | null;
                 createdAt: Date;
@@ -103,9 +103,16 @@ export declare class ScheduleService {
             notes: string[];
             userId: string;
         }) | null;
-        class: {
-            id: string;
+        subject: {
             name: string;
+            id: string;
+            department: string | null;
+            description: string | null;
+            code: string;
+        };
+        class: {
+            name: string;
+            id: string;
             notes: string[];
             gradeLevel: number;
             room: string | null;
@@ -119,40 +126,33 @@ export declare class ScheduleService {
             femaleStudentCount: number;
             weeklyScoreHistory: import("@prisma/client/runtime/library").JsonValue;
         };
-        subject: {
-            id: string;
-            name: string;
-            department: string | null;
-            description: string | null;
-            code: string;
-        };
     } & {
         id: string;
+        classId: string;
+        day: string;
         room: string | null;
         teacherId: string | null;
-        classId: string;
         subjectId: string;
-        day: string;
         period: number;
         session: string;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
     update(id: string, updateScheduleDto: UpdateScheduleDto): import(".prisma/client").Prisma.Prisma__ScheduleItemClient<{
         id: string;
+        classId: string;
+        day: string;
         room: string | null;
         teacherId: string | null;
-        classId: string;
         subjectId: string;
-        day: string;
         period: number;
         session: string;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     remove(id: string): import(".prisma/client").Prisma.Prisma__ScheduleItemClient<{
         id: string;
+        classId: string;
+        day: string;
         room: string | null;
         teacherId: string | null;
-        classId: string;
         subjectId: string;
-        day: string;
         period: number;
         session: string;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
