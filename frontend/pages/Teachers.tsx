@@ -7,7 +7,7 @@ import {
   Clock, Users, GraduationCap, Check, User as UserIcon, MessageSquare, Send, 
   MapPin, Calendar, CreditCard, Lock, Trash2, Pencil, ChevronRight, Briefcase, EyeOff, ShieldCheck, AlertTriangle, Key, Download
 } from 'lucide-react';
-import { calculateAge, isValidPhone, isValidCitizenId, toTitleCase } from '../utils';
+import { calculateAge, isValidPhone, isValidCitizenId, toTitleCase, generatePagination } from '../utils';
 import api from '../src/api/client';
 import ReAuthModal from '../components/ReAuthModal';
 import PasswordManagementModal from '../components/PasswordManagementModal';
@@ -461,6 +461,26 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
+
+  // Pagination & Search Filters
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [selectedSubject, setSelectedSubject] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1); // Reset to first page on new search
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Reset page when subject filter changes
+  useEffect(() => {
+     setCurrentPage(1);
+  }, [selectedSubject]);
   
   // Validation State
   const [formErrors, setFormErrors] = useState<string[]>([]);
@@ -552,12 +572,20 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
     try {
       setLoading(true);
       const [teachersRes, subjectsRes] = await Promise.all([
-         api.get('/teachers'),
+         api.get(`/teachers?page=${currentPage}&limit=10&search=${encodeURIComponent(debouncedSearch)}&subject=${encodeURIComponent(selectedSubject)}`),
          api.get('/subjects')
       ]);
-      setTeachers(teachersRes.data);
+
+      if (teachersRes.data.data) {
+        setTeachers(teachersRes.data.data);
+        setTotalPages(teachersRes.data.meta.totalPages);
+        setTotalItems(teachersRes.data.meta.total);
+      } else {
+        setTeachers(teachersRes.data);
+        setTotalPages(1);
+        setTotalItems(teachersRes.data.length);
+      }
       
-      // Extract subject names for the dropdown
       const subjectNames = subjectsRes.data.map((s: any) => s.name);
       setAvailableSubjects(subjectNames);
 
@@ -570,13 +598,7 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
 
   useEffect(() => {
     fetchData();
-  }, []);
-
-  const filteredTeachers = teachers.filter(t => 
-    (t.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (t.subjects || []).some(s => (s || '').toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (t.id || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  }, [currentPage, debouncedSearch, selectedSubject]);
 
   const handleOpenAdd = () => {
     setEditingTeacher(null);
@@ -775,7 +797,7 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filteredTeachers.map((teacher) => (
+              {teachers.map((teacher) => (
                 <tr key={teacher.id} className="group hover:bg-indigo-50/30 transition-colors duration-200">
                   <td className="px-6 py-4 pl-8">
                     <div className="flex items-center gap-4">
@@ -830,7 +852,7 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
               ))}
             </tbody>
           </table>
-          {filteredTeachers.length === 0 && (
+          {teachers.length === 0 && !loading && (
             <div className="p-12 text-center">
                <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-gray-100 mb-4">
                   <Search className="h-8 w-8 text-gray-400" />
@@ -840,6 +862,46 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
             </div>
           )}
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-gray-50/50">
+            <span className="text-sm text-gray-500">
+              Showing <span className="font-medium text-gray-900">{teachers.length}</span> of <span className="font-medium text-gray-900">{totalItems}</span> teachers
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+              >
+                Previous
+              </button>
+              <div className="hidden sm:flex items-center gap-1">
+                {generatePagination(currentPage, totalPages).map((page, idx) => (
+                  page === '...' ? (
+                    <span key={`ellipsis-${idx}`} className="px-2 text-gray-400">...</span>
+                  ) : (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page as number)}
+                      className={`h-9 w-9 rounded-lg text-sm font-medium transition-colors shadow-sm ${currentPage === page ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+                    >
+                      {page}
+                    </button>
+                  )
+                ))}
+              </div>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {selectedTeacher && (

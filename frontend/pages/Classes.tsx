@@ -11,7 +11,7 @@ import {
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area 
 } from 'recharts';
-import { getCurrentAcademicYear } from '../utils';
+import { getCurrentAcademicYear, generatePagination } from '../utils';
 import api from '../src/api/client';
 
 import ExcelImportModal from '../components/ExcelImportModal';
@@ -72,11 +72,33 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
     }
   }, [formClass.name]);
   
+  // Pagination & Search Filters
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [selectedGrade, setSelectedGrade] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1); // Reset to first page on new search
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Reset page when grade or year changes
+  useEffect(() => {
+     setCurrentPage(1);
+  }, [selectedGrade, selectedYear]);
+
   // Fetch Teachers for Dropdown
   const fetchTeachers = async () => {
     try {
         const res = await api.get('/teachers');
-        setTeachers(res.data);
+        // If the backend also returns { data, meta } for non-paginated teachers list, extract it.
+        const teacherData = res.data.data ? res.data.data : res.data;
+        setTeachers(teacherData);
     } catch (err) {
         console.error("Failed to fetch teachers", err);
     }
@@ -84,8 +106,18 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
 
   const fetchClasses = async () => {
     try {
-        const res = await api.get('/classes');
-        setClasses(res.data);
+        const gradeParam = selectedGrade ? `&grade=${selectedGrade}` : '';
+        const res = await api.get(`/classes?page=${currentPage}&limit=10&search=${encodeURIComponent(debouncedSearch)}&academicYear=${encodeURIComponent(selectedYear)}${gradeParam}`);
+        
+        if (res.data.data) {
+           setClasses(res.data.data);
+           setTotalPages(res.data.meta.totalPages);
+           setTotalItems(res.data.meta.total);
+        } else {
+           setClasses(res.data);
+           setTotalPages(1);
+           setTotalItems(res.data.length);
+        }
     } catch (err) {
         console.error("Failed to fetch classes", err);
     }
@@ -93,20 +125,16 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
 
   useEffect(() => {
       fetchTeachers();
-      fetchClasses();
   }, []);
+
+  useEffect(() => {
+     fetchClasses();
+  }, [currentPage, debouncedSearch, selectedYear, selectedGrade]);
 
   const handleImportSuccess = () => {
       fetchClasses();
       // Optionally refresh stats or other related data
   };
-
-  const filteredClasses = classes.filter(c => 
-    c.academicYear === selectedYear &&
-    (c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     c.room.toLowerCase().includes(searchTerm.toLowerCase()) || 
-     getTeacherName(c.teacherId).toLowerCase().includes(searchTerm.toLowerCase()))
-  );
 
   function getTeacherName(id: string) {
     return teachers.find(t => t.id === id)?.name || 'Unknown';
@@ -227,10 +255,27 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
            </div>
            
            <div className="flex items-center gap-3 w-full md:w-auto">
+              {/* Grade Filter */}
+              <div className="relative">
+                 <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                 <select 
+                    className="pl-10 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none appearance-none cursor-pointer font-medium text-gray-700 w-full md:w-auto min-w-[130px]"
+                    value={selectedGrade}
+                    onChange={(e) => setSelectedGrade(e.target.value)}
+                 >
+                    <option value="">All Grades</option>
+                    <option value="10">Grade 10</option>
+                    <option value="11">Grade 11</option>
+                    <option value="12">Grade 12</option>
+                 </select>
+                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400 pointer-events-none" />
+              </div>
+
+              {/* Year Filter */}
               <div className="relative">
                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                  <select 
-                    className="pl-10 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none appearance-none cursor-pointer font-medium text-gray-700"
+                    className="pl-10 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none appearance-none cursor-pointer font-medium text-gray-700 w-full md:w-auto"
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(e.target.value)}
                  >
@@ -257,7 +302,7 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filteredClasses.map((cls) => (
+              {classes.map((cls) => (
                 <tr key={cls.id} className="group hover:bg-indigo-50/30 transition-colors duration-200">
                   <td className="px-6 py-4 pl-8">
                      <div className="flex items-center gap-3">
@@ -315,7 +360,7 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
               ))}
             </tbody>
           </table>
-          {filteredClasses.length === 0 && (
+          {classes.length === 0 && (
              <div className="p-12 text-center">
                <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-gray-100 mb-4">
                   <Search className="h-8 w-8 text-gray-400" />
@@ -325,6 +370,50 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
             </div>
           )}
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-gray-50/50">
+            <span className="text-sm text-gray-500">
+              Showing <span className="font-medium text-gray-900">{classes.length}</span> of <span className="font-medium text-gray-900">{totalItems}</span> classes
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+              >
+                Previous
+              </button>
+              <div className="hidden sm:flex items-center gap-1">
+                {generatePagination(currentPage, totalPages).map((page, idx) => (
+                  page === '...' ? (
+                    <span key={`ellipsis-${idx}`} className="px-2 text-gray-400">...</span>
+                  ) : (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page as number)}
+                      className={`h-9 w-9 rounded-lg text-sm font-medium transition-colors shadow-sm ${
+                        currentPage === page
+                          ? 'bg-indigo-600 text-white border-indigo-600'
+                          : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  )
+                ))}
+              </div>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {selectedClass && (

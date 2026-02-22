@@ -49,6 +49,7 @@ const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
 const import_student_dto_1 = require("./dto/import-student.dto");
 const import_teacher_dto_1 = require("./dto/import-teacher.dto");
+const import_class_dto_1 = require("./dto/import-class.dto");
 const XLSX = __importStar(require("xlsx"));
 const id_generator_service_1 = require("../common/id-generator.service");
 const password_service_1 = require("../common/password.service");
@@ -123,6 +124,10 @@ let ImportsService = class ImportsService {
             const rowNum = i + 2;
             const errorBase = { row: rowNum };
             if (type === 'students') {
+                if (row.guardian_citizen_id !== undefined)
+                    row.guardian_citizen_id = this.sanitizeStringNumber(row.guardian_citizen_id, 12);
+                if (row.guardian_phone !== undefined)
+                    row.guardian_phone = this.sanitizeStringNumber(row.guardian_phone, 10);
                 const dto = (0, class_transformer_1.plainToInstance)(import_student_dto_1.ImportStudentDto, row);
                 if (row.dob)
                     dto.dob = this.parseDate(row.dob);
@@ -154,6 +159,10 @@ let ImportsService = class ImportsService {
                 }
             }
             else if (type === 'teachers') {
+                if (row.citizen_id !== undefined)
+                    row.citizen_id = this.sanitizeStringNumber(row.citizen_id, 12);
+                if (row.phone !== undefined)
+                    row.phone = this.sanitizeStringNumber(row.phone, 10);
                 const dto = (0, class_transformer_1.plainToInstance)(import_teacher_dto_1.ImportTeacherDto, row);
                 if (row.dob)
                     dto.dob = this.parseDate(row.dob);
@@ -185,6 +194,37 @@ let ImportsService = class ImportsService {
                     validData.push({ ...dto, departmentId, subjectList: subjects });
                 }
             }
+            else if (type === 'classes') {
+                const dto = (0, class_transformer_1.plainToInstance)(import_class_dto_1.ImportClassDto, row);
+                const validationErrors = await (0, class_validator_1.validate)(dto);
+                if (validationErrors.length > 0) {
+                    validationErrors.forEach(err => {
+                        errors.push({ ...errorBase, column: err.property, error: Object.values(err.constraints || {})[0] });
+                    });
+                    continue;
+                }
+                let teacherId = null;
+                if (row.homeroom_teacher) {
+                    const teacher = await this.prisma.user.findUnique({ where: { username: row.homeroom_teacher }, include: { teacher: true } });
+                    if (!teacher || teacher.role !== 'TEACHER' || !teacher.teacher) {
+                        errors.push({ ...errorBase, column: 'homeroom_teacher', error: `Teacher username '${row.homeroom_teacher}' not found or invalid` });
+                    }
+                    else {
+                        teacherId = teacher.teacher.id;
+                    }
+                }
+                const existingClass = await this.prisma.classGroup.findFirst({
+                    where: { name: row.class_name, academicYear: row.academic_year }
+                });
+                if (existingClass) {
+                    errors.push({ ...errorBase, column: 'class_name', error: `Class '${row.class_name}' already exists in year ${row.academic_year}` });
+                }
+                const match = row.class_name.match(/^(\d+)/);
+                const gradeLevel = match ? parseInt(match[1], 10) : 10;
+                if (errors.filter(e => e.row === rowNum).length === 0) {
+                    validData.push({ ...dto, teacherId, gradeLevel });
+                }
+            }
         }
         if (errors.length > 0) {
             throw new common_1.BadRequestException({ message: 'Validation Failed', errors });
@@ -201,15 +241,43 @@ let ImportsService = class ImportsService {
         return val;
     }
     parseGender(val) {
-        const v = (val || '').toLowerCase().trim();
-        if (v === 'nam' || v === 'male')
+        if (!val)
+            return null;
+        const str = String(val).toLowerCase().trim();
+        if (str === 'male' || str === 'nam')
             return create_student_dto_1.Gender.Male;
-        if (v === 'nữ' || v === 'female')
+        if (str === 'female' || str === 'nữ')
             return create_student_dto_1.Gender.Female;
         return create_student_dto_1.Gender.Other;
     }
+    sanitizeStringNumber(val, targetLength) {
+        if (val === undefined || val === null)
+            return '';
+        let str = String(val).trim();
+        if (str.startsWith("'")) {
+            str = str.substring(1);
+        }
+        if (typeof val === 'number') {
+            const numStr = val.toLocaleString('fullwide', { useGrouping: false });
+            if (numStr && numStr !== 'NaN') {
+                str = numStr;
+            }
+        }
+        if (/^\d+$/.test(str)) {
+            while (str.length < targetLength) {
+                str = '0' + str;
+            }
+        }
+        return str;
+    }
     async saveData(data, type) {
         let count = 0;
+        let defaultPass = '';
+        let encryptedPass = '';
+        if (type !== 'classes') {
+            defaultPass = await this.passwordService.hashPassword('123456');
+            encryptedPass = this.passwordService.encryptPassword('123456');
+        }
         await this.prisma.$transaction(async (tx) => {
             for (const item of data) {
                 if (type === 'classes') {
@@ -227,8 +295,6 @@ let ImportsService = class ImportsService {
                     });
                 }
                 else {
-                    const defaultPass = await this.passwordService.hashPassword('123456');
-                    const encryptedPass = this.passwordService.encryptPassword('123456');
                     const user = await tx.user.create({
                         data: {
                             username: item.username,

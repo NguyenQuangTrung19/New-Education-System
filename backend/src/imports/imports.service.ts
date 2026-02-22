@@ -86,6 +86,9 @@ export class ImportsService {
       const errorBase = { row: rowNum };
 
       if (type === 'students') {
+        if (row.guardian_citizen_id !== undefined) row.guardian_citizen_id = this.sanitizeStringNumber(row.guardian_citizen_id, 12);
+        if (row.guardian_phone !== undefined) row.guardian_phone = this.sanitizeStringNumber(row.guardian_phone, 10);
+        
         const dto = plainToInstance(ImportStudentDto, row);
         
         if (row.dob) dto.dob = this.parseDate(row.dob);
@@ -121,6 +124,9 @@ export class ImportsService {
         }
 
       } else if (type === 'teachers') {
+         if (row.citizen_id !== undefined) row.citizen_id = this.sanitizeStringNumber(row.citizen_id, 12);
+         if (row.phone !== undefined) row.phone = this.sanitizeStringNumber(row.phone, 10);
+         
          const dto = plainToInstance(ImportTeacherDto, row);
          if (row.dob) dto.dob = this.parseDate(row.dob);
          if (row.gender) dto.gender = this.parseGender(row.gender);
@@ -150,6 +156,42 @@ export class ImportsService {
          if (errors.filter(e => e.row === rowNum).length === 0) {
             validData.push({ ...dto, departmentId, subjectList: subjects });
          }
+      } else if (type === 'classes') {
+         const dto = plainToInstance(ImportClassDto, row);
+
+         const validationErrors = await validate(dto);
+         if (validationErrors.length > 0) {
+            validationErrors.forEach(err => {
+                errors.push({ ...errorBase, column: err.property, error: Object.values(err.constraints || {})[0] });
+            });
+            continue;
+         }
+
+         let teacherId = null;
+         if (row.homeroom_teacher) {
+            const teacher = await this.prisma.user.findUnique({ where: { username: row.homeroom_teacher }, include: { teacher: true }});
+            if (!teacher || teacher.role !== 'TEACHER' || !teacher.teacher) {
+                errors.push({ ...errorBase, column: 'homeroom_teacher', error: `Teacher username '${row.homeroom_teacher}' not found or invalid` });
+            } else {
+                teacherId = teacher.teacher.id;
+            }
+         }
+
+         const existingClass = await this.prisma.classGroup.findFirst({
+            where: { name: row.class_name, academicYear: row.academic_year }
+         });
+         
+         if (existingClass) {
+             errors.push({ ...errorBase, column: 'class_name', error: `Class '${row.class_name}' already exists in year ${row.academic_year}` });
+         }
+
+         // Extract grade level from class name (e.g., "10A1" -> 10)
+         const match = row.class_name.match(/^(\d+)/);
+         const gradeLevel = match ? parseInt(match[1], 10) : 10; // Default to 10 if not found
+
+         if (errors.filter(e => e.row === rowNum).length === 0) {
+            validData.push({ ...dto, teacherId, gradeLevel });
+         }
       }
     }
 
@@ -169,15 +211,54 @@ export class ImportsService {
       return val; 
   }
 
-  private parseGender(val: string): Gender {
-      const v = (val || '').toLowerCase().trim();
-      if (v === 'nam' || v === 'male') return Gender.Male;
-      if (v === 'nữ' || v === 'female') return Gender.Female;
-      return Gender.Other;
+  private parseGender(val: any): Gender {
+    if (!val) return null as any;
+    const str = String(val).toLowerCase().trim();
+    if (str === 'male' || str === 'nam') return Gender.Male;
+    if (str === 'female' || str === 'nữ') return Gender.Female;
+    return Gender.Other;
+  }
+
+  private sanitizeStringNumber(val: any, targetLength: number): string {
+    if (val === undefined || val === null) return '';
+    let str = String(val).trim();
+    
+    // Remove leading apostrophe which users add to force text in Excel
+    if (str.startsWith("'")) {
+      str = str.substring(1);
+    }
+    
+    // Check if the value was parsed as a numeric format (e.g., scientific notation)
+    // and attempt to recover the exact integer representation
+    if (typeof val === 'number') {
+        const numStr = val.toLocaleString('fullwide', { useGrouping: false });
+        if (numStr && numStr !== 'NaN') {
+            str = numStr;
+        }
+    }
+    
+    // Clean up purely numeric strings
+    if (/^\d+$/.test(str)) {
+        // Pad zeros to reach target length if we are short (e.g., dropped leading zeros)
+        while (str.length < targetLength) {
+             str = '0' + str;
+        }
+    }
+    
+    return str;
   }
 
   private async saveData(data: any[], type: string) {
       let count = 0;
+      
+      // Compute default passwords outside the transaction to prevent timeout
+      let defaultPass = '';
+      let encryptedPass = '';
+      if (type !== 'classes') {
+          defaultPass = await this.passwordService.hashPassword('123456');
+          encryptedPass = this.passwordService.encryptPassword('123456');
+      }
+
       await this.prisma.$transaction(async (tx) => {
           for (const item of data) {
               if (type === 'classes') {
@@ -195,9 +276,7 @@ export class ImportsService {
                   });
               } else {
                   // User creation for Students and Teachers
-                  const defaultPass = await this.passwordService.hashPassword('123456');
-                  const encryptedPass = this.passwordService.encryptPassword('123456');
-    
+
                   const user = await tx.user.create({
                       data: {
                           username: item.username,

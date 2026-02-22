@@ -23,23 +23,79 @@ let TeachersService = class TeachersService {
         this.idGenerator = idGenerator;
         this.passwordService = passwordService;
     }
-    async findAll() {
-        const teachers = await this.prisma.teacher.findMany({
-            include: {
-                user: { select: { name: true, email: true, avatarUrl: true, username: true } },
-                classes: true,
-            }
-        });
-        return teachers.map(teacher => {
-            const { user, ...rest } = teacher;
+    async findAll(params) {
+        const page = params?.page ? parseInt(params.page, 10) : undefined;
+        const limit = params?.limit ? parseInt(params.limit, 10) : undefined;
+        const search = params?.search || '';
+        const subject = params?.subject || '';
+        const where = {};
+        if (search) {
+            where.OR = [
+                { id: { contains: search, mode: 'insensitive' } },
+                { user: { name: { contains: search, mode: 'insensitive' } } },
+                { user: { username: { contains: search, mode: 'insensitive' } } },
+                { user: { email: { contains: search, mode: 'insensitive' } } },
+                { subjects: { hasSome: [search] } },
+            ];
+        }
+        if (subject) {
+            where.subjects = { hasSome: [subject] };
+        }
+        if (page !== undefined && limit !== undefined) {
+            const skip = (page - 1) * limit;
+            const [total, teachers] = await this.prisma.$transaction([
+                this.prisma.teacher.count({ where }),
+                this.prisma.teacher.findMany({
+                    where,
+                    skip,
+                    take: limit,
+                    include: {
+                        user: { select: { name: true, email: true, avatarUrl: true, username: true } },
+                        classes: true,
+                    },
+                    orderBy: { id: 'asc' }
+                })
+            ]);
+            const data = teachers.map(teacher => {
+                const { user, ...rest } = teacher;
+                return {
+                    ...rest,
+                    name: user.name,
+                    email: user.email,
+                    username: user.username,
+                    avatarUrl: user.avatarUrl,
+                };
+            });
             return {
-                ...rest,
-                name: user.name,
-                email: user.email,
-                username: user.username,
-                avatarUrl: user.avatarUrl,
+                data,
+                meta: {
+                    total,
+                    page,
+                    limit,
+                    totalPages: Math.ceil(total / limit),
+                }
             };
-        });
+        }
+        else {
+            const teachers = await this.prisma.teacher.findMany({
+                where,
+                include: {
+                    user: { select: { name: true, email: true, avatarUrl: true, username: true } },
+                    classes: true,
+                },
+                orderBy: { id: 'asc' }
+            });
+            return teachers.map(teacher => {
+                const { user, ...rest } = teacher;
+                return {
+                    ...rest,
+                    name: user.name,
+                    email: user.email,
+                    username: user.username,
+                    avatarUrl: user.avatarUrl,
+                };
+            });
+        }
     }
     async findOne(id) {
         const teacher = await this.prisma.teacher.findUnique({

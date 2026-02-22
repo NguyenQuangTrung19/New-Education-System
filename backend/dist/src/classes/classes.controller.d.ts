@@ -4,7 +4,7 @@ import { UpdateClassDto } from './dto/update-class.dto';
 export declare class ClassesController {
     private readonly classesService;
     constructor(classesService: ClassesService);
-    findAll(): Promise<({
+    findAll(page?: string, limit?: string, search?: string, grade?: string, academicYear?: string): Promise<({
         teacher: ({
             user: {
                 name: string;
@@ -41,7 +41,52 @@ export declare class ClassesController {
         maleStudentCount: number;
         femaleStudentCount: number;
         weeklyScoreHistory: import("@prisma/client/runtime/library").JsonValue;
-    })[]>;
+    })[] | {
+        data: ({
+            teacher: ({
+                user: {
+                    name: string;
+                };
+            } & {
+                id: string;
+                phone: string | null;
+                address: string | null;
+                citizenId: string | null;
+                gender: import(".prisma/client").$Enums.Gender | null;
+                dateOfBirth: Date | null;
+                joinYear: number | null;
+                department: string | null;
+                subjects: string[];
+                classesAssigned: number;
+                notes: string[];
+                userId: string;
+            }) | null;
+            _count: {
+                students: number;
+            };
+        } & {
+            name: string;
+            id: string;
+            notes: string[];
+            gradeLevel: number;
+            room: string | null;
+            academicYear: string;
+            teacherId: string | null;
+            description: string | null;
+            averageGpa: number;
+            currentWeeklyScore: number;
+            studentCount: number;
+            maleStudentCount: number;
+            femaleStudentCount: number;
+            weeklyScoreHistory: import("@prisma/client/runtime/library").JsonValue;
+        })[];
+        meta: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+        };
+    }>;
     findOne(id: string): Promise<({
         teacher: ({
             user: {

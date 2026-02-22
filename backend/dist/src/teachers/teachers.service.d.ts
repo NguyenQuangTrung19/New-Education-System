@@ -6,7 +6,12 @@ export declare class TeachersService {
     private idGenerator;
     private passwordService;
     constructor(prisma: PrismaService, idGenerator: IdGeneratorService, passwordService: PasswordService);
-    findAll(): Promise<{
+    findAll(params?: {
+        page?: string;
+        limit?: string;
+        search?: string;
+        subject?: string;
+    }): Promise<{
         name: string;
         email: string;
         username: string;
@@ -39,7 +44,48 @@ export declare class TeachersService {
         classesAssigned: number;
         notes: string[];
         userId: string;
-    }[]>;
+    }[] | {
+        data: {
+            name: string;
+            email: string;
+            username: string;
+            avatarUrl: string | null;
+            classes: {
+                name: string;
+                id: string;
+                notes: string[];
+                gradeLevel: number;
+                room: string | null;
+                academicYear: string;
+                teacherId: string | null;
+                description: string | null;
+                averageGpa: number;
+                currentWeeklyScore: number;
+                studentCount: number;
+                maleStudentCount: number;
+                femaleStudentCount: number;
+                weeklyScoreHistory: import("@prisma/client/runtime/library").JsonValue;
+            }[];
+            id: string;
+            phone: string | null;
+            address: string | null;
+            citizenId: string | null;
+            gender: import(".prisma/client").$Enums.Gender | null;
+            dateOfBirth: Date | null;
+            joinYear: number | null;
+            department: string | null;
+            subjects: string[];
+            classesAssigned: number;
+            notes: string[];
+            userId: string;
+        }[];
+        meta: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+        };
+    }>;
     findOne(id: string): Promise<{
         name: string;
         email: string;

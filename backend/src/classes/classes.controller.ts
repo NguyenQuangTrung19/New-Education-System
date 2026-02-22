@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Query } from '@nestjs/common';
 import { ClassesService } from './classes.service';
 import { AuthGuard } from '@nestjs/passport';
 import { CreateClassDto } from './dto/create-class.dto';
@@ -14,8 +14,14 @@ export class ClassesController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @Get()
-  findAll() {
-    return this.classesService.findAll();
+  findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('grade') grade?: string,
+    @Query('academicYear') academicYear?: string,
+  ) {
+    return this.classesService.findAll({ page, limit, search, grade, academicYear });
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)

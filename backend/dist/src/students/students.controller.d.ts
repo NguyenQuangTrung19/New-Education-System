@@ -3,7 +3,7 @@ import { CreateStudentDto, UpdateStudentDto } from './dto/create-student.dto';
 export declare class StudentsController {
     private readonly studentsService;
     constructor(studentsService: StudentsService);
-    findAll(): Promise<({
+    findAll(query: any): Promise<({
         user: {
             name: string;
             username: string;
@@ -42,7 +42,54 @@ export declare class StudentsController {
         guardianPhone: string | null;
         semesterEvaluation: string | null;
         classId: string | null;
-    })[]>;
+    })[] | {
+        data: ({
+            user: {
+                name: string;
+                username: string;
+                email: string;
+                avatarUrl: string | null;
+            };
+            class: {
+                name: string;
+                id: string;
+                notes: string[];
+                gradeLevel: number;
+                room: string | null;
+                academicYear: string;
+                teacherId: string | null;
+                description: string | null;
+                averageGpa: number;
+                currentWeeklyScore: number;
+                studentCount: number;
+                maleStudentCount: number;
+                femaleStudentCount: number;
+                weeklyScoreHistory: import("@prisma/client/runtime/library").JsonValue;
+            } | null;
+        } & {
+            id: string;
+            address: string | null;
+            gender: import(".prisma/client").$Enums.Gender | null;
+            dateOfBirth: Date | null;
+            notes: string[];
+            userId: string;
+            enrollmentYear: number;
+            gpa: number;
+            guardianName: string | null;
+            guardianCitizenId: string | null;
+            guardianYearOfBirth: number | null;
+            guardianJob: string | null;
+            guardianPhone: string | null;
+            semesterEvaluation: string | null;
+            classId: string | null;
+        })[];
+        meta: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+        };
+    }>;
     findOne(id: string): Promise<({
         user: {
             name: string;

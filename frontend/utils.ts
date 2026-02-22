@@ -55,3 +55,50 @@ export const getCurrentAcademicYear = (): string => {
     return `${year - 1}-${year}`;
   }
 };
+
+/**
+ * Generates an array of page numbers and ellipses for smart pagination rendering.
+ * @param currentPage The active page (1-based)
+ * @param totalPages The total number of pages
+ * @returns Array representing the sequence of pages and ellipses (e.g., [1, 2, '...', 50])
+ */
+export const generatePagination = (currentPage: number, totalPages: number): (number | string)[] => {
+  // If the total number of pages is 7 or less,
+  // display all pages without any ellipses.
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+
+  // If the current page is among the first 3 pages,
+  // show the first 5, an ellipsis, and the last page.
+  if (currentPage <= 3) {
+    return [1, 2, 3, 4, 5, '...', totalPages];
+  }
+
+  // If the current page is among the last 3 pages,
+  // show the first page, an ellipsis, and the last 5 pages.
+  if (currentPage >= totalPages - 2) {
+    return [
+      1,
+      '...',
+      totalPages - 4,
+      totalPages - 3,
+      totalPages - 2,
+      totalPages - 1,
+      totalPages,
+    ];
+  }
+
+  // If the current page is somewhere in the middle,
+  // show the first page, an ellipsis, the current page and its neighbors,
+  // another ellipsis, and the last page.
+  return [
+    1,
+    '...',
+    currentPage - 1,
+    currentPage,
+    currentPage + 1,
+    '...',
+    totalPages,
+  ];
+};

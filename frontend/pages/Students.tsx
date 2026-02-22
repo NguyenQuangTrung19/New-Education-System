@@ -8,7 +8,7 @@ import {
   Briefcase, CreditCard, Lock, History, UserCheck, Trash2, Pencil, ChevronDown, EyeOff, ShieldCheck, AlertTriangle, Download
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { calculateAge, isValidPhone, isValidCitizenId, toTitleCase } from '../utils';
+import { calculateAge, isValidPhone, isValidCitizenId, toTitleCase, generatePagination } from '../utils';
 import api from '../src/api/client';
 import ReAuthModal from '../components/ReAuthModal';
 import PasswordManagementModal from '../components/PasswordManagementModal';
@@ -167,12 +167,15 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
                               </ResponsiveContainer>
                          </div>
                          <div className="mt-4 space-y-2">
-                              {student.academicHistory.map((rec, idx) => (
+                              {student.academicHistory?.map((rec, idx) => (
                                   <div key={idx} className="flex justify-between items-center text-xs p-2 bg-gray-50 rounded">
                                       <span className="font-medium text-gray-600">{rec.year} - {rec.className}</span>
                                       <span className="font-bold text-indigo-600">{rec.gpa} GPA</span>
                                   </div>
                               ))}
+                              {(!student.academicHistory || student.academicHistory.length === 0) && (
+                                  <div className="text-center p-3 text-xs text-gray-400 italic">No academic history available</div>
+                              )}
                          </div>
                       </div>
 
@@ -387,6 +390,13 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
   const [loading, setLoading] = useState(true);
   const [selectedClass, setSelectedClass] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -483,17 +493,27 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
   const [formStudent, setFormStudent] = useState<Partial<Student>>(defaultStudentState);
 
   // Fetch Students Logic
-  // Fetch Students Logic
   const fetchStudents = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/students');
-      const mapped = response.data.map((s: any) => ({
+      const classParam = selectedClass !== 'All' ? `&classId=${selectedClass}` : '';
+      const response = await api.get(`/students?page=${currentPage}&limit=20&search=${encodeURIComponent(debouncedSearch)}${classParam}`);
+      
+      const studentsData = response.data.data ? response.data.data : response.data;
+      const mapped = studentsData.map((s: any) => ({
         ...s,
         name: s.user?.name || 'Unknown',
         email: s.user?.email || '',
       }));
       setStudents(mapped);
+      
+      if (response.data.meta) {
+          setTotalPages(response.data.meta.totalPages);
+          setTotalItems(response.data.meta.total);
+      } else {
+          setTotalPages(1);
+          setTotalItems(mapped.length);
+      }
     } catch (err) {
       console.error("Failed to fetch students", err);
     } finally {
@@ -511,16 +531,26 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
         }
     };
 
-    fetchStudents();
     fetchClasses();
   }, []);
 
-  const filteredStudents = students.filter(student => {
-    const matchesClass = selectedClass === 'All' || student.classId === selectedClass;
-    const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          student.id.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesClass && matchesSearch;
-  });
+  // Fetch data on dependency change
+  useEffect(() => {
+    fetchStudents();
+  }, [currentPage, debouncedSearch, selectedClass]);
+
+  // Handle Search Debounce
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
+  // Reset pagination on filter change
+  useEffect(() => {
+     setCurrentPage(1);
+  }, [debouncedSearch, selectedClass]);
 
   const handleOpenAdd = () => {
     setEditingStudent(null);
@@ -701,7 +731,7 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filteredStudents.map((student) => {
+              {students.map((student) => {
                 const className = classes.find(c => c.id === student.classId)?.name || student.classId;
                 const canEdit = canEditStudent(student);
 
@@ -751,7 +781,7 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
               })}
             </tbody>
           </table>
-          {filteredStudents.length === 0 && (
+          {students.length === 0 && (
              <div className="p-12 text-center">
                <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-gray-100 mb-4">
                   <Search className="h-8 w-8 text-gray-400" />
@@ -760,6 +790,56 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
                <p className="text-gray-500 mt-1">Try changing class filters or search query.</p>
             </div>
           )}
+
+          {/* Pagination Controls */}
+          <div className="px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-gray-50/50">
+            <span className="text-sm text-gray-500">
+              Showing <span className="font-medium text-gray-900">{students.length}</span> of <span className="font-medium text-gray-900">{totalItems}</span> students
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors shadow-sm ${
+                  currentPage === 1
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Previous
+              </button>
+              <div className="hidden sm:flex items-center gap-1">
+                {generatePagination(currentPage, totalPages).map((page, idx) => (
+                  page === '...' ? (
+                    <span key={`ellipsis-${idx}`} className="px-2 text-gray-400">...</span>
+                  ) : (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page as number)}
+                      className={`h-9 w-9 rounded-lg text-sm font-medium transition-colors shadow-sm ${
+                        currentPage === page
+                          ? 'bg-indigo-600 text-white border-indigo-600'
+                          : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  )
+                ))}
+              </div>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors shadow-sm ${
+                  currentPage === totalPages
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

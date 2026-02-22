@@ -23,20 +23,61 @@ let StudentsService = class StudentsService {
         this.idGenerator = idGenerator;
         this.passwordService = passwordService;
     }
-    async findAll() {
-        return this.prisma.student.findMany({
-            include: {
-                user: {
-                    select: {
-                        name: true,
-                        email: true,
-                        username: true,
-                        avatarUrl: true,
-                    }
-                },
-                class: true,
-            }
-        });
+    async findAll(params) {
+        const page = params?.page ? parseInt(params.page, 10) : undefined;
+        const limit = params?.limit ? parseInt(params.limit, 10) : undefined;
+        const search = params?.search || '';
+        const classId = params?.classId || '';
+        const where = {};
+        if (classId && classId !== 'All') {
+            where.classId = classId;
+        }
+        if (search) {
+            where.OR = [
+                { id: { contains: search, mode: 'insensitive' } },
+                { user: { name: { contains: search, mode: 'insensitive' } } }
+            ];
+        }
+        const includeConfig = {
+            user: {
+                select: {
+                    name: true,
+                    email: true,
+                    username: true,
+                    avatarUrl: true,
+                }
+            },
+            class: true,
+        };
+        if (page !== undefined && limit !== undefined) {
+            const skip = (page - 1) * limit;
+            const [total, students] = await this.prisma.$transaction([
+                this.prisma.student.count({ where }),
+                this.prisma.student.findMany({
+                    where,
+                    skip,
+                    take: limit,
+                    include: includeConfig,
+                    orderBy: { enrollmentYear: 'desc' }
+                })
+            ]);
+            return {
+                data: students,
+                meta: {
+                    total,
+                    page,
+                    limit,
+                    totalPages: Math.ceil(total / limit),
+                }
+            };
+        }
+        else {
+            return this.prisma.student.findMany({
+                where,
+                include: includeConfig,
+                orderBy: { enrollmentYear: 'desc' }
+            });
+        }
     }
     async findOne(id) {
         return this.prisma.student.findUnique({

@@ -11,17 +11,69 @@ export class ClassesService {
     private idGenerator: IdGeneratorService
   ) {}
 
-  async findAll() {
-    return this.prisma.classGroup.findMany({
-      include: {
+  async findAll(params?: { page?: string; limit?: string; search?: string; grade?: string; academicYear?: string }) {
+    const page = params?.page ? parseInt(params.page, 10) : undefined;
+    const limit = params?.limit ? parseInt(params.limit, 10) : undefined;
+    const search = params?.search || '';
+    const gradeLevel = params?.grade ? parseInt(params.grade, 10) : undefined;
+    const academicYear = params?.academicYear || undefined;
+
+    const where: any = {};
+    
+    if (academicYear) {
+       where.academicYear = academicYear;
+    }
+
+    if (gradeLevel) {
+       where.gradeLevel = gradeLevel;
+    }
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' as any } },
+        { room: { contains: search, mode: 'insensitive' as any } },
+        { teacher: { user: { name: { contains: search, mode: 'insensitive' as any } } } }
+      ];
+    }
+
+    const includeConfig = {
         teacher: {
              include: { user: { select: { name: true } } }
         },
         _count: {
             select: { students: true }
         }
-      }
-    });
+    };
+
+    if (page !== undefined && limit !== undefined) {
+      const skip = (page - 1) * limit;
+      const [total, classes] = await this.prisma.$transaction([
+        this.prisma.classGroup.count({ where }),
+        this.prisma.classGroup.findMany({
+          where,
+          skip,
+          take: limit,
+          include: includeConfig,
+          orderBy: { name: 'asc' }
+        })
+      ]);
+
+      return {
+        data: classes,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        }
+      };
+    } else {
+      return this.prisma.classGroup.findMany({
+        where,
+        include: includeConfig,
+        orderBy: { name: 'asc' }
+      });
+    }
   }
 
   async findOne(id: string) {
