@@ -13,7 +13,7 @@ export class AssignmentsService {
     const { classIds, teacherId, subjectId, ...data } = createAssignmentDto;
 
     // Connect classes if provided
-    const classesConnect = classIds?.map(id => ({ id })) || [];
+    const classesConnect = classIds?.map((id) => ({ id })) || [];
 
     return this.prisma.assignment.create({
       data: {
@@ -21,8 +21,8 @@ export class AssignmentsService {
         subject: { connect: { id: subjectId } },
         teacher: { connect: { id: teacherId } },
         classes: { connect: classesConnect },
-        classIds: classIds || []
-      }
+        classIds: classIds || [],
+      },
     });
   }
 
@@ -32,8 +32,8 @@ export class AssignmentsService {
         subject: true,
         teacher: { include: { user: true } },
         classes: true,
-        submissions: true
-      }
+        submissions: true,
+      },
     });
   }
 
@@ -44,8 +44,8 @@ export class AssignmentsService {
         subject: true,
         teacher: { include: { user: true } },
         classes: true,
-        submissions: { include: { student: { include: { user: true } } } }
-      }
+        submissions: { include: { student: { include: { user: true } } } },
+      },
     });
   }
 
@@ -67,49 +67,49 @@ export class AssignmentsService {
 
     // Check if assignment exists
     const assignment = await this.prisma.assignment.findUnique({
-        where: { id: assignmentId }
+      where: { id: assignmentId },
     });
     if (!assignment) {
-        throw new Error('Assignment not found');
+      throw new Error('Assignment not found');
     }
 
     // Check if submission exists
     const existing = await this.prisma.assignmentSubmission.findFirst({
-        where: {
-            assignmentId,
-            studentId
-        }
+      where: {
+        assignmentId,
+        studentId,
+      },
     });
 
     if (existing) {
-        return this.prisma.assignmentSubmission.update({
-            where: { id: existing.id },
-            data: {
-                answers,
-                submittedAt: new Date(),
-                status: 'submitted'
-            }
-        });
+      return this.prisma.assignmentSubmission.update({
+        where: { id: existing.id },
+        data: {
+          answers,
+          submittedAt: new Date(),
+          status: 'submitted',
+        },
+      });
     }
 
     return this.prisma.assignmentSubmission.create({
-        data: {
-            assignmentId,
-            studentId,
-            answers,
-            status: 'submitted'
-        }
+      data: {
+        assignmentId,
+        studentId,
+        answers,
+        status: 'submitted',
+      },
     });
   }
 
   async grade(submissionId: string, gradeDto: GradeSubmissionDto) {
-      return this.prisma.assignmentSubmission.update({
-          where: { id: submissionId },
-          data: {
-              score: gradeDto.score,
-              feedback: gradeDto.feedback,
-              status: 'graded'
-          }
-      });
+    return this.prisma.assignmentSubmission.update({
+      where: { id: submissionId },
+      data: {
+        score: gradeDto.score,
+        feedback: gradeDto.feedback,
+        status: 'graded',
+      },
+    });
   }
 }

@@ -35,9 +35,14 @@ let PasswordService = class PasswordService {
         const key = this.getEncryptionKey();
         const iv = (0, crypto_1.randomBytes)(12);
         const cipher = (0, crypto_1.createCipheriv)('aes-256-gcm', key, iv);
-        const encrypted = Buffer.concat([cipher.update(plain, 'utf8'), cipher.final()]);
+        const encrypted = Buffer.concat([
+            cipher.update(plain, 'utf8'),
+            cipher.final(),
+        ]);
         const tag = cipher.getAuthTag();
-        return [iv, tag, encrypted].map((part) => part.toString('base64')).join('.');
+        return [iv, tag, encrypted]
+            .map((part) => part.toString('base64'))
+            .join('.');
     }
     decryptPassword(payload) {
         const key = this.getEncryptionKey();

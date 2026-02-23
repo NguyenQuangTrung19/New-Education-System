@@ -13,6 +13,7 @@ import { CommonModule } from './common/common.module';
 import { ScheduleModule } from './schedule/schedule.module';
 
 import { ImportsModule } from './imports/imports.module';
+import { TimetableModule } from './timetable/timetable.module';
 
 @Module({
   imports: [
@@ -27,7 +28,9 @@ import { ImportsModule } from './imports/imports.module';
     CommonModule,
     ImportsModule,
     ScheduleModule,
-  ],controllers: [AppController],
+    TimetableModule,
+  ],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}

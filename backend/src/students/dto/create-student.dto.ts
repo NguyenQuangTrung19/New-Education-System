@@ -1,5 +1,17 @@
-import { IsString, IsEmail, IsNotEmpty, IsOptional, 
-  IsNumber, IsArray, IsDateString, IsInt, Min, Max, MinLength, IsEnum } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsNumber,
+  IsArray,
+  IsDateString,
+  IsInt,
+  Min,
+  Max,
+  MinLength,
+  IsEnum,
+} from 'class-validator';
 
 export enum Gender {
   Male = 'Male',
@@ -49,15 +61,15 @@ export class CreateStudentDto {
   @IsString()
   @IsOptional()
   address?: string;
-  
+
   @IsString()
   @IsOptional()
   phone?: string;
-  
+
   @IsString()
   @IsOptional()
   guardianName?: string;
-  
+
   @IsString()
   @IsOptional()
   guardianPhone?: string;
@@ -114,11 +126,11 @@ export class UpdateStudentDto {
   @IsDateString()
   @IsOptional()
   dateOfBirth?: string;
-  
+
   @IsString()
   @IsOptional()
   address?: string;
-  
+
   @IsString()
   @IsOptional()
   phone?: string; // usually on User but simplified here

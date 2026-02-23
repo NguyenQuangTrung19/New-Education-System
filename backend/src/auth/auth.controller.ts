@@ -1,4 +1,13 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, UnauthorizedException, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  UnauthorizedException,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -10,7 +19,11 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
-    const user = await this.authService.validateUser(loginDto.username, loginDto.password, loginDto.role);
+    const user = await this.authService.validateUser(
+      loginDto.username,
+      loginDto.password,
+      loginDto.role,
+    );
     if (!user) {
       throw new UnauthorizedException('Invalid credentials or role');
     }
@@ -20,12 +33,18 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @Post('verify-password')
-  async verifyPassword(@Request() req: any, @Body('password') password: string) {
-      // req.user is populated by JwtStrategy
-      const isValid = await this.authService.verifyPassword(req.user.userId, password);
-      if (!isValid) {
-          throw new UnauthorizedException('Incorrect password');
-      }
-      return { success: true };
+  async verifyPassword(
+    @Request() req: any,
+    @Body('password') password: string,
+  ) {
+    // req.user is populated by JwtStrategy
+    const isValid = await this.authService.verifyPassword(
+      req.user.userId,
+      password,
+    );
+    if (!isValid) {
+      throw new UnauthorizedException('Incorrect password');
+    }
+    return { success: true };
   }
 }

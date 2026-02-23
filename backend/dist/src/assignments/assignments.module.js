@@ -18,7 +18,7 @@ exports.AssignmentsModule = AssignmentsModule = __decorate([
     (0, common_1.Module)({
         imports: [prisma_module_1.PrismaModule],
         providers: [assignments_service_1.AssignmentsService],
-        controllers: [assignments_controller_1.AssignmentsController]
+        controllers: [assignments_controller_1.AssignmentsController],
     })
 ], AssignmentsModule);
 //# sourceMappingURL=assignments.module.js.map

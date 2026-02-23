@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
 import { AssignmentsService } from './assignments.service';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { UpdateAssignmentDto } from './dto/update-assignment.dto';
@@ -37,7 +46,10 @@ export class AssignmentsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAssignmentDto: UpdateAssignmentDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateAssignmentDto: UpdateAssignmentDto,
+  ) {
     return this.assignmentsService.update(id, updateAssignmentDto);
   }
 
@@ -52,13 +64,16 @@ export class AssignmentsController {
   @Roles(UserRole.STUDENT)
   @Post(':id/submit')
   submit(@Param('id') id: string, @Body() submitDto: SubmitAssignmentDto) {
-      return this.assignmentsService.submit(id, submitDto);
+    return this.assignmentsService.submit(id, submitDto);
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @Patch('submissions/:submissionId/grade')
-  grade(@Param('submissionId') submissionId: string, @Body() gradeDto: GradeSubmissionDto) {
-      return this.assignmentsService.grade(submissionId, gradeDto);
+  grade(
+    @Param('submissionId') submissionId: string,
+    @Body() gradeDto: GradeSubmissionDto,
+  ) {
+    return this.assignmentsService.grade(submissionId, gradeDto);
   }
 }

@@ -1,5 +1,15 @@
-import { IsString, IsEmail, IsNotEmpty, IsOptional, 
-  IsNumber, IsArray, IsEnum, IsDateString, IsInt, MinLength } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsNumber,
+  IsArray,
+  IsEnum,
+  IsDateString,
+  IsInt,
+  MinLength,
+} from 'class-validator';
 import { Gender } from '@prisma/client';
 
 export class CreateTeacherDto {
@@ -30,11 +40,11 @@ export class CreateTeacherDto {
   @IsNumber()
   @IsOptional()
   joinYear?: number;
-  
+
   @IsString()
   @IsOptional()
   address?: string;
-  
+
   @IsString()
   @IsOptional()
   phone?: string;
@@ -65,7 +75,7 @@ export class UpdateTeacherDto {
   @IsEmail()
   @IsOptional()
   email?: string;
-  
+
   @IsArray()
   @IsOptional()
   subjects?: string[];
@@ -81,7 +91,7 @@ export class UpdateTeacherDto {
   @IsString()
   @IsOptional()
   address?: string;
-  
+
   @IsString()
   @IsOptional()
   phone?: string;

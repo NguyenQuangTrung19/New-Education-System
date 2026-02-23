@@ -1,0 +1,31 @@
+{
+    "weeklyStructure": {
+        "days": 5,
+        "periodsPerDay": 8
+    },
+    "classes": [
+        { "id": "10A1" },
+        { "id": "10A2" }
+    ],
+    "teachers": [
+        {
+            "id": "T1",
+            "subjects": ["Math"],
+            "assignments": [
+                { "classId": "10A1", "periods": 6 },
+                { "classId": "10A2", "periods": 4 }
+            ],
+            "timeOff": [
+                { "day": 1, "periods": [0, 1, 2, 3] }
+            ]
+        },
+        {
+            "id": "T2",
+            "subjects": ["Literature"],
+            "assignments": [
+                { "classId": "10A1", "periods": 4 },
+                { "classId": "10A2", "periods": 6 }
+            ]
+        }
+    ]
+}

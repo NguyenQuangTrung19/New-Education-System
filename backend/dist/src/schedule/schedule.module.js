@@ -18,7 +18,7 @@ exports.ScheduleModule = ScheduleModule = __decorate([
     (0, common_1.Module)({
         imports: [prisma_module_1.PrismaModule],
         providers: [schedule_service_1.ScheduleService],
-        controllers: [schedule_controller_1.ScheduleController]
+        controllers: [schedule_controller_1.ScheduleController],
     })
 ], ScheduleModule);
 //# sourceMappingURL=schedule.module.js.map

@@ -1,4 +1,3 @@
-
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { validate } from 'class-validator';
@@ -12,40 +11,40 @@ import { PasswordService } from '../common/password.service';
 import { Gender } from '../students/dto/create-student.dto';
 
 const STUDENT_HEADERS = {
-  'student_code': 'student_code',
-  'full_name': 'full_name',
-  'username': 'username',
-  'dob': 'dob',
-  'gender': 'gender',
-  'email': 'email',
-  'address': 'address',
-  'class_name': 'class_name',
-  'guardian_name': 'guardian_name',
-  'guardian_phone': 'guardian_phone',
-  'guardian_birth_year': 'guardian_birth_year',
-  'guardian_occupation': 'guardian_occupation',
-  'guardian_citizen_id': 'guardian_citizen_id'
+  student_code: 'student_code',
+  full_name: 'full_name',
+  username: 'username',
+  dob: 'dob',
+  gender: 'gender',
+  email: 'email',
+  address: 'address',
+  class_name: 'class_name',
+  guardian_name: 'guardian_name',
+  guardian_phone: 'guardian_phone',
+  guardian_birth_year: 'guardian_birth_year',
+  guardian_occupation: 'guardian_occupation',
+  guardian_citizen_id: 'guardian_citizen_id',
 };
 
 const TEACHER_HEADERS = {
-  'full_name': 'full_name',
-  'username': 'username',
-  'start_year': 'start_year',
-  'dob': 'dob',
-  'gender': 'gender',
-  'citizen_id': 'citizen_id',
-  'email': 'email',
-  'phone': 'phone',
-  'address': 'address',
-  'subjects': 'subjects'
+  full_name: 'full_name',
+  username: 'username',
+  start_year: 'start_year',
+  dob: 'dob',
+  gender: 'gender',
+  citizen_id: 'citizen_id',
+  email: 'email',
+  phone: 'phone',
+  address: 'address',
+  subjects: 'subjects',
 };
 
 const CLASS_HEADERS = {
-  'class_name': 'class_name',
-  'classroom': 'classroom',
-  'academic_year': 'academic_year',
-  'homeroom_teacher': 'homeroom_teacher',
-  'description': 'description'
+  class_name: 'class_name',
+  classroom: 'classroom',
+  academic_year: 'academic_year',
+  homeroom_teacher: 'homeroom_teacher',
+  description: 'description',
 };
 
 @Injectable()
@@ -53,12 +52,13 @@ export class ImportsService {
   constructor(
     private prisma: PrismaService,
     private idGenerator: IdGeneratorService,
-    private passwordService: PasswordService
+    private passwordService: PasswordService,
   ) {}
 
   async importData(file: Express.Multer.File, type: string) {
     if (!file) throw new BadRequestException('No file provided');
-    if (type !== 'students' && type !== 'teachers' && type !== 'classes') throw new BadRequestException('Invalid import type');
+    if (type !== 'students' && type !== 'teachers' && type !== 'classes')
+      throw new BadRequestException('Invalid import type');
 
     const workbook = XLSX.read(file.buffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
@@ -72,9 +72,10 @@ export class ImportsService {
     const headers = Object.keys(firstRow || {});
     let expectedHeaders: string[] = [];
     if (type === 'students') expectedHeaders = Object.keys(STUDENT_HEADERS);
-    else if (type === 'teachers') expectedHeaders = Object.keys(TEACHER_HEADERS);
+    else if (type === 'teachers')
+      expectedHeaders = Object.keys(TEACHER_HEADERS);
     else expectedHeaders = Object.keys(CLASS_HEADERS);
-    
+
     const errors: any[] = [];
     const validData: any[] = [];
 
@@ -86,112 +87,177 @@ export class ImportsService {
       const errorBase = { row: rowNum };
 
       if (type === 'students') {
-        if (row.guardian_citizen_id !== undefined) row.guardian_citizen_id = this.sanitizeStringNumber(row.guardian_citizen_id, 12);
-        if (row.guardian_phone !== undefined) row.guardian_phone = this.sanitizeStringNumber(row.guardian_phone, 10);
-        
+        if (row.guardian_citizen_id !== undefined)
+          row.guardian_citizen_id = this.sanitizeStringNumber(
+            row.guardian_citizen_id,
+            12,
+          );
+        if (row.guardian_phone !== undefined)
+          row.guardian_phone = this.sanitizeStringNumber(
+            row.guardian_phone,
+            10,
+          );
+
         const dto = plainToInstance(ImportStudentDto, row);
-        
+
         if (row.dob) dto.dob = this.parseDate(row.dob);
         if (row.gender) dto.gender = this.parseGender(row.gender);
 
         const validationErrors = await validate(dto);
         if (validationErrors.length > 0) {
-          validationErrors.forEach(err => {
-            errors.push({ ...errorBase, column: err.property, error: Object.values(err.constraints || {})[0] });
+          validationErrors.forEach((err) => {
+            errors.push({
+              ...errorBase,
+              column: err.property,
+              error: Object.values(err.constraints || {})[0],
+            });
           });
-          continue; 
+          continue;
         }
-        
-        const classGroup = await this.prisma.classGroup.findUnique({ where: { name: row.class_name } });
+
+        const classGroup = await this.prisma.classGroup.findUnique({
+          where: { name: row.class_name },
+        });
         if (!classGroup) {
-          errors.push({ ...errorBase, column: 'class_name', error: `Class '${row.class_name}' not found` });
+          errors.push({
+            ...errorBase,
+            column: 'class_name',
+            error: `Class '${row.class_name}' not found`,
+          });
         }
 
-        const existingUser = await this.prisma.user.findUnique({ where: { username: row.username } });
+        const existingUser = await this.prisma.user.findUnique({
+          where: { username: row.username },
+        });
         if (existingUser) {
-           errors.push({ ...errorBase, column: 'username', error: `Username '${row.username}' already exists` });
+          errors.push({
+            ...errorBase,
+            column: 'username',
+            error: `Username '${row.username}' already exists`,
+          });
         }
-        
+
         if (row.email) {
-            const existingEmail = await this.prisma.user.findUnique({ where: { email: row.email } });
-            if (existingEmail) {
-                errors.push({ ...errorBase, column: 'email', error: `Email '${row.email}' already exists` });
-            }
+          const existingEmail = await this.prisma.user.findUnique({
+            where: { email: row.email },
+          });
+          if (existingEmail) {
+            errors.push({
+              ...errorBase,
+              column: 'email',
+              error: `Email '${row.email}' already exists`,
+            });
+          }
         }
 
-        if (errors.filter(e => e.row === rowNum).length === 0) {
-           validData.push({ ...dto, classId: classGroup?.id });
+        if (errors.filter((e) => e.row === rowNum).length === 0) {
+          validData.push({ ...dto, classId: classGroup?.id });
         }
-
       } else if (type === 'teachers') {
-         if (row.citizen_id !== undefined) row.citizen_id = this.sanitizeStringNumber(row.citizen_id, 12);
-         if (row.phone !== undefined) row.phone = this.sanitizeStringNumber(row.phone, 10);
-         
-         const dto = plainToInstance(ImportTeacherDto, row);
-         if (row.dob) dto.dob = this.parseDate(row.dob);
-         if (row.gender) dto.gender = this.parseGender(row.gender);
+        if (row.citizen_id !== undefined)
+          row.citizen_id = this.sanitizeStringNumber(row.citizen_id, 12);
+        if (row.phone !== undefined)
+          row.phone = this.sanitizeStringNumber(row.phone, 10);
 
-         const validationErrors = await validate(dto);
-         if (validationErrors.length > 0) {
-            validationErrors.forEach(err => {
-                errors.push({ ...errorBase, column: err.property, error: Object.values(err.constraints || {})[0] });
+        const dto = plainToInstance(ImportTeacherDto, row);
+        if (row.dob) dto.dob = this.parseDate(row.dob);
+        if (row.gender) dto.gender = this.parseGender(row.gender);
+
+        const validationErrors = await validate(dto);
+        if (validationErrors.length > 0) {
+          validationErrors.forEach((err) => {
+            errors.push({
+              ...errorBase,
+              column: err.property,
+              error: Object.values(err.constraints || {})[0],
             });
-            continue;
-         }
+          });
+          continue;
+        }
 
-         const existingUser = await this.prisma.user.findUnique({ where: { username: row.username } });
-         if (existingUser) errors.push({ ...errorBase, column: 'username', error: `Username exists` });
+        const existingUser = await this.prisma.user.findUnique({
+          where: { username: row.username },
+        });
+        if (existingUser)
+          errors.push({
+            ...errorBase,
+            column: 'username',
+            error: `Username exists`,
+          });
 
-         const subjects = (row.subjects as string).split(',').map((s: string) => s.trim());
-         let departmentId = null;
-         for (const subjName of subjects) {
-             const subj = await this.prisma.subject.findFirst({ where: { OR: [{ code: subjName }, { name: subjName }] } });
-             if (!subj) {
-                 errors.push({ ...errorBase, column: 'subjects', error: `Subject '${subjName}' not found` });
-             } else {
-                 if (!departmentId) departmentId = subj.department; 
-             }
-         }
-         
-         if (errors.filter(e => e.row === rowNum).length === 0) {
-            validData.push({ ...dto, departmentId, subjectList: subjects });
-         }
+        const subjects = (row.subjects as string)
+          .split(',')
+          .map((s: string) => s.trim());
+        let departmentId = null;
+        for (const subjName of subjects) {
+          const subj = await this.prisma.subject.findFirst({
+            where: { OR: [{ code: subjName }, { name: subjName }] },
+          });
+          if (!subj) {
+            errors.push({
+              ...errorBase,
+              column: 'subjects',
+              error: `Subject '${subjName}' not found`,
+            });
+          } else {
+            if (!departmentId) departmentId = subj.department;
+          }
+        }
+
+        if (errors.filter((e) => e.row === rowNum).length === 0) {
+          validData.push({ ...dto, departmentId, subjectList: subjects });
+        }
       } else if (type === 'classes') {
-         const dto = plainToInstance(ImportClassDto, row);
+        const dto = plainToInstance(ImportClassDto, row);
 
-         const validationErrors = await validate(dto);
-         if (validationErrors.length > 0) {
-            validationErrors.forEach(err => {
-                errors.push({ ...errorBase, column: err.property, error: Object.values(err.constraints || {})[0] });
+        const validationErrors = await validate(dto);
+        if (validationErrors.length > 0) {
+          validationErrors.forEach((err) => {
+            errors.push({
+              ...errorBase,
+              column: err.property,
+              error: Object.values(err.constraints || {})[0],
             });
-            continue;
-         }
+          });
+          continue;
+        }
 
-         let teacherId = null;
-         if (row.homeroom_teacher) {
-            const teacher = await this.prisma.user.findUnique({ where: { username: row.homeroom_teacher }, include: { teacher: true }});
-            if (!teacher || teacher.role !== 'TEACHER' || !teacher.teacher) {
-                errors.push({ ...errorBase, column: 'homeroom_teacher', error: `Teacher username '${row.homeroom_teacher}' not found or invalid` });
-            } else {
-                teacherId = teacher.teacher.id;
-            }
-         }
+        let teacherId = null;
+        if (row.homeroom_teacher) {
+          const teacher = await this.prisma.user.findUnique({
+            where: { username: row.homeroom_teacher },
+            include: { teacher: true },
+          });
+          if (!teacher || teacher.role !== 'TEACHER' || !teacher.teacher) {
+            errors.push({
+              ...errorBase,
+              column: 'homeroom_teacher',
+              error: `Teacher username '${row.homeroom_teacher}' not found or invalid`,
+            });
+          } else {
+            teacherId = teacher.teacher.id;
+          }
+        }
 
-         const existingClass = await this.prisma.classGroup.findFirst({
-            where: { name: row.class_name, academicYear: row.academic_year }
-         });
-         
-         if (existingClass) {
-             errors.push({ ...errorBase, column: 'class_name', error: `Class '${row.class_name}' already exists in year ${row.academic_year}` });
-         }
+        const existingClass = await this.prisma.classGroup.findFirst({
+          where: { name: row.class_name, academicYear: row.academic_year },
+        });
 
-         // Extract grade level from class name (e.g., "10A1" -> 10)
-         const match = row.class_name.match(/^(\d+)/);
-         const gradeLevel = match ? parseInt(match[1], 10) : 10; // Default to 10 if not found
+        if (existingClass) {
+          errors.push({
+            ...errorBase,
+            column: 'class_name',
+            error: `Class '${row.class_name}' already exists in year ${row.academic_year}`,
+          });
+        }
 
-         if (errors.filter(e => e.row === rowNum).length === 0) {
-            validData.push({ ...dto, teacherId, gradeLevel });
-         }
+        // Extract grade level from class name (e.g., "10A1" -> 10)
+        const match = row.class_name.match(/^(\d+)/);
+        const gradeLevel = match ? parseInt(match[1], 10) : 10; // Default to 10 if not found
+
+        if (errors.filter((e) => e.row === rowNum).length === 0) {
+          validData.push({ ...dto, teacherId, gradeLevel });
+        }
       }
     }
 
@@ -203,12 +269,12 @@ export class ImportsService {
   }
 
   private parseDate(val: any): string | null {
-      if (!val) return null;
-      if (typeof val === 'number') {
-          const date = XLSX.SSF.parse_date_code(val);
-          return `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')}`;
-      }
-      return val; 
+    if (!val) return null;
+    if (typeof val === 'number') {
+      const date = XLSX.SSF.parse_date_code(val);
+      return `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')}`;
+    }
+    return val;
   }
 
   private parseGender(val: any): Gender {
@@ -222,112 +288,116 @@ export class ImportsService {
   private sanitizeStringNumber(val: any, targetLength: number): string {
     if (val === undefined || val === null) return '';
     let str = String(val).trim();
-    
+
     // Remove leading apostrophe which users add to force text in Excel
     if (str.startsWith("'")) {
       str = str.substring(1);
     }
-    
+
     // Check if the value was parsed as a numeric format (e.g., scientific notation)
     // and attempt to recover the exact integer representation
     if (typeof val === 'number') {
-        const numStr = val.toLocaleString('fullwide', { useGrouping: false });
-        if (numStr && numStr !== 'NaN') {
-            str = numStr;
-        }
+      const numStr = val.toLocaleString('fullwide', { useGrouping: false });
+      if (numStr && numStr !== 'NaN') {
+        str = numStr;
+      }
     }
-    
+
     // Clean up purely numeric strings
     if (/^\d+$/.test(str)) {
-        // Pad zeros to reach target length if we are short (e.g., dropped leading zeros)
-        while (str.length < targetLength) {
-             str = '0' + str;
-        }
+      // Pad zeros to reach target length if we are short (e.g., dropped leading zeros)
+      while (str.length < targetLength) {
+        str = '0' + str;
+      }
     }
-    
+
     return str;
   }
 
   private async saveData(data: any[], type: string) {
-      let count = 0;
-      
-      // Compute default passwords outside the transaction to prevent timeout
-      let defaultPass = '';
-      let encryptedPass = '';
-      if (type !== 'classes') {
-          defaultPass = await this.passwordService.hashPassword('123456');
-          encryptedPass = this.passwordService.encryptPassword('123456');
-      }
+    let count = 0;
 
-      await this.prisma.$transaction(async (tx) => {
-          for (const item of data) {
-              if (type === 'classes') {
-                  const id = await this.idGenerator.generateClassId(item.academic_year); 
-                  await tx.classGroup.create({
-                      data: {
-                          id, 
-                          name: item.class_name,
-                          gradeLevel: item.gradeLevel,
-                          room: item.classroom,
-                          academicYear: item.academic_year,
-                          description: item.description,
-                          teacherId: item.teacherId
-                      }
-                  });
-              } else {
-                  // User creation for Students and Teachers
+    // Compute default passwords outside the transaction to prevent timeout
+    let defaultPass = '';
+    let encryptedPass = '';
+    if (type !== 'classes') {
+      defaultPass = await this.passwordService.hashPassword('123456');
+      encryptedPass = this.passwordService.encryptPassword('123456');
+    }
 
-                  const user = await tx.user.create({
-                      data: {
-                          username: item.username,
-                          password: defaultPass,
-                          passwordEncrypted: encryptedPass,
-                          name: item.full_name,
-                          email: item.email || `${item.username}@school.edu`, 
-                          role: type === 'students' ? 'STUDENT' : 'TEACHER'
-                      }
-                  });
-    
-                  if (type === 'students') {
-                      const id = item.student_code || await this.idGenerator.generateStudentId(new Date().getFullYear());
-                      // @ts-ignore: gender field might not be in generated type yet
-                      await tx.student.create({
-                          data: {
-                              id,
-                              userId: user.id,
-                              classId: item.classId,
-                              enrollmentYear: new Date().getFullYear(),
-                              dateOfBirth: new Date(item.dob),
-                              gender: item.gender as any,
-                              address: item.address,
-                              guardianName: item.guardian_name,
-                              guardianPhone: item.guardian_phone,
-                              guardianCitizenId: item.guardian_citizen_id,
-                              guardianJob: item.guardian_occupation,
-                              guardianYearOfBirth: item.guardian_birth_year,
-                          }
-                      });
-                  } else if (type === 'teachers') {
-                      await tx.teacher.create({
-                          data: {
-                              id: `GV${Math.floor(Math.random() * 10000)}`, 
-                              userId: user.id,
-                              subjects: item.subjectList,
-                              citizenId: item.citizen_id,
-                              gender: item.gender as any, 
-                              phone: item.phone,
-                              address: item.address,
-                              joinYear: item.start_year,
-                              dateOfBirth: new Date(item.dob),
-                              // @ts-ignore: department field might not be in generated type yet
-                              department: item.departmentId, 
-                          }
-                      });
-                  }
-              }
-              count++;
+    await this.prisma.$transaction(async (tx) => {
+      for (const item of data) {
+        if (type === 'classes') {
+          const id = await this.idGenerator.generateClassId(item.academic_year);
+          await tx.classGroup.create({
+            data: {
+              id,
+              name: item.class_name,
+              gradeLevel: item.gradeLevel,
+              room: item.classroom,
+              academicYear: item.academic_year,
+              description: item.description,
+              teacherId: item.teacherId,
+            },
+          });
+        } else {
+          // User creation for Students and Teachers
+
+          const user = await tx.user.create({
+            data: {
+              username: item.username,
+              password: defaultPass,
+              passwordEncrypted: encryptedPass,
+              name: item.full_name,
+              email: item.email || `${item.username}@school.edu`,
+              role: type === 'students' ? 'STUDENT' : 'TEACHER',
+            },
+          });
+
+          if (type === 'students') {
+            const id =
+              item.student_code ||
+              (await this.idGenerator.generateStudentId(
+                new Date().getFullYear(),
+              ));
+            // @ts-ignore: gender field might not be in generated type yet
+            await tx.student.create({
+              data: {
+                id,
+                userId: user.id,
+                classId: item.classId,
+                enrollmentYear: new Date().getFullYear(),
+                dateOfBirth: new Date(item.dob),
+                gender: item.gender as any,
+                address: item.address,
+                guardianName: item.guardian_name,
+                guardianPhone: item.guardian_phone,
+                guardianCitizenId: item.guardian_citizen_id,
+                guardianJob: item.guardian_occupation,
+                guardianYearOfBirth: item.guardian_birth_year,
+              },
+            });
+          } else if (type === 'teachers') {
+            await tx.teacher.create({
+              data: {
+                id: `GV${Math.floor(Math.random() * 10000)}`,
+                userId: user.id,
+                subjects: item.subjectList,
+                citizenId: item.citizen_id,
+                gender: item.gender as any,
+                phone: item.phone,
+                address: item.address,
+                joinYear: item.start_year,
+                dateOfBirth: new Date(item.dob),
+                // @ts-ignore: department field might not be in generated type yet
+                department: item.departmentId,
+              },
+            });
           }
-      });
-      return { count };
+        }
+        count++;
+      }
+    });
+    return { count };
   }
 }

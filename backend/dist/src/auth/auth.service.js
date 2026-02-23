@@ -22,7 +22,9 @@ let AuthService = class AuthService {
     }
     async validateUser(username, pass, role) {
         const user = await this.usersService.findOne(username);
-        if (user && await this.usersService.verifyPassword(user.id, pass) && user.role === role) {
+        if (user &&
+            (await this.usersService.verifyPassword(user.id, pass)) &&
+            user.role === role) {
             const { password, passwordEncrypted, ...result } = user;
             return result;
         }
@@ -35,7 +37,7 @@ let AuthService = class AuthService {
         const payload = { username: user.username, sub: user.id, role: user.role };
         return {
             access_token: this.jwtService.sign(payload),
-            user: user
+            user: user,
         };
     }
 };

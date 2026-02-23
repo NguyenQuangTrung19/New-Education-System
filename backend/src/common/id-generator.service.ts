@@ -16,13 +16,14 @@ export class IdGeneratorService {
   async generateClassId(year: string): Promise<string> {
     // year format usually "2023-2024", we can use just the first part or the whole thing
     // Let's use 'C' + first 4 digits of year
-    const yearPrefix = year.split('-')[0] || new Date().getFullYear().toString();
+    const yearPrefix =
+      year.split('-')[0] || new Date().getFullYear().toString();
     return this.generateId('C', parseInt(yearPrefix));
   }
 
   private async generateId(prefix: string, year: number): Promise<string> {
     const key = `${prefix}_${year}`;
-    
+
     // Atomic increment using Prisma
     const sequence = await (this.prisma as any).idSequence.upsert({
       where: { key },

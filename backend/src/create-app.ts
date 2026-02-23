@@ -16,7 +16,7 @@ export async function createApp() {
     new ValidationPipe({
       whitelist: true,
       transform: true,
-    })
+    }),
   );
   return app;
 }

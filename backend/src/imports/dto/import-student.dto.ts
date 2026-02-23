@@ -1,5 +1,14 @@
-
-import { IsNotEmpty, IsString, IsOptional, IsEmail, IsEnum, IsNumber, IsDateString, Matches, Length } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsOptional,
+  IsEmail,
+  IsEnum,
+  IsNumber,
+  IsDateString,
+  Matches,
+  Length,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { Gender } from '../../students/dto/create-student.dto';
 
@@ -19,7 +28,7 @@ export class ImportStudentDto {
 
   @IsNotEmpty({ message: 'Date of birth is required' })
   // We validate as string first, service will parse
-  dob: any; 
+  dob: any;
 
   @IsNotEmpty({ message: 'Gender is required' })
   @IsEnum(Gender, { message: 'Gender must be Male, Female, or Other' })
@@ -43,7 +52,9 @@ export class ImportStudentDto {
 
   @IsNotEmpty({ message: 'Guardian phone is required' })
   @IsString()
-  @Matches(/^0[0-9]{9}$/, { message: 'Phone must start with 0 and have 10 digits' })
+  @Matches(/^0[0-9]{9}$/, {
+    message: 'Phone must start with 0 and have 10 digits',
+  })
   guardian_phone: string;
 
   @IsOptional()

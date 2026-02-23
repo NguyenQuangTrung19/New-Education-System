@@ -35,7 +35,7 @@ let StudentsService = class StudentsService {
         if (search) {
             where.OR = [
                 { id: { contains: search, mode: 'insensitive' } },
-                { user: { name: { contains: search, mode: 'insensitive' } } }
+                { user: { name: { contains: search, mode: 'insensitive' } } },
             ];
         }
         const includeConfig = {
@@ -45,7 +45,7 @@ let StudentsService = class StudentsService {
                     email: true,
                     username: true,
                     avatarUrl: true,
-                }
+                },
             },
             class: true,
         };
@@ -58,8 +58,8 @@ let StudentsService = class StudentsService {
                     skip,
                     take: limit,
                     include: includeConfig,
-                    orderBy: { enrollmentYear: 'desc' }
-                })
+                    orderBy: { enrollmentYear: 'desc' },
+                }),
             ]);
             return {
                 data: students,
@@ -68,14 +68,14 @@ let StudentsService = class StudentsService {
                     page,
                     limit,
                     totalPages: Math.ceil(total / limit),
-                }
+                },
             };
         }
         else {
             return this.prisma.student.findMany({
                 where,
                 include: includeConfig,
-                orderBy: { enrollmentYear: 'desc' }
+                orderBy: { enrollmentYear: 'desc' },
             });
         }
     }
@@ -87,11 +87,11 @@ let StudentsService = class StudentsService {
                 class: true,
                 academicHistory: true,
                 grades: {
-                    include: { subject: true }
+                    include: { subject: true },
                 },
                 attendance: true,
                 tuitions: true,
-            }
+            },
         });
     }
     async create(createStudentDto) {
@@ -120,7 +120,9 @@ let StudentsService = class StudentsService {
                     enrollmentYear,
                     address: studentData.address,
                     gender: studentData.gender,
-                    dateOfBirth: studentData.dateOfBirth ? new Date(studentData.dateOfBirth) : null,
+                    dateOfBirth: studentData.dateOfBirth
+                        ? new Date(studentData.dateOfBirth)
+                        : null,
                     gpa: studentData.gpa || 0.0,
                     guardianName: studentData.guardianName,
                     guardianPhone: studentData.guardianPhone,
@@ -143,14 +145,16 @@ let StudentsService = class StudentsService {
                     where: { id: student.userId },
                     data: {
                         name: name,
-                        email: email
-                    }
+                        email: email,
+                    },
                 });
             }
         }
         const normalizedStudentData = {
             ...studentData,
-            dateOfBirth: studentData.dateOfBirth ? new Date(studentData.dateOfBirth) : undefined,
+            dateOfBirth: studentData.dateOfBirth
+                ? new Date(studentData.dateOfBirth)
+                : undefined,
         };
         return this.prisma.student.update({
             where: { id },

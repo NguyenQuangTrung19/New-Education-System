@@ -77,7 +77,9 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsNotEmpty)({ message: 'Guardian phone is required' }),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.Matches)(/^0[0-9]{9}$/, { message: 'Phone must start with 0 and have 10 digits' }),
+    (0, class_validator_1.Matches)(/^0[0-9]{9}$/, {
+        message: 'Phone must start with 0 and have 10 digits',
+    }),
     __metadata("design:type", String)
 ], ImportStudentDto.prototype, "guardian_phone", void 0);
 __decorate([

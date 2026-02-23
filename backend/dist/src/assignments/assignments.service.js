@@ -19,15 +19,15 @@ let AssignmentsService = class AssignmentsService {
     }
     create(createAssignmentDto) {
         const { classIds, teacherId, subjectId, ...data } = createAssignmentDto;
-        const classesConnect = classIds?.map(id => ({ id })) || [];
+        const classesConnect = classIds?.map((id) => ({ id })) || [];
         return this.prisma.assignment.create({
             data: {
                 ...data,
                 subject: { connect: { id: subjectId } },
                 teacher: { connect: { id: teacherId } },
                 classes: { connect: classesConnect },
-                classIds: classIds || []
-            }
+                classIds: classIds || [],
+            },
         });
     }
     findAll() {
@@ -36,8 +36,8 @@ let AssignmentsService = class AssignmentsService {
                 subject: true,
                 teacher: { include: { user: true } },
                 classes: true,
-                submissions: true
-            }
+                submissions: true,
+            },
         });
     }
     findOne(id) {
@@ -47,8 +47,8 @@ let AssignmentsService = class AssignmentsService {
                 subject: true,
                 teacher: { include: { user: true } },
                 classes: true,
-                submissions: { include: { student: { include: { user: true } } } }
-            }
+                submissions: { include: { student: { include: { user: true } } } },
+            },
         });
     }
     update(id, updateAssignmentDto) {
@@ -65,7 +65,7 @@ let AssignmentsService = class AssignmentsService {
     async submit(assignmentId, submitDto) {
         const { studentId, answers } = submitDto;
         const assignment = await this.prisma.assignment.findUnique({
-            where: { id: assignmentId }
+            where: { id: assignmentId },
         });
         if (!assignment) {
             throw new Error('Assignment not found');
@@ -73,8 +73,8 @@ let AssignmentsService = class AssignmentsService {
         const existing = await this.prisma.assignmentSubmission.findFirst({
             where: {
                 assignmentId,
-                studentId
-            }
+                studentId,
+            },
         });
         if (existing) {
             return this.prisma.assignmentSubmission.update({
@@ -82,8 +82,8 @@ let AssignmentsService = class AssignmentsService {
                 data: {
                     answers,
                     submittedAt: new Date(),
-                    status: 'submitted'
-                }
+                    status: 'submitted',
+                },
             });
         }
         return this.prisma.assignmentSubmission.create({
@@ -91,8 +91,8 @@ let AssignmentsService = class AssignmentsService {
                 assignmentId,
                 studentId,
                 answers,
-                status: 'submitted'
-            }
+                status: 'submitted',
+            },
         });
     }
     async grade(submissionId, gradeDto) {
@@ -101,8 +101,8 @@ let AssignmentsService = class AssignmentsService {
             data: {
                 score: gradeDto.score,
                 feedback: gradeDto.feedback,
-                status: 'graded'
-            }
+                status: 'graded',
+            },
         });
     }
 };

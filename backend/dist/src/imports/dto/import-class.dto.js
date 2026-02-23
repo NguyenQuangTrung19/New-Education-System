@@ -31,7 +31,9 @@ __decorate([
 ], ImportClassDto.prototype, "classroom", void 0);
 __decorate([
     (0, class_validator_1.IsNotEmpty)({ message: 'Academic year is required' }),
-    (0, class_validator_1.Matches)(/^\d{4}-\d{4}$/, { message: 'Academic year must be in format YYYY-YYYY' }),
+    (0, class_validator_1.Matches)(/^\d{4}-\d{4}$/, {
+        message: 'Academic year must be in format YYYY-YYYY',
+    }),
     __metadata("design:type", String)
 ], ImportClassDto.prototype, "academic_year", void 0);
 __decorate([

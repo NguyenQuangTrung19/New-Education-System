@@ -33,7 +33,9 @@ let TeachersService = class TeachersService {
             where.OR = [
                 { id: { contains: search, mode: 'insensitive' } },
                 { user: { name: { contains: search, mode: 'insensitive' } } },
-                { user: { username: { contains: search, mode: 'insensitive' } } },
+                {
+                    user: { username: { contains: search, mode: 'insensitive' } },
+                },
                 { user: { email: { contains: search, mode: 'insensitive' } } },
                 { subjects: { hasSome: [search] } },
             ];
@@ -50,13 +52,20 @@ let TeachersService = class TeachersService {
                     skip,
                     take: limit,
                     include: {
-                        user: { select: { name: true, email: true, avatarUrl: true, username: true } },
+                        user: {
+                            select: {
+                                name: true,
+                                email: true,
+                                avatarUrl: true,
+                                username: true,
+                            },
+                        },
                         classes: true,
                     },
-                    orderBy: { id: 'asc' }
-                })
+                    orderBy: { id: 'asc' },
+                }),
             ]);
-            const data = teachers.map(teacher => {
+            const data = teachers.map((teacher) => {
                 const { user, ...rest } = teacher;
                 return {
                     ...rest,
@@ -73,19 +82,26 @@ let TeachersService = class TeachersService {
                     page,
                     limit,
                     totalPages: Math.ceil(total / limit),
-                }
+                },
             };
         }
         else {
             const teachers = await this.prisma.teacher.findMany({
                 where,
                 include: {
-                    user: { select: { name: true, email: true, avatarUrl: true, username: true } },
+                    user: {
+                        select: {
+                            name: true,
+                            email: true,
+                            avatarUrl: true,
+                            username: true,
+                        },
+                    },
                     classes: true,
                 },
-                orderBy: { id: 'asc' }
+                orderBy: { id: 'asc' },
             });
-            return teachers.map(teacher => {
+            return teachers.map((teacher) => {
                 const { user, ...rest } = teacher;
                 return {
                     ...rest,
@@ -101,10 +117,12 @@ let TeachersService = class TeachersService {
         const teacher = await this.prisma.teacher.findUnique({
             where: { id },
             include: {
-                user: { select: { name: true, email: true, avatarUrl: true, username: true } },
+                user: {
+                    select: { name: true, email: true, avatarUrl: true, username: true },
+                },
                 classes: true,
                 teachingAssignments: { include: { subject: true, class: true } },
-            }
+            },
         });
         if (!teacher)
             return null;
@@ -144,7 +162,9 @@ let TeachersService = class TeachersService {
                     phone: teacherData.phone,
                     citizenId: teacherData.citizenId,
                     gender: teacherData.gender || 'Male',
-                    dateOfBirth: teacherData.dateOfBirth ? new Date(teacherData.dateOfBirth) : null,
+                    dateOfBirth: teacherData.dateOfBirth
+                        ? new Date(teacherData.dateOfBirth)
+                        : null,
                     subjects: subjects || [],
                     classesAssigned: teacherData.classesAssigned ?? 0,
                     notes: teacherData.notes ?? [],
@@ -160,13 +180,15 @@ let TeachersService = class TeachersService {
             if (teacher && teacher.userId) {
                 await this.prisma.user.update({
                     where: { id: teacher.userId },
-                    data: { name, email }
+                    data: { name, email },
                 });
             }
         }
         const normalizedTeacherData = {
             ...teacherData,
-            dateOfBirth: teacherData.dateOfBirth ? new Date(teacherData.dateOfBirth) : undefined,
+            dateOfBirth: teacherData.dateOfBirth
+                ? new Date(teacherData.dateOfBirth)
+                : undefined,
         };
         return this.prisma.teacher.update({
             where: { id },
@@ -180,17 +202,17 @@ let TeachersService = class TeachersService {
         return this.prisma.$transaction(async (prisma) => {
             await prisma.classGroup.updateMany({
                 where: { teacherId: id },
-                data: { teacherId: null }
+                data: { teacherId: null },
             });
             await prisma.scheduleItem.updateMany({
                 where: { teacherId: id },
-                data: { teacherId: null }
+                data: { teacherId: null },
             });
             await prisma.teachingAssignment.deleteMany({
-                where: { teacherId: id }
+                where: { teacherId: id },
             });
             await prisma.assignment.deleteMany({
-                where: { teacherId: id }
+                where: { teacherId: id },
             });
             await prisma.teacher.delete({ where: { id } });
             return prisma.user.delete({ where: { id: teacher.userId } });

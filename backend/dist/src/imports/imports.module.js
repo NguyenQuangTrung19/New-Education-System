@@ -19,7 +19,12 @@ exports.ImportsModule = ImportsModule;
 exports.ImportsModule = ImportsModule = __decorate([
     (0, common_1.Module)({
         controllers: [imports_controller_1.ImportsController],
-        providers: [imports_service_1.ImportsService, prisma_service_1.PrismaService, id_generator_service_1.IdGeneratorService, password_service_1.PasswordService],
+        providers: [
+            imports_service_1.ImportsService,
+            prisma_service_1.PrismaService,
+            id_generator_service_1.IdGeneratorService,
+            password_service_1.PasswordService,
+        ],
     })
 ], ImportsModule);
 //# sourceMappingURL=imports.module.js.map

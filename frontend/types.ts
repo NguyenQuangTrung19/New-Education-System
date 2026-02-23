@@ -102,6 +102,7 @@ export interface Teacher {
   // Performance stats
   classesAssigned: number;
   notes?: string[];
+  classes?: ClassGroup[];
 }
 
 export interface WeeklyScore {

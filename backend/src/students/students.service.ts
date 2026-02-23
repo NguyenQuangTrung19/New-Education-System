@@ -8,7 +8,7 @@ export class StudentsService {
   constructor(
     private prisma: PrismaService,
     private idGenerator: IdGeneratorService,
-    private passwordService: PasswordService
+    private passwordService: PasswordService,
   ) {}
 
   async findAll(params?: any) {
@@ -26,7 +26,7 @@ export class StudentsService {
     if (search) {
       where.OR = [
         { id: { contains: search, mode: 'insensitive' as any } },
-        { user: { name: { contains: search, mode: 'insensitive' as any } } }
+        { user: { name: { contains: search, mode: 'insensitive' as any } } },
       ];
     }
 
@@ -37,7 +37,7 @@ export class StudentsService {
           email: true,
           username: true,
           avatarUrl: true,
-        }
+        },
       },
       class: true,
     };
@@ -51,8 +51,8 @@ export class StudentsService {
           skip,
           take: limit,
           include: includeConfig,
-          orderBy: { enrollmentYear: 'desc' }
-        })
+          orderBy: { enrollmentYear: 'desc' },
+        }),
       ]);
 
       return {
@@ -62,14 +62,14 @@ export class StudentsService {
           page,
           limit,
           totalPages: Math.ceil(total / limit),
-        }
+        },
       };
     } else {
       // Fallback for non-paginated queries
       return this.prisma.student.findMany({
         where,
         include: includeConfig,
-        orderBy: { enrollmentYear: 'desc' }
+        orderBy: { enrollmentYear: 'desc' },
       });
     }
   }
@@ -82,30 +82,35 @@ export class StudentsService {
         class: true,
         academicHistory: true,
         grades: {
-            include: { subject: true }
+          include: { subject: true },
         },
         attendance: true,
         tuitions: true,
-      }
+      },
     });
   }
-  
+
   async create(createStudentDto: any) {
-    const { username, password, name, email, classId, ...studentData } = createStudentDto;
-    
+    const { username, password, name, email, classId, ...studentData } =
+      createStudentDto;
+
     // Hash password or set default
     const plainPassword = password || 'student123';
-    const hashedPassword = await this.passwordService.hashPassword(plainPassword);
-    const encryptedPassword = this.passwordService.encryptPassword(plainPassword);
+    const hashedPassword =
+      await this.passwordService.hashPassword(plainPassword);
+    const encryptedPassword =
+      this.passwordService.encryptPassword(plainPassword);
 
     return this.prisma.$transaction(async (prisma) => {
-      const enrollmentYear = studentData.enrollmentYear || new Date().getFullYear();
-      const studentId = await this.idGenerator.generateStudentId(enrollmentYear);
+      const enrollmentYear =
+        studentData.enrollmentYear || new Date().getFullYear();
+      const studentId =
+        await this.idGenerator.generateStudentId(enrollmentYear);
 
       const user = await prisma.user.create({
         data: {
-          username, 
-          password: hashedPassword, 
+          username,
+          password: hashedPassword,
           passwordEncrypted: encryptedPassword,
           name,
           email,
@@ -122,7 +127,9 @@ export class StudentsService {
           // Add other fields as necessary from dto
           address: studentData.address,
           gender: studentData.gender,
-          dateOfBirth: studentData.dateOfBirth ? new Date(studentData.dateOfBirth) : null,
+          dateOfBirth: studentData.dateOfBirth
+            ? new Date(studentData.dateOfBirth)
+            : null,
           gpa: studentData.gpa || 0.0,
           guardianName: studentData.guardianName,
           guardianPhone: studentData.guardianPhone,
@@ -133,31 +140,41 @@ export class StudentsService {
           notes: studentData.notes ?? [],
         },
       });
-      
+
       return { ...student, user };
     });
   }
 
   async update(id: string, updateStudentDto: any) {
-    const { name, email, username, password, user, id: _id, ...studentData } = updateStudentDto;
+    const {
+      name,
+      email,
+      username,
+      password,
+      user,
+      id: _id,
+      ...studentData
+    } = updateStudentDto;
 
     // Update User info if provided
     if (name || email) {
       const student = await this.prisma.student.findUnique({ where: { id } });
       if (student && student.userId) {
-          await this.prisma.user.update({
-            where: { id: student.userId },
-            data: { 
-              name: name,
-              email: email
-            }
-          });
+        await this.prisma.user.update({
+          where: { id: student.userId },
+          data: {
+            name: name,
+            email: email,
+          },
+        });
       }
     }
 
     const normalizedStudentData = {
       ...studentData,
-      dateOfBirth: studentData.dateOfBirth ? new Date(studentData.dateOfBirth) : undefined,
+      dateOfBirth: studentData.dateOfBirth
+        ? new Date(studentData.dateOfBirth)
+        : undefined,
     };
 
     return this.prisma.student.update({
@@ -171,17 +188,17 @@ export class StudentsService {
     if (!student) return null;
 
     return this.prisma.$transaction(async (prisma) => {
-        // Cleanup relations if needed (mostly cascades for student, but good to be safe)
-        // e.g. Attendance, Grades usually cascade delete on Student delete? 
-        // Let's assume Prisma schema handles cascade for simple child tables, 
-        // but let's be explicit if we are unsure.
-        // For now, simple delete of student usually works unless strict constraints exist.
+      // Cleanup relations if needed (mostly cascades for student, but good to be safe)
+      // e.g. Attendance, Grades usually cascade delete on Student delete?
+      // Let's assume Prisma schema handles cascade for simple child tables,
+      // but let's be explicit if we are unsure.
+      // For now, simple delete of student usually works unless strict constraints exist.
 
-        // Delete student profile first
-        await prisma.student.delete({ where: { id } });
-        
-        // Delete user account
-        return prisma.user.delete({ where: { id: student.userId } });
+      // Delete student profile first
+      await prisma.student.delete({ where: { id } });
+
+      // Delete user account
+      return prisma.user.delete({ where: { id: student.userId } });
     });
   }
 }

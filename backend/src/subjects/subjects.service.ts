@@ -15,7 +15,7 @@ export class SubjectsService {
     'Tổ Ngoại ngữ',
     'Tổ Năng khiếu / Nghệ thuật',
     'Tổ Công nghệ',
-    'Tổ Tổng hợp / Văn phòng'
+    'Tổ Tổng hợp / Văn phòng',
   ];
 
   getDepartments() {
@@ -39,7 +39,7 @@ export class SubjectsService {
       include: {
         homeworks: true,
         // teachingAssignments: { include: { teacher: { include: { user: true } } } } // if needed
-      }
+      },
     });
   }
 
@@ -48,8 +48,10 @@ export class SubjectsService {
       where: { id },
       include: {
         homeworks: true,
-        teachingAssignments: { include: { teacher: { include: { user: true } } } }
-      }
+        teachingAssignments: {
+          include: { teacher: { include: { user: true } } },
+        },
+      },
     });
   }
 

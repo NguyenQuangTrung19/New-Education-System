@@ -1,5 +1,14 @@
-
-import { IsNotEmpty, IsString, IsOptional, IsEmail, IsEnum, IsNumber, IsDateString, Matches, Length } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsOptional,
+  IsEmail,
+  IsEnum,
+  IsNumber,
+  IsDateString,
+  Matches,
+  Length,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { Gender } from '../../students/dto/create-student.dto';
 
@@ -19,7 +28,7 @@ export class ImportTeacherDto {
   start_year: number;
 
   @IsNotEmpty({ message: 'Date of birth is required' })
-  dob: any; 
+  dob: any;
 
   @IsNotEmpty({ message: 'Gender is required' })
   @IsEnum(Gender, { message: 'Gender must be Male, Female, or Other' })

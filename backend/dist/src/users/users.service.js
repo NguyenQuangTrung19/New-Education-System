@@ -26,7 +26,7 @@ let UsersService = class UsersService {
             include: {
                 teacher: true,
                 student: true,
-            }
+            },
         });
     }
     async createUser(data) {
@@ -51,13 +51,13 @@ let UsersService = class UsersService {
         const encryptedPassword = this.passwordService.encryptPassword(password);
         return this.prisma.user.update({
             where: { id },
-            data: { password: hashedPassword, passwordEncrypted: encryptedPassword }
+            data: { password: hashedPassword, passwordEncrypted: encryptedPassword },
         });
     }
     async getUserCredentials(id) {
         const user = await this.prisma.user.findUnique({
             where: { id },
-            select: { passwordEncrypted: true }
+            select: { passwordEncrypted: true },
         });
         if (!user?.passwordEncrypted) {
             return { password: null };
@@ -68,12 +68,14 @@ let UsersService = class UsersService {
     async verifyPassword(id, plainPassword) {
         const user = await this.prisma.user.findUnique({
             where: { id },
-            select: { password: true, passwordEncrypted: true }
+            select: { password: true, passwordEncrypted: true },
         });
         if (!user?.password)
             return false;
         const isValid = await this.passwordService.verifyPassword(plainPassword, user.password);
-        if (!isValid && !user.passwordEncrypted && user.password === plainPassword) {
+        if (!isValid &&
+            !user.passwordEncrypted &&
+            user.password === plainPassword) {
             await this.updatePassword(id, plainPassword);
             return true;
         }

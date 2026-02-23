@@ -27,7 +27,7 @@ let SubjectsService = class SubjectsService {
         'Tổ Ngoại ngữ',
         'Tổ Năng khiếu / Nghệ thuật',
         'Tổ Công nghệ',
-        'Tổ Tổng hợp / Văn phòng'
+        'Tổ Tổng hợp / Văn phòng',
     ];
     getDepartments() {
         return SubjectsService_1.DEPARTMENTS;
@@ -47,7 +47,7 @@ let SubjectsService = class SubjectsService {
         return this.prisma.subject.findMany({
             include: {
                 homeworks: true,
-            }
+            },
         });
     }
     findOne(id) {
@@ -55,8 +55,10 @@ let SubjectsService = class SubjectsService {
             where: { id },
             include: {
                 homeworks: true,
-                teachingAssignments: { include: { teacher: { include: { user: true } } } }
-            }
+                teachingAssignments: {
+                    include: { teacher: { include: { user: true } } },
+                },
+            },
         });
     }
     update(id, updateSubjectDto) {

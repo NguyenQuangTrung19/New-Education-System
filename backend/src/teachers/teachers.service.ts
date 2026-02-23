@@ -8,22 +8,29 @@ export class TeachersService {
   constructor(
     private prisma: PrismaService,
     private idGenerator: IdGeneratorService,
-    private passwordService: PasswordService
+    private passwordService: PasswordService,
   ) {}
 
-  async findAll(params?: { page?: string; limit?: string; search?: string; subject?: string }) {
+  async findAll(params?: {
+    page?: string;
+    limit?: string;
+    search?: string;
+    subject?: string;
+  }) {
     const page = params?.page ? parseInt(params.page, 10) : undefined;
     const limit = params?.limit ? parseInt(params.limit, 10) : undefined;
     const search = params?.search || '';
     const subject = params?.subject || '';
 
     const where: any = {};
-    
+
     if (search) {
       where.OR = [
         { id: { contains: search, mode: 'insensitive' as any } },
         { user: { name: { contains: search, mode: 'insensitive' as any } } },
-        { user: { username: { contains: search, mode: 'insensitive' as any } } },
+        {
+          user: { username: { contains: search, mode: 'insensitive' as any } },
+        },
         { user: { email: { contains: search, mode: 'insensitive' as any } } },
         { subjects: { hasSome: [search] } },
       ];
@@ -42,14 +49,21 @@ export class TeachersService {
           skip,
           take: limit,
           include: {
-            user: { select: { name: true, email: true, avatarUrl: true, username: true } },
+            user: {
+              select: {
+                name: true,
+                email: true,
+                avatarUrl: true,
+                username: true,
+              },
+            },
             classes: true,
           },
-          orderBy: { id: 'asc' }
-        })
+          orderBy: { id: 'asc' },
+        }),
       ]);
 
-      const data = teachers.map(teacher => {
+      const data = teachers.map((teacher) => {
         const { user, ...rest } = teacher;
         return {
           ...rest,
@@ -67,19 +81,26 @@ export class TeachersService {
           page,
           limit,
           totalPages: Math.ceil(total / limit),
-        }
+        },
       };
     } else {
       const teachers = await this.prisma.teacher.findMany({
         where,
         include: {
-          user: { select: { name: true, email: true, avatarUrl: true, username: true } },
+          user: {
+            select: {
+              name: true,
+              email: true,
+              avatarUrl: true,
+              username: true,
+            },
+          },
           classes: true,
         },
-        orderBy: { id: 'asc' }
+        orderBy: { id: 'asc' },
       });
-  
-      return teachers.map(teacher => {
+
+      return teachers.map((teacher) => {
         const { user, ...rest } = teacher;
         return {
           ...rest,
@@ -96,10 +117,12 @@ export class TeachersService {
     const teacher = await this.prisma.teacher.findUnique({
       where: { id },
       include: {
-        user: { select: { name: true, email: true, avatarUrl: true, username: true } },
+        user: {
+          select: { name: true, email: true, avatarUrl: true, username: true },
+        },
         classes: true,
         teachingAssignments: { include: { subject: true, class: true } },
-      }
+      },
     });
 
     if (!teacher) return null;
@@ -114,11 +137,14 @@ export class TeachersService {
     };
   }
   async create(createTeacherDto: any) {
-    const { username, password, name, email, subjects, ...teacherData } = createTeacherDto;
-    
+    const { username, password, name, email, subjects, ...teacherData } =
+      createTeacherDto;
+
     const plainPassword = password || 'teacher123';
-    const hashedPassword = await this.passwordService.hashPassword(plainPassword);
-    const encryptedPassword = this.passwordService.encryptPassword(plainPassword);
+    const hashedPassword =
+      await this.passwordService.hashPassword(plainPassword);
+    const encryptedPassword =
+      this.passwordService.encryptPassword(plainPassword);
 
     return this.prisma.$transaction(async (prisma) => {
       const joinYear = teacherData.joinYear || new Date().getFullYear();
@@ -126,7 +152,7 @@ export class TeachersService {
 
       const user = await prisma.user.create({
         data: {
-          username, 
+          username,
           password: hashedPassword,
           passwordEncrypted: encryptedPassword,
           name,
@@ -144,39 +170,51 @@ export class TeachersService {
           phone: teacherData.phone,
           citizenId: teacherData.citizenId,
           gender: teacherData.gender || 'Male',
-          dateOfBirth: teacherData.dateOfBirth ? new Date(teacherData.dateOfBirth) : null,
+          dateOfBirth: teacherData.dateOfBirth
+            ? new Date(teacherData.dateOfBirth)
+            : null,
           subjects: subjects || [],
           classesAssigned: teacherData.classesAssigned ?? 0,
           notes: teacherData.notes ?? [],
         },
       });
-      
+
       return { ...teacher, user };
     });
   }
 
   async update(id: string, updateTeacherDto: any) {
-     const { name, email, username, password, user, id: _id, ...teacherData } = updateTeacherDto;
-     
-     if (name || email) {
-        const teacher = await this.prisma.teacher.findUnique({ where: { id } });
-        if (teacher && teacher.userId) {
-            await this.prisma.user.update({
-                where: { id: teacher.userId },
-                data: { name, email }
-            });
-        }
-     }
+    const {
+      name,
+      email,
+      username,
+      password,
+      user,
+      id: _id,
+      ...teacherData
+    } = updateTeacherDto;
 
-     const normalizedTeacherData = {
-       ...teacherData,
-       dateOfBirth: teacherData.dateOfBirth ? new Date(teacherData.dateOfBirth) : undefined,
-     };
+    if (name || email) {
+      const teacher = await this.prisma.teacher.findUnique({ where: { id } });
+      if (teacher && teacher.userId) {
+        await this.prisma.user.update({
+          where: { id: teacher.userId },
+          data: { name, email },
+        });
+      }
+    }
 
-     return this.prisma.teacher.update({
-       where: { id },
-       data: normalizedTeacherData,
-     });
+    const normalizedTeacherData = {
+      ...teacherData,
+      dateOfBirth: teacherData.dateOfBirth
+        ? new Date(teacherData.dateOfBirth)
+        : undefined,
+    };
+
+    return this.prisma.teacher.update({
+      where: { id },
+      data: normalizedTeacherData,
+    });
   }
 
   async remove(id: string) {
@@ -184,27 +222,27 @@ export class TeachersService {
     if (!teacher) return null;
 
     return this.prisma.$transaction(async (prisma) => {
-        await prisma.classGroup.updateMany({
-            where: { teacherId: id },
-            data: { teacherId: null }
-        });
+      await prisma.classGroup.updateMany({
+        where: { teacherId: id },
+        data: { teacherId: null },
+      });
 
-        await prisma.scheduleItem.updateMany({
-            where: { teacherId: id },
-            data: { teacherId: null }
-        });
+      await prisma.scheduleItem.updateMany({
+        where: { teacherId: id },
+        data: { teacherId: null },
+      });
 
-        await prisma.teachingAssignment.deleteMany({
-            where: { teacherId: id }
-        });
+      await prisma.teachingAssignment.deleteMany({
+        where: { teacherId: id },
+      });
 
-        await prisma.assignment.deleteMany({
-            where: { teacherId: id }
-        });
+      await prisma.assignment.deleteMany({
+        where: { teacherId: id },
+      });
 
-        await prisma.teacher.delete({ where: { id } });
+      await prisma.teacher.delete({ where: { id } });
 
-        return prisma.user.delete({ where: { id: teacher.userId } });
+      return prisma.user.delete({ where: { id: teacher.userId } });
     });
   }
 }

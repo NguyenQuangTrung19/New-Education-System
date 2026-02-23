@@ -67,16 +67,78 @@ let ImportsController = class ImportsController {
         let headers = [];
         let example = [];
         if (type === 'students') {
-            headers = ['student_code', 'full_name', 'username', 'dob', 'gender', 'email', 'address', 'class_name', 'guardian_name', 'guardian_phone', 'guardian_birth_year', 'guardian_occupation', 'guardian_citizen_id'];
-            example = ['', 'Nguyen Van A', 'nguyenvana', '2010-01-01', 'Male', 'a@example.com', 'Hanoi', '10A1', 'Nguyen Van B', '0912345678', '1980', 'Engineer', '001234567890'];
+            headers = [
+                'student_code',
+                'full_name',
+                'username',
+                'dob',
+                'gender',
+                'email',
+                'address',
+                'class_name',
+                'guardian_name',
+                'guardian_phone',
+                'guardian_birth_year',
+                'guardian_occupation',
+                'guardian_citizen_id',
+            ];
+            example = [
+                '',
+                'Nguyen Van A',
+                'nguyenvana',
+                '2010-01-01',
+                'Male',
+                'a@example.com',
+                'Hanoi',
+                '10A1',
+                'Nguyen Van B',
+                '0912345678',
+                '1980',
+                'Engineer',
+                '001234567890',
+            ];
         }
         else if (type === 'teachers') {
-            headers = ['full_name', 'username', 'start_year', 'dob', 'gender', 'citizen_id', 'email', 'phone', 'address', 'subjects'];
-            example = ['Tran Thi C', 'tranthic', '2020', '1990-05-05', 'Female', '009876543210', 'c@school.edu', '0987654321', 'Hanoi', 'MATH,PHYS'];
+            headers = [
+                'full_name',
+                'username',
+                'start_year',
+                'dob',
+                'gender',
+                'citizen_id',
+                'email',
+                'phone',
+                'address',
+                'subjects',
+            ];
+            example = [
+                'Tran Thi C',
+                'tranthic',
+                '2020',
+                '1990-05-05',
+                'Female',
+                '009876543210',
+                'c@school.edu',
+                '0987654321',
+                'Hanoi',
+                'MATH,PHYS',
+            ];
         }
         else {
-            headers = ['class_name', 'classroom', 'academic_year', 'homeroom_teacher', 'description'];
-            example = ['10A1', 'B101', '2024-2025', 'gv.nguyenvana', 'Advanced Math Class'];
+            headers = [
+                'class_name',
+                'classroom',
+                'academic_year',
+                'homeroom_teacher',
+                'description',
+            ];
+            example = [
+                '10A1',
+                'B101',
+                '2024-2025',
+                'gv.nguyenvana',
+                'Advanced Math Class',
+            ];
         }
         const ws = XLSX.utils.aoa_to_sheet([headers, example]);
         const wb = XLSX.utils.book_new();

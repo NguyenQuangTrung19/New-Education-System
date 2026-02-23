@@ -9,7 +9,7 @@ export class ScheduleService {
 
   create(createScheduleDto: CreateScheduleDto) {
     return this.prisma.scheduleItem.create({
-      data: createScheduleDto
+      data: createScheduleDto,
     });
   }
 
@@ -24,9 +24,9 @@ export class ScheduleService {
       include: {
         subject: true,
         class: true,
-        teacher: { include: { user: true } }
+        teacher: { include: { user: true } },
       },
-      orderBy: { period: 'asc' }
+      orderBy: { period: 'asc' },
     });
   }
 
@@ -36,21 +36,21 @@ export class ScheduleService {
       include: {
         subject: true,
         class: true,
-        teacher: { include: { user: true } }
-      }
+        teacher: { include: { user: true } },
+      },
     });
   }
 
   update(id: string, updateScheduleDto: UpdateScheduleDto) {
     return this.prisma.scheduleItem.update({
-        where: { id },
-        data: updateScheduleDto
+      where: { id },
+      data: updateScheduleDto,
     });
   }
 
   remove(id: string) {
     return this.prisma.scheduleItem.delete({
-      where: { id }
+      where: { id },
     });
   }
 }

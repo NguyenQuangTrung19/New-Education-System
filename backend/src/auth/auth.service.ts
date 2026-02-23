@@ -9,9 +9,17 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(username: string, pass: string, role: string): Promise<any> {
+  async validateUser(
+    username: string,
+    pass: string,
+    role: string,
+  ): Promise<any> {
     const user = await this.usersService.findOne(username);
-    if (user && await this.usersService.verifyPassword(user.id, pass) && user.role === role) {
+    if (
+      user &&
+      (await this.usersService.verifyPassword(user.id, pass)) &&
+      user.role === role
+    ) {
       const { password, passwordEncrypted, ...result } = user;
       return result;
     }
@@ -19,14 +27,14 @@ export class AuthService {
   }
 
   async verifyPassword(userId: string, pass: string): Promise<boolean> {
-      return this.usersService.verifyPassword(userId, pass);
+    return this.usersService.verifyPassword(userId, pass);
   }
 
   async login(user: any) {
     const payload = { username: user.username, sub: user.id, role: user.role };
     return {
       access_token: this.jwtService.sign(payload),
-      user: user
+      user: user,
     };
   }
 }

@@ -18,7 +18,7 @@ exports.SubjectsModule = SubjectsModule = __decorate([
     (0, common_1.Module)({
         imports: [prisma_module_1.PrismaModule],
         providers: [subjects_service_1.SubjectsService],
-        controllers: [subjects_controller_1.SubjectsController]
+        controllers: [subjects_controller_1.SubjectsController],
     })
 ], SubjectsModule);
 //# sourceMappingURL=subjects.module.js.map

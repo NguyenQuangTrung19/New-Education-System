@@ -37,16 +37,20 @@ let ClassesService = class ClassesService {
             where.OR = [
                 { name: { contains: search, mode: 'insensitive' } },
                 { room: { contains: search, mode: 'insensitive' } },
-                { teacher: { user: { name: { contains: search, mode: 'insensitive' } } } }
+                {
+                    teacher: {
+                        user: { name: { contains: search, mode: 'insensitive' } },
+                    },
+                },
             ];
         }
         const includeConfig = {
             teacher: {
-                include: { user: { select: { name: true } } }
+                include: { user: { select: { name: true } } },
             },
             _count: {
-                select: { students: true }
-            }
+                select: { students: true },
+            },
         };
         if (page !== undefined && limit !== undefined) {
             const skip = (page - 1) * limit;
@@ -57,8 +61,8 @@ let ClassesService = class ClassesService {
                     skip,
                     take: limit,
                     include: includeConfig,
-                    orderBy: { name: 'asc' }
-                })
+                    orderBy: { name: 'asc' },
+                }),
             ]);
             return {
                 data: classes,
@@ -67,14 +71,14 @@ let ClassesService = class ClassesService {
                     page,
                     limit,
                     totalPages: Math.ceil(total / limit),
-                }
+                },
             };
         }
         else {
             return this.prisma.classGroup.findMany({
                 where,
                 include: includeConfig,
-                orderBy: { name: 'asc' }
+                orderBy: { name: 'asc' },
             });
         }
     }
@@ -85,17 +89,18 @@ let ClassesService = class ClassesService {
                 teacher: { include: { user: true } },
                 students: { include: { user: true } },
                 scheduleItems: {
-                    include: { subject: true, teacher: { include: { user: true } } }
+                    include: { subject: true, teacher: { include: { user: true } } },
                 },
                 teachingAssignments: {
-                    include: { subject: true, teacher: { include: { user: true } } }
-                }
-            }
+                    include: { subject: true, teacher: { include: { user: true } } },
+                },
+            },
         });
     }
     async create(createClassDto) {
         const { academicYear, ...validClassData } = createClassDto;
-        const year = academicYear || `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
+        const year = academicYear ||
+            `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
         const classId = await this.idGenerator.generateClassId(year);
         return this.prisma.classGroup.create({
             data: {
@@ -113,7 +118,7 @@ let ClassesService = class ClassesService {
                 femaleStudentCount: validClassData.femaleStudentCount ?? 0,
                 weeklyScoreHistory: validClassData.weeklyScoreHistory ?? [],
                 notes: validClassData.notes ?? [],
-            }
+            },
         });
     }
     async update(id, updateClassDto) {
@@ -123,30 +128,31 @@ let ClassesService = class ClassesService {
             normalizedUpdateData.teacherId = validUpdateData.teacherId || null;
         }
         if (Object.prototype.hasOwnProperty.call(validUpdateData, 'weeklyScoreHistory')) {
-            normalizedUpdateData.weeklyScoreHistory = validUpdateData.weeklyScoreHistory ?? [];
+            normalizedUpdateData.weeklyScoreHistory =
+                validUpdateData.weeklyScoreHistory ?? [];
         }
         if (Object.prototype.hasOwnProperty.call(validUpdateData, 'notes')) {
             normalizedUpdateData.notes = validUpdateData.notes ?? [];
         }
         return this.prisma.classGroup.update({
             where: { id },
-            data: normalizedUpdateData
+            data: normalizedUpdateData,
         });
     }
     async remove(id) {
         return this.prisma.$transaction(async (prisma) => {
             await prisma.student.updateMany({
                 where: { classId: id },
-                data: { classId: null }
+                data: { classId: null },
             });
             await prisma.scheduleItem.deleteMany({
-                where: { classId: id }
+                where: { classId: id },
             });
             await prisma.teachingAssignment.deleteMany({
-                where: { classId: id }
+                where: { classId: id },
             });
             return prisma.classGroup.delete({
-                where: { id }
+                where: { id },
             });
         });
     }

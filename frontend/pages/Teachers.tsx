@@ -80,6 +80,10 @@ const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({ teacher, onClos
                                  <span className="px-2.5 py-0.5 bg-indigo-100 text-indigo-700 rounded-full font-medium border border-indigo-200">{teacher.id}</span>
                                  <span className="flex items-center text-gray-500"><Briefcase className="h-4 w-4 mr-1"/> {t('teachers.modal.joined')} {teacher.joinYear}</span>
                                  <span className="flex items-center text-gray-500"><Clock className="h-4 w-4 mr-1"/> {experience} {t('teachers.modal.exp')}</span>
+                                 <span className="flex items-center text-gray-500">
+                                    <Users className="h-4 w-4 mr-1"/> 
+                                    {t('teachers.modal.homeroom')}: {teacher.classes && teacher.classes.length > 0 ? teacher.classes.map(c => c.name).join(', ') : 'None'}
+                                 </span>
                              </div>
                          </div>
                          {isAdmin && (

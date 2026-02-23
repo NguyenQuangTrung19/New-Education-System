@@ -19,7 +19,7 @@ let ScheduleService = class ScheduleService {
     }
     create(createScheduleDto) {
         return this.prisma.scheduleItem.create({
-            data: createScheduleDto
+            data: createScheduleDto,
         });
     }
     findAll(query = {}) {
@@ -33,9 +33,9 @@ let ScheduleService = class ScheduleService {
             include: {
                 subject: true,
                 class: true,
-                teacher: { include: { user: true } }
+                teacher: { include: { user: true } },
             },
-            orderBy: { period: 'asc' }
+            orderBy: { period: 'asc' },
         });
     }
     findOne(id) {
@@ -44,19 +44,19 @@ let ScheduleService = class ScheduleService {
             include: {
                 subject: true,
                 class: true,
-                teacher: { include: { user: true } }
-            }
+                teacher: { include: { user: true } },
+            },
         });
     }
     update(id, updateScheduleDto) {
         return this.prisma.scheduleItem.update({
             where: { id },
-            data: updateScheduleDto
+            data: updateScheduleDto,
         });
     }
     remove(id) {
         return this.prisma.scheduleItem.delete({
-            where: { id }
+            where: { id },
         });
     }
 };

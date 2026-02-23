@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import { TeachersService } from './teachers.service';
 import { AuthGuard } from '@nestjs/passport';
 import { CreateTeacherDto, UpdateTeacherDto } from './dto/create-teacher.dto';

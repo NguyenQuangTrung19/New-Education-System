@@ -10,7 +10,9 @@ export class ImportClassDto {
   classroom: string;
 
   @IsNotEmpty({ message: 'Academic year is required' })
-  @Matches(/^\d{4}-\d{4}$/, { message: 'Academic year must be in format YYYY-YYYY' })
+  @Matches(/^\d{4}-\d{4}$/, {
+    message: 'Academic year must be in format YYYY-YYYY',
+  })
   academic_year: string;
 
   @IsOptional()

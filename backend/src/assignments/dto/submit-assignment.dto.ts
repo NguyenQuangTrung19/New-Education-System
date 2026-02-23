@@ -1,5 +1,10 @@
-
-import { IsNotEmpty, IsString, IsOptional, IsJSON, IsObject } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsOptional,
+  IsJSON,
+  IsObject,
+} from 'class-validator';
 
 export class SubmitAssignmentDto {
   @IsNotEmpty()

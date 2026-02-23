@@ -27,7 +27,13 @@ let ClassesController = class ClassesController {
         this.classesService = classesService;
     }
     findAll(page, limit, search, grade, academicYear) {
-        return this.classesService.findAll({ page, limit, search, grade, academicYear });
+        return this.classesService.findAll({
+            page,
+            limit,
+            search,
+            grade,
+            academicYear,
+        });
     }
     findOne(id) {
         return this.classesService.findOne(id);
