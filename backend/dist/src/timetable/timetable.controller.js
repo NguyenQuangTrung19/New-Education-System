@@ -21,7 +21,15 @@ let TimetableController = class TimetableController {
         this.timetableService = timetableService;
     }
     async generateTimetable(config) {
-        return this.timetableService.generateSchedule();
+        try {
+            return await this.timetableService.generateSchedule();
+        }
+        catch (e) {
+            if (e.message && e.message.includes('PRE_FLIGHT_ERROR')) {
+                throw new common_1.BadRequestException(e.message.replace('PRE_FLIGHT_ERROR: ', ''));
+            }
+            throw new common_1.InternalServerErrorException(e.message || 'Timetable generation failed');
+        }
     }
 };
 exports.TimetableController = TimetableController;

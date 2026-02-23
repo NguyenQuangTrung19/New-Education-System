@@ -1,3 +1,4 @@
+import { HomeworkStatus } from '@prisma/client';
 export declare class CreateAssignmentDto {
     title: string;
     description?: string;
@@ -8,4 +9,5 @@ export declare class CreateAssignmentDto {
     duration?: number;
     password?: string;
     questions?: any;
+    status?: HomeworkStatus;
 }

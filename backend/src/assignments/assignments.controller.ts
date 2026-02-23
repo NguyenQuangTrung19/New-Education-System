@@ -7,6 +7,8 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
+  NotFoundException,
 } from '@nestjs/common';
 import { AssignmentsService } from './assignments.service';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
@@ -32,8 +34,11 @@ export class AssignmentsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
   @Get()
-  findAll() {
-    return this.assignmentsService.findAll();
+  findAll(
+    @Query('teacherId') teacherId?: string,
+    @Query('classId') classId?: string,
+  ) {
+    return this.assignmentsService.findAll(teacherId, classId);
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)

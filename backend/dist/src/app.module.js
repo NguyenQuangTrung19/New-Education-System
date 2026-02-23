@@ -22,6 +22,7 @@ const common_module_1 = require("./common/common.module");
 const schedule_module_1 = require("./schedule/schedule.module");
 const imports_module_1 = require("./imports/imports.module");
 const timetable_module_1 = require("./timetable/timetable.module");
+const teaching_assignments_module_1 = require("./teaching-assignments/teaching-assignments.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -40,6 +41,7 @@ exports.AppModule = AppModule = __decorate([
             imports_module_1.ImportsModule,
             schedule_module_1.ScheduleModule,
             timetable_module_1.TimetableModule,
+            teaching_assignments_module_1.TeachingAssignmentsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

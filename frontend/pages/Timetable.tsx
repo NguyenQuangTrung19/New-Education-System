@@ -147,9 +147,21 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
     }
   };
 
+  const fetchAssignments = async () => {
+    try {
+        const { data } = await api.get('/teaching-assignments');
+        setAssignments(data);
+    } catch (error) {
+        console.error("Failed to fetch teaching assignments", error);
+    }
+  };
+
   useEffect(() => {
     fetchSchedule();
-  }, [currentWeekStart, selectedClassId, selectedTeacherId]);
+    if (isAdmin) {
+       fetchAssignments();
+    }
+  }, [currentWeekStart, selectedClassId, selectedTeacherId, isAdmin]);
 
   // Initialization Logic
   useEffect(() => {
@@ -263,14 +275,14 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
     }
   };
   
-  // Assignment Handlers (kept same)
+  // Assignment Handlers
   const handleAssignmentChange = (id: string, field: keyof TeachingAssignment, value: any) => {
       setAssignments(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
   };
   const handleAddAssignment = () => {
       if(teachersList.length === 0 || subjectsList.length === 0 || classesList.length === 0) return;
       const newAssignment: TeachingAssignment = {
-          id: `ASN-${Date.now()}`,
+          id: `new-${Date.now()}`,
           teacherId: teachersList[0].id,
           subjectId: subjectsList[0].id,
           classId: classesList[0].id,
@@ -280,6 +292,24 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
   };
   const handleDeleteAssignment = (id: string) => {
       setAssignments(prev => prev.filter(a => a.id !== id));
+  };
+
+  const handleSaveAssignments = async () => {
+      try {
+          const payload = assignments.map(a => ({
+              teacherId: a.teacherId,
+              subjectId: a.subjectId,
+              classId: a.classId,
+              sessionsPerWeek: a.sessionsPerWeek
+          }));
+          await api.post('/teaching-assignments/bulk', payload);
+          setShowAssignmentsModal(false);
+          alert(t('common.saveSuccess', 'Saved successfully'));
+      } catch (e: any) {
+          console.error("Save assignments failed", e);
+          const msg = e.response?.data?.message || 'Failed to save workload constraints.';
+          alert(`Error: ${Array.isArray(msg) ? msg.join(', ') : msg}`);
+      }
   };
 
   // --- Render Components ---
@@ -335,7 +365,10 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
               </div>
               <div className="p-4 border-t border-gray-100 bg-gray-50 rounded-b-xl flex justify-between">
                   {isAdmin ? <button onClick={handleAddAssignment} className="flex items-center text-indigo-600 font-bold text-sm hover:text-indigo-800 px-2 py-1"><Plus className="h-4 w-4 mr-1" /> {t('timetable.addAssignment')}</button> : <div></div>}
-                  <button onClick={onClose} className="px-6 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 shadow-md">{t('timetable.done')}</button>
+                  <div className="flex gap-2">
+                     <button onClick={onClose} className="px-5 py-2 text-gray-600 hover:bg-gray-200 rounded-lg text-sm font-bold transition-colors">{t('common.cancel')}</button>
+                     {isAdmin && <button onClick={handleSaveAssignments} className="px-6 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 shadow-md transition-colors">{t('common.save')}</button>}
+                  </div>
               </div>
           </div>
         </div>

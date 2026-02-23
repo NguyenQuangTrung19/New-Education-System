@@ -152,8 +152,8 @@ export declare class StudentsService {
         })[];
         attendance: {
             id: string;
-            studentId: string;
             status: import(".prisma/client").$Enums.AttendanceStatus;
+            studentId: string;
             scheduleId: string | null;
             date: Date;
             note: string | null;
@@ -161,8 +161,8 @@ export declare class StudentsService {
         tuitions: {
             id: string;
             academicYear: string;
-            studentId: string;
             status: import(".prisma/client").$Enums.TuitionSemesterStatus;
+            studentId: string;
             semester: string;
             totalAmount: number;
             totalPaid: number;

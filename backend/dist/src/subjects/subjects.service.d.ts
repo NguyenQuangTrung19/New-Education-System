@@ -25,6 +25,7 @@ export declare class SubjectsService {
             dueDate: Date;
             duration: number | null;
             questions: import("@prisma/client/runtime/library").JsonValue | null;
+            status: import(".prisma/client").$Enums.HomeworkStatus;
         }[];
     } & {
         name: string;
@@ -82,6 +83,7 @@ export declare class SubjectsService {
             dueDate: Date;
             duration: number | null;
             questions: import("@prisma/client/runtime/library").JsonValue | null;
+            status: import(".prisma/client").$Enums.HomeworkStatus;
         }[];
     } & {
         name: string;

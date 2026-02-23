@@ -75,6 +75,25 @@ let TimetableService = TimetableService_1 = class TimetableService {
             })),
             timeOff: [],
         }));
+        this.logger.log('Validating assignment constraints...');
+        const teacherLoads = {};
+        const classLoads = {};
+        formattedTeachers.forEach(t => {
+            t.assignments.forEach(a => {
+                teacherLoads[t.id] = (teacherLoads[t.id] || 0) + a.periods;
+                classLoads[a.classId] = (classLoads[a.classId] || 0) + a.periods;
+            });
+        });
+        for (const [tId, load] of Object.entries(teacherLoads)) {
+            if (load > 40) {
+                throw new Error(`PRE_FLIGHT_ERROR: Teacher ${tId} is assigned ${load} periods. The maximum allowed for a 5-day week is 40.`);
+            }
+        }
+        for (const [cId, load] of Object.entries(classLoads)) {
+            if (load > 40) {
+                throw new Error(`PRE_FLIGHT_ERROR: Class ${cId} is assigned ${load} periods. The maximum allowed for a 5-day week is 40.`);
+            }
+        }
         const inputPayload = {
             weeklyStructure: {
                 days: 5,

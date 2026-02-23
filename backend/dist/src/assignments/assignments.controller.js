@@ -31,8 +31,8 @@ let AssignmentsController = class AssignmentsController {
     create(createAssignmentDto) {
         return this.assignmentsService.create(createAssignmentDto);
     }
-    findAll() {
-        return this.assignmentsService.findAll();
+    findAll(teacherId, classId) {
+        return this.assignmentsService.findAll(teacherId, classId);
     }
     findOne(id) {
         return this.assignmentsService.findOne(id);
@@ -64,8 +64,10 @@ __decorate([
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN, client_1.UserRole.TEACHER, client_1.UserRole.STUDENT),
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)('teacherId')),
+    __param(1, (0, common_1.Query)('classId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], AssignmentsController.prototype, "findAll", null);
 __decorate([

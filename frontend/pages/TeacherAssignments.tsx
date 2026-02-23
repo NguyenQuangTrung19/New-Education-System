@@ -70,14 +70,13 @@ export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentU
   const fetchData = async () => {
     try {
         setLoading(true);
-        // Parallel fetch for efficiency
+        // Scope assignments to this teacher only
         const [assignmentsRes, subjectsRes, classesRes] = await Promise.all([
-            api.get('/assignments'), // Should filter by teacherId in backend ideally, or here
+            api.get(`/assignments?teacherId=${currentUser.id}`),
             api.get('/subjects'),
-            api.get('/classes') // Assuming a classes endpoint exists
+            api.get('/classes')
         ]);
 
-        // Transform backend assignment to frontend StoredAssignment
         const mappedAssignments = assignmentsRes.data.map((a: any) => ({
             id: a.id,
             title: a.title,
@@ -87,13 +86,13 @@ export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentU
             classIds: a.classIds || (a.classes ? a.classes.map((c:any) => c.id) : []),
             passwordAccess: a.password || '',
             questions: a.questions || [],
-            status: 'active', // Backend doesn't have status on Assignment, assume active for now
+            status: a.status === 'CLOSED' ? 'closed' : 'active',
             createdAt: a.createdAt
         }));
 
         setAssignments(mappedAssignments);
         setMySubjects(subjectsRes.data);
-        setMyClasses(classesRes.data); // Should filter by teacher in real app if backend returns all
+        setMyClasses(classesRes.data);
     } catch (error) {
         console.error("Failed to fetch data", error);
     } finally {
@@ -340,13 +339,15 @@ export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentU
   };
 
   const confirmSecurityCheck = async () => {
-      if (securityPassword === 'password') {
+      try {
+          // Verify password server-side instead of using hardcoded string
+          await api.post('/auth/verify-password', { password: securityPassword });
+          
           if (pendingAction === 'edit_access') {
               setShowSecurityModal(false);
               setView('create');
               setActiveQuestionIndex(0);
           } else if (pendingAction === 'delete') {
-              // Execute Delete
               if (editingId) {
                   try {
                     await api.delete(`/assignments/${editingId}`);
@@ -359,11 +360,10 @@ export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentU
               }
               setShowSecurityModal(false);
           } else {
-              // Publish
               confirmPublishAction();
           }
-      } else {
-          setSecurityError("Mật khẩu giáo viên không đúng.");
+      } catch (err) {
+          setSecurityError("Mật khẩu không đúng. Vui lòng thử lại.");
       }
   };
 

@@ -1,12 +1,14 @@
 import {
   IsArray,
   IsDateString,
+  IsEnum,
   IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
   Min,
 } from 'class-validator';
+import { HomeworkStatus } from '@prisma/client';
 
 export class CreateAssignmentDto {
   @IsString()
@@ -23,7 +25,7 @@ export class CreateAssignmentDto {
 
   @IsString()
   @IsNotEmpty()
-  teacherId: string; // If admin creates, they specify teacher. If teacher creates, we can use their ID.
+  teacherId: string;
 
   @IsArray()
   @IsOptional()
@@ -43,4 +45,8 @@ export class CreateAssignmentDto {
 
   @IsOptional()
   questions?: any;
+
+  @IsEnum(HomeworkStatus)
+  @IsOptional()
+  status?: HomeworkStatus;
 }

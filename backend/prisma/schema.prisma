@@ -40,6 +40,12 @@ enum AssignmentStatus {
   graded
 }
 
+enum HomeworkStatus {
+  ACTIVE
+  CLOSED
+  DRAFT
+}
+
 enum TuitionStatus {
   paid
   partial
@@ -263,27 +269,28 @@ model TuitionItem {
 }
 
 model Assignment {
-  id          String   @id @default(uuid())
+  id          String         @id @default(uuid())
   title       String
   description String?
   
   subjectId   String
-  subject     Subject  @relation(fields: [subjectId], references: [id])
+  subject     Subject        @relation(fields: [subjectId], references: [id])
   
   teacherId   String
-  teacher     Teacher  @relation(fields: [teacherId], references: [id])
+  teacher     Teacher        @relation(fields: [teacherId], references: [id])
   
-  classIds    String[] // Helper field for M:N if needed, or just rely on implicit
+  classIds    String[]       // Denormalized helper for quick reads
   classes     ClassGroup[]
   
   dueDate     DateTime
-  duration    Int? // Minutes
+  duration    Int?           // Minutes
   password    String?
   
-  questions   Json? // Store questions structure
+  questions   Json?          // Store questions structure
+  status      HomeworkStatus @default(ACTIVE)
   
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
   
   submissions AssignmentSubmission[]
 }

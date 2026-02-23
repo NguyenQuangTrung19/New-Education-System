@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body } from '@nestjs/common';
+import { Controller, Post, Get, Body, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { TimetableService } from './timetable.service';
 
 @Controller('timetable')
@@ -7,7 +7,13 @@ export class TimetableController {
 
   @Post('generate')
   async generateTimetable(@Body() config: any) {
-    // In a real scenario, this would accept academic year or specific parameters
-    return this.timetableService.generateSchedule();
+    try {
+        return await this.timetableService.generateSchedule();
+    } catch (e: any) {
+        if (e.message && e.message.includes('PRE_FLIGHT_ERROR')) {
+             throw new BadRequestException(e.message.replace('PRE_FLIGHT_ERROR: ', ''));
+        }
+        throw new InternalServerErrorException(e.message || 'Timetable generation failed');
+    }
   }
 }
