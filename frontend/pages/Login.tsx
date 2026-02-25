@@ -329,19 +329,26 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
               ))}
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
+            {/* Defeat aggressive browser autofill */}
+            <input type="text" name="hidden_username" autoComplete="username" className="hidden" style={{display: 'none'}} />
+            <input type="password" name="hidden_password" autoComplete="current-password" className="hidden" style={{display: 'none'}} />
+            
             {error && (
                 <div className="bg-red-500/20 border border-red-500/50 p-3 rounded-xl text-white text-sm text-center font-medium backdrop-blur-sm">
                     {error}
                 </div>
             )}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-white/80 uppercase tracking-wider ml-1">Username</label>
+              <label htmlFor="auth-username" className="text-xs font-bold text-white/80 uppercase tracking-wider ml-1">Username</label>
               <div className="relative group">
                 <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-glacier-lake transition-colors z-10" />
                 <input
+                  id="auth-username"
+                  name="auth-username"
                   type="text"
                   required
+                  autoComplete="new-password"
                   className="block w-full pl-12 pr-4 py-3.5 bg-white border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-glacier-lake/50 shadow-lg transition-all font-medium"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -350,12 +357,15 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-white/80 uppercase tracking-wider ml-1">{t('login.label.password')}</label>
+              <label htmlFor="auth-password" className="text-xs font-bold text-white/80 uppercase tracking-wider ml-1">{t('login.label.password')}</label>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-glacier-lake transition-colors z-10" />
                 <input
+                  id="auth-password"
+                  name="auth-password"
                   type={showPassword ? "text" : "password"}
                   required
+                  autoComplete="new-password"
                   className="block w-full pl-12 pr-12 py-3.5 bg-white border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-glacier-lake/50 shadow-lg transition-all font-medium"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
