@@ -16,8 +16,8 @@ type InfoTab = 'about' | 'contact' | 'credit';
 export const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const { t } = useLanguage();
   const [role, setRole] = useState<UserRole>(UserRole.ADMIN);
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('password123');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,17 +28,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
   const handleRoleChange = (newRole: UserRole) => {
     setRole(newRole);
-    // Pre-fill for demo purposes based on seed data
-    if (newRole === UserRole.TEACHER) {
-      setUsername('gv.nguyenvanan');
-      setPassword('password123');
-    } else if (newRole === UserRole.STUDENT) {
-      setUsername('hs.lethimai');
-      setPassword('password123');
-    } else {
-      setUsername('admin');
-      setPassword('password123');
-    }
+    setUsername('');
+    setPassword('');
     setError(null);
   };
 
