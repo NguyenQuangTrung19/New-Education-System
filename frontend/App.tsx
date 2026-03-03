@@ -200,38 +200,34 @@ const App: React.FC = () => {
     return <Welcome onComplete={handleWelcomeComplete} />;
   }
 
-  const renderContent = () => {
+    const renderContent = () => {
     if (!isPageAllowed(currentPage, currentUser?.role)) {
       return <Dashboard onNavigate={handleNavigate} notifications={notifications} currentUser={currentUser} />;
     }
-    switch (currentPage) {
-      case 'dashboard': return <Dashboard onNavigate={handleNavigate} notifications={notifications} currentUser={currentUser} />;
-      case 'teachers': return <Teachers currentUser={currentUser} />;
-      case 'students': return <Students currentUser={currentUser} />;
-      case 'classes': return <Classes currentUser={currentUser} />;
-      case 'subjects': return <Subjects currentUser={currentUser} />;
-      case 'timetable': return <Timetable currentUser={currentUser} onNavigate={handleNavigate} />;
-      case 'profile': return <Profile user={currentUser!} onUpdateUser={handleUpdateUser} />;
-      case 'notifications': return (
-        <NotificationsPage 
-          notifications={notifications} 
-          onMarkAsRead={handleMarkAsRead}
-          onDelete={handleDeleteNotification}
-        />
-      );
-      case 'my-classes': return <MyClasses currentUser={currentUser!} initialClassId={navParams?.classId} />;
-      case 'teacher-assignments': return <TeacherAssignments currentUser={currentUser!} />;
-      case 'teacher-resources': return <TeacherResources currentUser={currentUser!} />;
-      case 'student-class': return <StudentClass currentUser={currentUser!} />;
-      case 'rules': return <Rules />;
-      case 'student-results': return <StudentResults currentUser={currentUser!} />;
-      case 'leaderboard': return <Leaderboard currentUser={currentUser!} />;
-      case 'tuition': return <Tuition currentUser={currentUser!} />;
-      case 'admin-tuition': return <AdminTuition currentUser={currentUser!} />;
-      case 'admin-assignments': return <AdminAssignments currentUser={currentUser!} />;
-      case 'settings': return <Settings />;
-      default: return <Dashboard onNavigate={handleNavigate} notifications={notifications} currentUser={currentUser} />;
-    }
+
+    const routeComponents: Record<string, React.ReactNode> = {
+      'dashboard': <Dashboard onNavigate={handleNavigate} notifications={notifications} currentUser={currentUser} />,
+      'teachers': <Teachers currentUser={currentUser} />,
+      'students': <Students currentUser={currentUser} />,
+      'classes': <Classes currentUser={currentUser} />,
+      'subjects': <Subjects currentUser={currentUser} />,
+      'timetable': <Timetable currentUser={currentUser} onNavigate={handleNavigate} />,
+      'profile': <Profile user={currentUser!} onUpdateUser={handleUpdateUser} />,
+      'notifications': <NotificationsPage notifications={notifications} onMarkAsRead={handleMarkAsRead} onDelete={handleDeleteNotification} />,
+      'my-classes': <MyClasses currentUser={currentUser!} initialClassId={navParams?.classId} />,
+      'teacher-assignments': <TeacherAssignments currentUser={currentUser!} />,
+      'teacher-resources': <TeacherResources currentUser={currentUser!} />,
+      'student-class': <StudentClass currentUser={currentUser!} />,
+      'rules': <Rules />,
+      'student-results': <StudentResults currentUser={currentUser!} />,
+      'leaderboard': <Leaderboard currentUser={currentUser!} />,
+      'tuition': <Tuition currentUser={currentUser!} />,
+      'admin-tuition': <AdminTuition currentUser={currentUser!} />,
+      'admin-assignments': <AdminAssignments currentUser={currentUser!} />,
+      'settings': <Settings />
+    };
+
+    return routeComponents[currentPage] || <Dashboard onNavigate={handleNavigate} notifications={notifications} currentUser={currentUser} />;
   };
 
   const getPageTitle = () => {
@@ -260,11 +256,11 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-cloud-dancer overflow-hidden">
+    <div className="flex bg-ice-white text-main transition-colors duration-400 font-sans overflow-hidden min-h-screen">
       {/* Sidebar Backdrop for Mobile - High Z-index but below sidebar */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-slate-900/50 z-30 md:hidden backdrop-blur-sm transition-opacity"
+          className="fixed inset-0 bg-slate-900/40 z-30 md:hidden backdrop-blur-md transition-opacity"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
@@ -294,9 +290,11 @@ const App: React.FC = () => {
           onNavigate={handleNavigate}
         />
 
-        <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8 custom-scrollbar">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8 custom-scrollbar bg-ice-white bg-opacity-80">
           <div className="max-w-7xl mx-auto h-full">
-            {renderContent()}
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full h-full">
+               {renderContent()}
+            </div>
           </div>
         </main>
       </div>

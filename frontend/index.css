@@ -13,26 +13,27 @@
   --color-muted-coral: #FF8E85;
   --color-lavender-mist: #B5B9D9;
 
-  /* Map standard colors to variables */
-  --color-primary-50: var(--bg-indigo-50);
-  --color-primary-100: var(--bg-indigo-100);
-  --color-primary-200: #BFDBEE;
-  --color-primary-300: #9AC6E4;
-  --color-primary-400: var(--color-primary);
+  /* Map standard colors to variables (Upgraded to Curated Tailored HSL Colors) */
+  --color-primary-50: hsl(210, 100%, 97%);
+  --color-primary-100: hsl(210, 100%, 93%);
+  --color-primary-200: hsl(210, 96%, 86%);
+  --color-primary-300: hsl(209, 85%, 75%);
+  --color-primary-400: hsl(208, 64%, 58%);
   --color-primary-500: var(--color-primary);
   --color-primary-600: var(--color-primary-dark);
-  --color-primary-700: #4A7290;
-  --color-primary-900: #2E4A60;
+  --color-primary-700: hsl(210, 68%, 35%);
+  --color-primary-900: hsl(211, 74%, 22%);
 
-  --color-indigo-50: var(--bg-indigo-50);
-  --color-indigo-100: var(--bg-indigo-100);
-  --color-indigo-500: var(--color-primary);
-  --color-indigo-600: var(--color-primary-dark);
-  --color-indigo-700: #4A7290;
+  --color-indigo-50: hsl(230, 100%, 97%);
+  --color-indigo-100: hsl(229, 100%, 94%);
+  --color-indigo-500: hsl(230, 66%, 60%);
+  --color-indigo-600: hsl(230, 58%, 51%);
+  --color-indigo-700: hsl(230, 58%, 43%);
 
-  --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
-  --shadow-glow: 0 0 15px var(--color-primary-light);
-  --shadow-neon: 0 0 10px var(--color-primary), 0 0 20px var(--color-primary-dark);
+  /* Premium Micro-interaction Shadows */
+  --shadow-soft: 0 8px 30px -4px rgba(0, 0, 0, 0.08); /* More diffuse and soft */
+  --shadow-glow: 0 0 20px hsla(208, 64%, 58%, 0.4);
+  --shadow-neon: 0 0 10px hsla(208, 64%, 58%, 0.2), 0 0 20px var(--color-primary-dark);
 }
 
 :root {
@@ -228,23 +229,29 @@ input, select, textarea {
   color: #94A3B8 !important;
 }
 
-/* Buttons - Primary */
+/* Buttons - Primary & Micro-interactions */
 .bg-indigo-600 {
-  background-image: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+  background-image: linear-gradient(135deg, hsl(230, 66%, 60%), hsl(230, 58%, 51%)); /* Vibrant Gradient */
   background-color: transparent; 
   color: #FFFFFF !important;
   border: none;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 15px -1px hsla(230, 66%, 60%, 0.3); /* Softer tinted shadow */
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Apple-like cubic transition */
 }
 
 [data-theme='midnight'] .bg-indigo-600 {
-  box-shadow: 0 0 15px var(--color-primary-dark);
+  box-shadow: 0 0 20px hsla(230, 66%, 60%, 0.4);
 }
 
 .bg-indigo-600:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-  transition: all 0.2s;
+  background-image: linear-gradient(135deg, hsl(230, 66%, 65%), hsl(230, 58%, 55%));
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 20px -2px hsla(230, 66%, 60%, 0.5); /* Lift shadow dynamically up */
+}
+
+.bg-indigo-600:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 10px -1px hsla(230, 66%, 60%, 0.3);
 }
 
 /* Active Menu Item Background */

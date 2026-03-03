@@ -99,11 +99,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside 
-      className={`fixed top-0 left-0 z-40 h-screen transition-all duration-500 ease-in-out flex flex-col border-r border-white/20 shadow-[4px_0_24px_rgba(0,0,0,0.1)] ${
+      className={`fixed top-0 left-0 z-40 h-screen transition-all cubic-bezier(0.4, 0, 0.2, 1) duration-500 ease-in-out flex flex-col border-r border-white/10 shadow-2xl shadow-indigo-500/10 ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       } md:translate-x-0 ${isCollapsed ? 'w-[88px]' : 'w-[280px]'}`}
       style={{
-        // Use the CSS variable that changes based on theme data attribute
         background: 'var(--bg-sidebar)' 
       }}
     >
@@ -137,14 +136,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
           
           return (
             <button
+            <button
               key={item.id}
               onClick={() => onNavigate(item.id)}
-              className={`w-full flex items-center py-3.5 rounded-2xl transition-all duration-300 group relative ${
+              title={isCollapsed ? item.label : undefined}
+              className={`w-full flex items-center py-3.5 rounded-2xl transition-all duration-300 group relative overflow-hidden ${
                 isCollapsed ? 'justify-center px-0' : 'px-4'
               } ${
                 isActive 
-                  ? 'bg-white text-indigo-600 shadow-[0_4px_15px_rgba(0,0,0,0.1)] font-bold' 
-                  : 'text-white/80 hover:text-white hover:bg-white/10 font-medium'
+                  ? 'bg-gradient-to-r from-indigo-500/10 to-transparent text-indigo-400 font-bold border-l-4 border-indigo-400' 
+                  : 'text-white/70 hover:text-white hover:bg-white/5 border-l-4 border-transparent font-medium'
               }`}
             >
               {isActive && !isCollapsed && (
@@ -159,7 +160,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               />
               
               {!isCollapsed && (
-                  <span className={`text-[14px] tracking-wide truncate ${isActive ? '' : ''}`}>
+                  <span className={`text-[14px] tracking-wide truncate ${isActive ? 'font-bold' : 'font-medium opacity-90'}`}>
                       {item.label}
                   </span>
               )}
