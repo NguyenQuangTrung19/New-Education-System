@@ -136,7 +136,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           
           return (
             <button
-            <button
               key={item.id}
               onClick={() => onNavigate(item.id)}
               title={isCollapsed ? item.label : undefined}

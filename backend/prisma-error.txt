@@ -1,0 +1,38 @@
+﻿Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+node.exe : Error: 
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (Error: :Strin   
+ g) [], RemoteExcep    
+tion
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+EPERM: operation not 
+permitted, rename 'C:\U
+sers\ACER\Documents\Wor
+kspace\Web\NewEdu\NewEd
+uSystem\backend\node_mo
+dules\.prisma\client\qu
+ery_engine-windows.dll.
+node.tmp9676' -> 'C:\Us
+ers\ACER\Documents\Work
+space\Web\NewEdu\NewEdu
+System\backend\node_mod
+ules\.prisma\client\que
+ry_engine-windows.dll.n
+ode'
+
+
