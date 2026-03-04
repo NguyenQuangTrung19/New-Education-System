@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type ThemeName = 'glacier' | 'rose' | 'sky' | 'midnight';
+export type ThemeName = 'crystal' | 'sage' | 'plum' | 'midnight';
 
 interface ThemeColors {
   primary: string;
@@ -10,25 +10,25 @@ interface ThemeColors {
 }
 
 const THEMES: Record<ThemeName, ThemeColors> = {
-  glacier: {
-    primary: '#80B1D3',
-    dark: '#5D8BAE',
-    light: '#A7CBE2'
+  crystal: {
+    primary: '#3B9AF5',
+    dark: '#257CE0',
+    light: '#D7EFFF'
   },
-  rose: {
-    primary: '#C2458E',
-    dark: '#9D3270',
-    light: '#E085B5'
+  sage: {
+    primary: '#6E7C5A',
+    dark: '#556147',
+    light: '#AEB8A0'
   },
-  sky: {
-    primary: '#87CEEB',
-    dark: '#5DADEC',
-    light: '#BFE6F7'
+  plum: {
+    primary: '#C8568C',
+    dark: '#8B2B54',
+    light: '#DA7EAB'
   },
   midnight: {
-    primary: '#E350A8', // Hot Pink
-    dark: '#9543A7',    // Orchid
-    light: '#B8E7EA'    // Ice Blue
+    primary: '#64748B',
+    dark: '#475569',
+    light: '#94A3B8'
   }
 };
 
@@ -41,7 +41,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [theme, setThemeState] = useState<ThemeName>('glacier');
+  const [theme, setThemeState] = useState<ThemeName>('crystal');
 
   // Load theme from local storage on mount
   useEffect(() => {

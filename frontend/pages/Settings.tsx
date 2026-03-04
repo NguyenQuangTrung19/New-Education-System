@@ -9,10 +9,10 @@ export const Settings: React.FC = () => {
   const { theme, setTheme } = useTheme();
 
   const themes: { id: ThemeName; name: string; color: string; colorDark: string }[] = [
-    { id: 'glacier', name: t('settings.theme.glacier'), color: '#80B1D3', colorDark: '#5D8BAE' },
-    { id: 'rose', name: t('settings.theme.rose'), color: '#C2458E', colorDark: '#9D3270' },
-    { id: 'sky', name: t('settings.theme.sky'), color: '#87CEEB', colorDark: '#5DADEC' },
-    { id: 'midnight', name: t('settings.theme.midnight'), color: '#21244D', colorDark: '#E350A8' }
+    { id: 'crystal', name: t('settings.theme.crystal'), color: '#D7EFFF', colorDark: '#257CE0' },
+    { id: 'sage', name: t('settings.theme.sage'), color: '#AEB8A0', colorDark: '#556147' },
+    { id: 'plum', name: t('settings.theme.plum'), color: '#DA7EAB', colorDark: '#351E28' },
+    { id: 'midnight', name: t('settings.theme.midnight'), color: '#475569', colorDark: '#0F172A' }
   ];
 
   return (

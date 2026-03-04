@@ -144,8 +144,8 @@ let ImportsService = class ImportsService {
                     });
                     continue;
                 }
-                const classGroup = await this.prisma.classGroup.findUnique({
-                    where: { name: row.class_name },
+                const classGroup = await this.prisma.classGroup.findFirst({
+                    where: { name: { equals: row.class_name, mode: 'insensitive' } },
                 });
                 if (!classGroup) {
                     errors.push({
@@ -214,9 +214,15 @@ let ImportsService = class ImportsService {
                     .split(',')
                     .map((s) => s.trim());
                 let departmentId = null;
+                let normalizedSubjects = [];
                 for (const subjName of subjects) {
                     const subj = await this.prisma.subject.findFirst({
-                        where: { OR: [{ code: subjName }, { name: subjName }] },
+                        where: {
+                            OR: [
+                                { code: { equals: subjName, mode: 'insensitive' } },
+                                { name: { equals: subjName, mode: 'insensitive' } }
+                            ]
+                        },
                     });
                     if (!subj) {
                         errors.push({
@@ -226,12 +232,13 @@ let ImportsService = class ImportsService {
                         });
                     }
                     else {
+                        normalizedSubjects.push(subj.name);
                         if (!departmentId)
                             departmentId = subj.department;
                     }
                 }
                 if (errors.filter((e) => e.row === rowNum).length === 0) {
-                    validData.push({ ...dto, departmentId, subjectList: subjects });
+                    validData.push({ ...dto, departmentId, subjectList: normalizedSubjects });
                 }
             }
             else if (type === 'classes') {
@@ -249,8 +256,8 @@ let ImportsService = class ImportsService {
                 }
                 let teacherId = null;
                 if (row.homeroom_teacher) {
-                    const teacher = await this.prisma.user.findUnique({
-                        where: { username: row.homeroom_teacher },
+                    const teacher = await this.prisma.user.findFirst({
+                        where: { username: { equals: row.homeroom_teacher, mode: 'insensitive' } },
                         include: { teacher: true },
                     });
                     if (!teacher || teacher.role !== 'TEACHER' || !teacher.teacher) {
@@ -265,7 +272,10 @@ let ImportsService = class ImportsService {
                     }
                 }
                 const existingClass = await this.prisma.classGroup.findFirst({
-                    where: { name: row.class_name, academicYear: row.academic_year },
+                    where: {
+                        name: { equals: row.class_name, mode: 'insensitive' },
+                        academicYear: row.academic_year
+                    },
                 });
                 if (existingClass) {
                     errors.push({

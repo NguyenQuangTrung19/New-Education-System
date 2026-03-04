@@ -102,19 +102,22 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <div className="mt-12 px-8 border-b border-gray-100 flex gap-6 overflow-x-auto">
                 <button 
                     onClick={() => setActiveInfoTab('about')}
-                    className={`pb-3 text-sm font-bold transition-all border-b-2 ${activeInfoTab === 'about' ? 'text-glacier-dark border-glacier-dark' : 'text-gray-500 border-transparent hover:text-gray-800'}`}
+                    className={`pb-3 text-sm font-bold transition-all border-b-2 ${activeInfoTab === 'about' ? 'border-current' : 'text-gray-500 border-transparent hover:text-gray-800'}`}
+                    style={activeInfoTab === 'about' ? {color: 'var(--theme-600)'} : {}}
                 >
                     {t('guest.tab.about')}
                 </button>
                 <button 
                     onClick={() => setActiveInfoTab('contact')}
-                    className={`pb-3 text-sm font-bold transition-all border-b-2 ${activeInfoTab === 'contact' ? 'text-glacier-dark border-glacier-dark' : 'text-gray-500 border-transparent hover:text-gray-800'}`}
+                    className={`pb-3 text-sm font-bold transition-all border-b-2 ${activeInfoTab === 'contact' ? 'border-current' : 'text-gray-500 border-transparent hover:text-gray-800'}`}
+                    style={activeInfoTab === 'contact' ? {color: 'var(--theme-600)'} : {}}
                 >
                     {t('guest.tab.contact')}
                 </button>
                 <button 
                     onClick={() => setActiveInfoTab('credit')}
-                    className={`pb-3 text-sm font-bold transition-all border-b-2 ${activeInfoTab === 'credit' ? 'text-glacier-dark border-glacier-dark' : 'text-gray-500 border-transparent hover:text-gray-800'}`}
+                    className={`pb-3 text-sm font-bold transition-all border-b-2 ${activeInfoTab === 'credit' ? 'border-current' : 'text-gray-500 border-transparent hover:text-gray-800'}`}
+                    style={activeInfoTab === 'credit' ? {color: 'var(--theme-600)'} : {}}
                 >
                     {t('guest.tab.credit')}
                 </button>
@@ -128,7 +131,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     <div className="space-y-6 animate-fade-in">
                         <div className="prose prose-sm max-w-none text-gray-600">
                             <h3 className="flex items-center text-lg font-bold text-[#111827] mb-3">
-                                <History className="h-5 w-5 mr-2 text-glacier-dark" /> {t('guest.about.history')}
+                                <History className="h-5 w-5 mr-2" style={{color: 'var(--theme-600)'}}/> {t('guest.about.history')}
                             </h3>
                             <p className="leading-relaxed text-justify mb-4">
                                 {t('guest.about.historyDesc')}
@@ -160,8 +163,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     <div className="space-y-6 animate-fade-in">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                                <div className="w-10 h-10 bg-primary-50 rounded-full flex items-center justify-center mb-3">
-                                    <MapPin className="h-5 w-5 text-glacier-dark" />
+                                <div className="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center mb-3">
+                                    <MapPin className="h-5 w-5 text-indigo-600" />
                                 </div>
                                 <h4 className="font-bold text-[#111827] text-sm uppercase mb-1">{t('guest.contact.address')}</h4>
                                 <p className="text-sm text-[#4b5563]">123 Đường Giáo Dục, Phường Phước Tân, TP. Biên Hòa, Đồng Nai</p>
@@ -189,7 +192,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                                     <Globe className="h-5 w-5 text-purple-600" />
                                 </div>
                                 <h4 className="font-bold text-[#111827] text-sm uppercase mb-1">{t('guest.contact.social')}</h4>
-                                <p className="text-sm text-glacier-lake hover:underline cursor-pointer">www.thcsphuoctan.edu.vn</p>
+                                <p className="text-sm text-indigo-600 hover:underline cursor-pointer">www.thcsphuoctan.edu.vn</p>
                                 <div className="flex gap-3 mt-2">
                                     <Facebook className="h-5 w-5 text-blue-700 cursor-pointer hover:scale-110 transition-transform" />
                                     <div className="h-5 w-5 bg-red-600 rounded text-white flex items-center justify-center font-bold text-[10px] cursor-pointer hover:scale-110 transition-transform">YT</div>
@@ -211,13 +214,13 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 {activeInfoTab === 'credit' && (
                     <div className="space-y-6 animate-fade-in flex flex-col items-center justify-center py-4">
                         <div className="relative group">
-                            <div className="absolute -inset-1 bg-gradient-to-r from-glacier-lake to-glacier-dark rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                            <div className="absolute -inset-1 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" style={{background: 'linear-gradient(to right, var(--theme-400), var(--theme-600))'}}></div>
                             <div className="relative h-32 w-32 rounded-full border-4 border-white shadow-xl overflow-hidden">
                                 <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-4xl font-bold text-gray-400">
                                     <UserIcon className="h-16 w-16" />
                                 </div>
                             </div>
-                            <div className="absolute bottom-0 right-0 bg-glacier-lake text-white p-1.5 rounded-full border-2 border-white shadow-md">
+                            <div className="absolute bottom-0 right-0 text-white p-1.5 rounded-full border-2 border-white shadow-md" style={{backgroundColor: 'var(--theme-500)'}}>
                                 <Code className="h-4 w-4" />
                             </div>
                         </div>
@@ -248,7 +251,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                             <a href="#" className="p-3 bg-blue-50 rounded-full text-blue-600 hover:bg-blue-100 hover:text-blue-800 transition-colors">
                                 <Linkedin className="h-5 w-5" />
                             </a>
-                            <a href="#" className="p-3 bg-primary-50 rounded-full text-glacier-dark hover:bg-primary-100 transition-colors">
+                            <a href="#" className="p-3 bg-indigo-50 rounded-full text-indigo-600 hover:bg-indigo-100 transition-colors">
                                 <Mail className="h-5 w-5" />
                             </a>
                         </div>
@@ -283,7 +286,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             alt="School Campus" 
             className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-glacier-lake/90 via-[#5D8BAE]/80 to-slate-900/60 mix-blend-multiply"></div>
+        <div className="absolute inset-0" style={{background: 'linear-gradient(to bottom right, var(--theme-600), var(--theme-900))', opacity: 0.85}}></div>
         <div className="absolute inset-0 bg-black/10"></div>
       </div>
 
@@ -295,7 +298,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
           {/* Logo Area */}
           <div className="text-center mb-8 relative z-10">
-            <div className="inline-flex items-center justify-center w-28 h-28 rounded-3xl bg-ice-white shadow-xl mb-6 transform hover:scale-105 transition-transform duration-500 ring-4 ring-white/30">
+            <div className="inline-flex items-center justify-center w-28 h-28 rounded-3xl bg-white shadow-xl mb-6 transform hover:scale-105 transition-transform duration-500 ring-4 ring-white/30">
                <img 
                  src={SCHOOL_INFO.logo} 
                  onError={(e) => {e.currentTarget.src = SCHOOL_INFO.logoFallback}}
@@ -323,7 +326,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       onClick={() => handleRoleChange(item.r)}
                       className={`flex-1 flex items-center justify-center py-2.5 text-xs font-bold rounded-xl transition-all duration-300 relative z-10 ${role === item.r ? 'bg-slate-900 text-white shadow-lg scale-105 border border-white/10' : 'text-white/70 hover:text-white hover:bg-white/5'}`}
                   >
-                      <item.icon className={`h-4 w-4 mr-1.5 ${role === item.r ? 'text-glacier-lake' : ''}`} /> 
+                      <item.icon className={`h-4 w-4 mr-1.5 ${role === item.r ? 'text-indigo-400' : ''}`} /> 
                       {item.label}
                   </button>
               ))}
@@ -342,14 +345,14 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <div className="space-y-2">
               <label htmlFor="auth-username" className="text-xs font-bold text-white/80 uppercase tracking-wider ml-1">Username</label>
               <div className="relative group">
-                <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-glacier-lake transition-colors z-10" />
+                <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors z-10" />
                 <input
                   id="auth-username"
                   name="auth-username"
                   type="text"
                   required
                   autoComplete="new-password"
-                  className="block w-full pl-12 pr-4 py-3.5 bg-white border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-glacier-lake/50 shadow-lg transition-all font-medium"
+                  className="block w-full pl-12 pr-4 py-3.5 bg-white border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 shadow-lg transition-all font-medium"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                 />
@@ -359,21 +362,21 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <div className="space-y-2">
               <label htmlFor="auth-password" className="text-xs font-bold text-white/80 uppercase tracking-wider ml-1">{t('login.label.password')}</label>
               <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-glacier-lake transition-colors z-10" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors z-10" />
                 <input
                   id="auth-password"
                   name="auth-password"
                   type={showPassword ? "text" : "password"}
                   required
                   autoComplete="new-password"
-                  className="block w-full pl-12 pr-12 py-3.5 bg-white border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-glacier-lake/50 shadow-lg transition-all font-medium"
+                  className="block w-full pl-12 pr-12 py-3.5 bg-white border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 shadow-lg transition-all font-medium"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-glacier-lake focus:outline-none z-10"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-indigo-500 focus:outline-none z-10"
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -383,7 +386,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full flex justify-center items-center py-3.5 px-4 rounded-xl shadow-xl shadow-glacier-lake/20 text-sm font-bold text-white bg-gradient-to-r from-glacier-lake to-glacier-dark hover:from-glacier-dark hover:to-glacier-lake focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-glacier-lake focus:ring-white transition-all transform active:scale-[0.98] mt-4 ${loading ? 'opacity-80 cursor-not-allowed' : 'hover:-translate-y-1'}`}
+              className={`w-full flex justify-center items-center py-3.5 px-4 rounded-xl shadow-xl text-sm font-bold text-white bg-indigo-600 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white transition-all transform active:scale-[0.98] mt-4 ${loading ? 'opacity-80 cursor-not-allowed' : 'hover:-translate-y-1'}`}
             >
               {loading ? (
                 <div className="flex items-center">

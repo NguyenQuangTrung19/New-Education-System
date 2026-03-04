@@ -256,7 +256,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex bg-ice-white text-main transition-colors duration-400 font-sans overflow-hidden min-h-screen">
+    <div className="flex text-main transition-colors duration-400 font-sans overflow-hidden h-screen w-full">
       {/* Sidebar Backdrop for Mobile - High Z-index but below sidebar */}
       {isSidebarOpen && (
         <div 
@@ -290,8 +290,8 @@ const App: React.FC = () => {
           onNavigate={handleNavigate}
         />
 
-        <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8 custom-scrollbar bg-ice-white bg-opacity-80">
-          <div className="max-w-7xl mx-auto h-full">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8 lg:px-10 custom-scrollbar relative z-0">
+          <div className="max-w-[1400px] mx-auto h-full">
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full h-full">
                {renderContent()}
             </div>

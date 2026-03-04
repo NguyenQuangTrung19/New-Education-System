@@ -99,7 +99,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside 
-      className={`fixed top-0 left-0 z-40 h-screen transition-all cubic-bezier(0.4, 0, 0.2, 1) duration-500 ease-in-out flex flex-col border-r border-white/10 shadow-2xl shadow-indigo-500/10 ${
+      className={`fixed top-0 left-0 z-40 h-screen transition-all cubic-bezier(0.4, 0, 0.2, 1) duration-500 ease-in-out flex flex-col border-r border-white/5 shadow-[4px_0_24px_rgba(0,0,0,0.2)] backdrop-blur-2xl ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       } md:translate-x-0 ${isCollapsed ? 'w-[88px]' : 'w-[280px]'}`}
       style={{
@@ -122,8 +122,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         
         {!isCollapsed && (
           <div className="ml-4 flex flex-col justify-center animate-fade-in-up">
-            <span className="font-extrabold text-xl tracking-tight text-white leading-none font-sans drop-shadow-sm truncate max-w-[150px]">{SCHOOL_INFO.name}</span>
-            <span className="text-[11px] text-white/90 font-bold uppercase tracking-widest mt-1">Management</span>
+            <span className="font-heading font-extrabold text-xl tracking-tight leading-none drop-shadow-sm truncate max-w-[150px]" style={{color: 'var(--sidebar-text)'}}>{SCHOOL_INFO.name}</span>
+            <span className="text-[11px] font-bold uppercase tracking-widest mt-1" style={{color: 'var(--sidebar-text-muted)'}}>Management</span>
           </div>
         )}
       </div>
@@ -139,27 +139,32 @@ export const Sidebar: React.FC<SidebarProps> = ({
               key={item.id}
               onClick={() => onNavigate(item.id)}
               title={isCollapsed ? item.label : undefined}
-              className={`w-full flex items-center py-3.5 rounded-2xl transition-all duration-300 group relative overflow-hidden ${
+              className={`w-full flex items-center py-3.5 mb-1 rounded-2xl transition-all duration-300 group relative overflow-hidden ${
                 isCollapsed ? 'justify-center px-0' : 'px-4'
               } ${
                 isActive 
-                  ? 'bg-gradient-to-r from-indigo-500/10 to-transparent text-indigo-400 font-bold border-l-4 border-indigo-400' 
-                  : 'text-white/70 hover:text-white hover:bg-white/5 border-l-4 border-transparent font-medium'
+                  ? 'font-bold shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)] ring-1 ring-white/5' 
+                  : 'font-medium hover:bg-white/5'
               }`}
+              style={{
+                backgroundColor: isActive ? 'var(--sidebar-active-bg)' : undefined,
+                color: isActive ? 'var(--sidebar-text)' : 'var(--sidebar-text-muted)',
+              }}
             >
               {isActive && !isCollapsed && (
-                  <div className="absolute right-3 w-1.5 h-1.5 rounded-full bg-muted-coral"></div>
+                  <div className="absolute right-3 w-1.5 h-1.5 rounded-full shadow-[0_0_8px_rgba(129,140,248,0.8)]" style={{backgroundColor: 'var(--sidebar-active-indicator)'}}></div>
               )}
 
               <Icon 
                 className={`h-[22px] w-[22px] shrink-0 transition-all duration-300 ${
-                    isActive ? 'text-indigo-600 scale-110' : 'group-hover:scale-110'
+                    isActive ? 'scale-110' : 'group-hover:scale-110'
                 } ${!isCollapsed ? 'mr-3.5' : ''}`} 
                 strokeWidth={isActive ? 2.5 : 2}
+                style={{color: isActive ? 'var(--sidebar-active-indicator)' : undefined}}
               />
               
               {!isCollapsed && (
-                  <span className={`text-[14px] tracking-wide truncate ${isActive ? 'font-bold' : 'font-medium opacity-90'}`}>
+                  <span className={`text-[14px] tracking-wide truncate ${isActive ? 'font-bold' : 'font-medium'}`}>
                       {item.label}
                   </span>
               )}
@@ -183,7 +188,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onClick={() => onNavigate('settings')}
           className={`w-full flex items-center py-3 rounded-xl transition-all duration-300 group ${
              isCollapsed ? 'justify-center px-0' : 'px-4'
-          } ${activePage === 'settings' ? 'bg-white/20 text-white font-bold' : 'text-white/80 hover:bg-white/10 hover:text-white'}`}
+          } ${activePage === 'settings' ? 'font-bold' : 'hover:bg-white/10'}`}
+          style={{
+            backgroundColor: activePage === 'settings' ? 'var(--sidebar-active-bg)' : undefined,
+            color: activePage === 'settings' ? 'var(--sidebar-text)' : 'var(--sidebar-text-muted)',
+          }}
         >
           <Settings className={`h-5 w-5 shrink-0 transition-transform group-hover:rotate-90 ${!isCollapsed ? 'mr-3' : ''}`} />
           {!isCollapsed && <span className="text-sm">{t('menu.settings')}</span>}
@@ -192,9 +201,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
          {/* Logout */}
         <button 
           onClick={onLogout}
-          className={`w-full flex items-center py-3 rounded-xl text-white/80 hover:bg-white/15 hover:text-white transition-all duration-300 group ${
+          className={`w-full flex items-center py-3 rounded-xl hover:bg-white/15 transition-all duration-300 group ${
              isCollapsed ? 'justify-center px-0' : 'px-4'
           }`}
+          style={{color: 'var(--sidebar-text-muted)'}}
         >
           <LogOut className={`h-5 w-5 shrink-0 transition-transform group-hover:-translate-x-1 ${!isCollapsed ? 'mr-3' : ''}`} />
           {!isCollapsed && <span className="text-sm font-bold">{t('menu.signout')}</span>}
@@ -203,7 +213,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Collapse Toggle - Desktop Only */}
         <button 
            onClick={toggleCollapse}
-           className="hidden md:flex w-full mt-2 items-center justify-center py-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+           className="hidden md:flex w-full mt-2 items-center justify-center py-2 hover:bg-white/10 rounded-lg transition-colors"
+           style={{color: 'var(--sidebar-text-muted)'}}
         >
            {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </button>

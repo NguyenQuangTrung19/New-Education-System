@@ -12,10 +12,10 @@ export const Welcome: React.FC<WelcomeProps> = ({ onComplete }) => {
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen bg-glacier-lake flex flex-col relative overflow-hidden font-sans">
+    <div className="min-h-screen flex flex-col relative overflow-hidden font-sans" style={{background: 'linear-gradient(135deg, var(--theme-600) 0%, var(--theme-900) 100%)'}}>
       {/* Background Decorative Elements */}
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-white opacity-10 rounded-full blur-[100px] -mr-32 -mt-32 pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-glacier-dark opacity-30 rounded-full blur-[120px] -ml-20 -mb-20 pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] opacity-30 rounded-full blur-[120px] -ml-20 -mb-20 pointer-events-none" style={{backgroundColor: 'var(--theme-800)'}}></div>
       
       {/* Navbar Stub */}
       <div className="relative z-10 px-8 py-6 flex justify-between items-center max-w-7xl mx-auto w-full">
@@ -37,12 +37,12 @@ export const Welcome: React.FC<WelcomeProps> = ({ onComplete }) => {
             {/* Left: Text & CTA */}
             <div className="text-left space-y-6 animate-fade-in-up">
                 <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md border border-white/20 rounded-full px-4 py-1.5 text-white text-xs font-bold uppercase tracking-wider shadow-sm">
-                    <span className="w-2 h-2 rounded-full bg-soft-mint animate-pulse"></span> {t('welcome.portalAccess')}
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> {t('welcome.portalAccess')}
                 </div>
                 
                 <h1 className="text-5xl md:text-7xl font-black text-white leading-none tracking-tight drop-shadow-sm">
                     {t('welcome.hello')} <br/>
-                    <span className="text-ice-white opacity-90">{t('welcome.ready')}</span>
+                    <span className="text-white/80">{t('welcome.ready')}</span>
                 </h1>
                 
                 <p className="text-lg text-white/90 font-medium max-w-md leading-relaxed">
@@ -52,7 +52,8 @@ export const Welcome: React.FC<WelcomeProps> = ({ onComplete }) => {
                 <div className="pt-4 flex flex-col sm:flex-row gap-4">
                     <button 
                       onClick={() => onComplete('dashboard')}
-                      className="group bg-white text-glacier-lake px-8 py-4 rounded-2xl font-bold text-lg shadow-xl shadow-glacier-dark/20 hover:shadow-2xl hover:scale-105 transition-all flex items-center justify-center"
+                      className="group bg-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all flex items-center justify-center"
+                      style={{color: 'var(--theme-700)'}}
                     >
                       {t('welcome.dashboardBtn')}
                       <ArrowRight className="ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -71,7 +72,7 @@ export const Welcome: React.FC<WelcomeProps> = ({ onComplete }) => {
             <div className="hidden md:grid grid-cols-2 gap-4 animate-fade-in-up" style={{animationDelay: '0.2s'}}>
                 <div className="space-y-4 mt-8">
                     <div className="bg-white/10 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-lg text-white hover:-translate-y-1 transition-transform cursor-default">
-                        <LayoutDashboard className="h-8 w-8 mb-4 text-soft-mint" />
+                        <LayoutDashboard className="h-8 w-8 mb-4 text-emerald-300" />
                         <h3 className="font-bold text-lg">{t('welcome.features.overview')}</h3>
                         <p className="text-xs text-white/70 mt-1">{t('welcome.features.overviewDesc')}</p>
                     </div>
@@ -83,14 +84,14 @@ export const Welcome: React.FC<WelcomeProps> = ({ onComplete }) => {
                 </div>
                 <div className="space-y-4">
                     <div className="bg-white/10 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-lg text-white hover:-translate-y-1 transition-transform cursor-default">
-                        <Calendar className="h-8 w-8 mb-4 text-muted-coral" />
+                        <Calendar className="h-8 w-8 mb-4 text-orange-300" />
                         <h3 className="font-bold text-lg">{t('welcome.features.schedule')}</h3>
                         <p className="text-xs text-white/70 mt-1">{t('welcome.features.scheduleDesc')}</p>
                     </div>
-                    <div className="bg-white/90 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-lg text-glacier-lake hover:-translate-y-1 transition-transform cursor-default">
+                    <div className="bg-white/90 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-lg hover:-translate-y-1 transition-transform cursor-default" style={{color: 'var(--theme-700)'}}>
                         <Users className="h-8 w-8 mb-4" />
                         <h3 className="font-bold text-lg">{t('welcome.features.community')}</h3>
-                        <p className="text-xs text-glacier-dark mt-1">{t('welcome.features.communityDesc')}</p>
+                        <p className="text-xs mt-1" style={{color: 'var(--theme-600)'}}>{t('welcome.features.communityDesc')}</p>
                     </div>
                 </div>
             </div>

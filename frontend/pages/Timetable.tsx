@@ -3,12 +3,12 @@ import api from '../src/api/client';
 import { useLanguage } from '../contexts/LanguageContext';
 import { 
   CalendarDays, Clock, MapPin, ChevronDown, Sun, Moon, Search, X, 
-  User as UserIcon, Plus, Edit2, Trash2, Check, BookUser, FileDown, 
+  User as UserIcon, Plus, Edit2, Trash2, Check, FileDown, 
   ExternalLink, ChevronLeft, ChevronRight, Filter, Users, GraduationCap
 } from 'lucide-react';
-import { ScheduleItem, TeachingAssignment, User, UserRole, Subject, Teacher, ClassGroup } from '../types';
-
-interface TimetableProps {
+import { ScheduleItem, User, UserRole, Subject, Teacher, ClassGroup } from '../types';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';interface TimetableProps {
   currentUser: User | null;
   onNavigate?: (page: string, params?: any) => void;
 }
@@ -68,10 +68,6 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
   const [teachersList, setTeachersList] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Local state for assignments
-  const [assignments, setAssignments] = useState<TeachingAssignment[]>([]);
-  const [showAssignmentsModal, setShowAssignmentsModal] = useState(false);
-
   // Modes
   const [isEditing, setIsEditing] = useState(false);
   
@@ -147,20 +143,8 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
     }
   };
 
-  const fetchAssignments = async () => {
-    try {
-        const { data } = await api.get('/teaching-assignments');
-        setAssignments(data);
-    } catch (error) {
-        console.error("Failed to fetch teaching assignments", error);
-    }
-  };
-
   useEffect(() => {
     fetchSchedule();
-    if (isAdmin) {
-       fetchAssignments();
-    }
   }, [currentWeekStart, selectedClassId, selectedTeacherId, isAdmin]);
 
   // Initialization Logic
@@ -262,6 +246,142 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
     }
   };
 
+const handleExportExcel = async () => {
+    try {
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = 'School Management System';
+        workbook.created = new Date();
+
+        const sheetTitle = viewMode === 'class' 
+            ? `Thời Khóa Biểu - Lớp ${getClassName(selectedClassId)}`
+            : `Thời Khóa Biểu - GV ${getTeacherName(selectedTeacherId)}`;
+        const sheet = workbook.addWorksheet('Timetable', {
+            pageSetup: { paperSize: 9, orientation: 'landscape', fitToPage: true },
+            views: [{ showGridLines: false }]
+        });
+
+        // Set column widths
+        sheet.columns = [
+            { header: '', key: 'ca', width: 12 },
+            { header: '', key: 'tiet', width: 10 },
+            { header: '', key: 'thu2', width: 22 },
+            { header: '', key: 'thu3', width: 22 },
+            { header: '', key: 'thu4', width: 22 },
+            { header: '', key: 'thu5', width: 22 },
+            { header: '', key: 'thu6', width: 22 },
+        ];
+
+        // Title Row
+        sheet.mergeCells('A1:G2');
+        const titleCell = sheet.getCell('A1');
+        titleCell.value = sheetTitle.toUpperCase();
+        titleCell.font = { name: 'Arial', size: 18, bold: true, color: { argb: 'FF1F2937' } };
+        titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+
+        // Subtitle Row (Date range)
+        sheet.mergeCells('A3:G3');
+        const subTitleCell = sheet.getCell('A3');
+        const endOfWeek = addDays(currentWeekStart, 4);
+        subTitleCell.value = `Tuần từ ${formatDate(currentWeekStart)} đến ${formatDate(endOfWeek)}`;
+        subTitleCell.font = { name: 'Arial', size: 12, italic: true, color: { argb: 'FF4B5563' } };
+        subTitleCell.alignment = { horizontal: 'center' };
+        
+        sheet.addRow([]); // Empty row 4
+
+        // Header Row (Days)
+        const headerRow = sheet.getRow(5);
+        headerRow.values = ['Ca', 'Tiết', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6'];
+        headerRow.height = 30;
+        headerRow.eachCell((cell, colNumber) => {
+            cell.font = { name: 'Arial', size: 12, bold: true, color: { argb: 'FFFFFFFF' } };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } }; // Indigo-600
+            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+            cell.border = {
+                top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}
+            };
+        });
+
+        const writeSessionSlots = (sessionName: string, slots: TimeSlot[], startRowIndex: number, fillColor: string, fontColor: string) => {
+            let currentRow = startRowIndex;
+            slots.forEach((slot, index) => {
+                const row = sheet.getRow(currentRow);
+                row.height = 70; // Set enough height for multiline text
+
+                // Session name merge cell
+                if (index === 0) {
+                    sheet.mergeCells(`A${currentRow}:A${currentRow + slots.length - 1}`);
+                    const sessionCell = sheet.getCell(`A${currentRow}`);
+                    sessionCell.value = sessionName;
+                    sessionCell.font = { bold: true, size: 14, color: { argb: fontColor } };
+                    sessionCell.alignment = { vertical: 'middle', horizontal: 'center', textRotation: 90 };
+                    sessionCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fillColor } };
+                }
+
+                // Period cell
+                const periodCell = sheet.getCell(`B${currentRow}`);
+                periodCell.value = `Tiết ${slot.period}\n(${slot.time})`;
+                periodCell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+                periodCell.font = { size: 10, bold: true };
+                periodCell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+                // Fill days
+                days.forEach((day, dayIdx) => {
+                    const colLetter = String.fromCharCode(67 + dayIdx); // C, D, E, F, G (67 = C)
+                    const cell = sheet.getCell(`${colLetter}${currentRow}`);
+                    
+                    const sessionFilter = sessionName === 'SÁNG' ? 'Morning' : 'Afternoon';
+                    const entry = schedule.find(s => 
+                        s.day === day && 
+                        s.session === sessionFilter &&
+                        s.period === slot.period &&
+                        (viewMode === 'class' ? s.classId === selectedClassId : s.teacherId === selectedTeacherId)
+                    );
+
+                    if (entry) {
+                        const subjectName = getSubjectName(entry.subjectId);
+                        const subText = viewMode === 'class' ? getTeacherName(entry.teacherId) : getClassName(entry.classId);
+                        cell.value = `${subjectName}\nPhòng: ${entry.room}\n${subText}`;
+                        cell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF1F2937' } };
+                        // Highlight slightly based on session
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: sessionName === 'SÁNG' ? 'FFFFFBEB' : 'FFF5F3FF' } }; // Amber-50 / Indigo-50
+                    } else {
+                        cell.value = '';
+                    }
+
+                    cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+                    cell.border = { top: {style:'thin', color: {argb: 'FFE5E7EB'}}, left: {style:'thin', color: {argb: 'FFE5E7EB'}}, bottom: {style:'thin', color: {argb: 'FFE5E7EB'}}, right: {style:'thin', color: {argb: 'FFE5E7EB'}} };
+                });
+
+                // Re-apply outer borders to merged A cell
+                const aCell = sheet.getCell(`A${currentRow}`);
+                aCell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
+                currentRow++;
+            });
+            return currentRow;
+        };
+
+        let nextRow = writeSessionSlots('SÁNG', MORNING_SLOTS, 6, 'FFFEF3C7', 'FF92400E'); // Amber-100, Amber-900
+        writeSessionSlots('CHIỀU', AFTERNOON_SLOTS, nextRow, 'FFE0E7FF', 'FF3730A3'); // Indigo-100, Indigo-900
+
+        // Export Buffer
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        
+        let filename = 'ThoiKhoaBieu.xlsx';
+        if (viewMode === 'class') {
+            filename = `TKB_Lop_${getClassName(selectedClassId)}.xlsx`;
+        } else {
+            filename = `TKB_GV_${getTeacherName(selectedTeacherId)}.xlsx`;
+        }
+        saveAs(blob, filename);
+
+    } catch (error) {
+        console.error("Export Excel failed", error);
+        alert("Có lỗi xảy ra khi xuất file Excel!");
+    }
+};
+
   const handleDeleteSlot = async (id: string) => {
     if(window.confirm(t('common.confirmDelete'))) {
       try {
@@ -275,105 +395,7 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
     }
   };
   
-  // Assignment Handlers
-  const handleAssignmentChange = (id: string, field: keyof TeachingAssignment, value: any) => {
-      setAssignments(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
-  };
-  const handleAddAssignment = () => {
-      if(teachersList.length === 0 || subjectsList.length === 0 || classesList.length === 0) return;
-      const newAssignment: TeachingAssignment = {
-          id: `new-${Date.now()}`,
-          teacherId: teachersList[0].id,
-          subjectId: subjectsList[0].id,
-          classId: classesList[0].id,
-          sessionsPerWeek: 1
-      };
-      setAssignments([...assignments, newAssignment]);
-  };
-  const handleDeleteAssignment = (id: string) => {
-      setAssignments(prev => prev.filter(a => a.id !== id));
-  };
 
-  const handleSaveAssignments = async () => {
-      try {
-          const payload = assignments.map(a => ({
-              teacherId: a.teacherId,
-              subjectId: a.subjectId,
-              classId: a.classId,
-              sessionsPerWeek: a.sessionsPerWeek
-          }));
-          await api.post('/teaching-assignments/bulk', payload);
-          setShowAssignmentsModal(false);
-          alert(t('common.saveSuccess', 'Saved successfully'));
-      } catch (e: any) {
-          console.error("Save assignments failed", e);
-          const msg = e.response?.data?.message || 'Failed to save workload constraints.';
-          alert(`Error: ${Array.isArray(msg) ? msg.join(', ') : msg}`);
-      }
-  };
-
-  // --- Render Components ---
-
-  const AssignmentsModal = ({ onClose }: { onClose: () => void }) => {
-      // ... (Same implementation as before, keeping it for brevity but fully functional in real code)
-      return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={onClose} />
-          <div className="relative bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-scale-in">
-              <div className="bg-white border-b border-gray-100 p-4 flex justify-between items-center rounded-t-xl">
-                  <div>
-                      <h3 className="font-bold text-lg text-gray-900">{t('timetable.assignments')}</h3>
-                      <p className="text-sm text-gray-500">{t('timetable.defineLoad')}</p>
-                  </div>
-                  <button onClick={onClose} className="hover:bg-gray-100 rounded-full p-2 transition-colors"><X className="h-5 w-5 text-gray-500" /></button>
-              </div>
-              <div className="flex-1 overflow-auto p-0">
-                  <table className="w-full text-left border-collapse">
-                      <thead className="bg-gray-50 sticky top-0 z-10">
-                          <tr className="text-xs uppercase font-bold text-gray-500 tracking-wider">
-                              <th className="px-6 py-3">{t('timetable.teacher')}</th>
-                              <th className="px-6 py-3">{t('subject.name')}</th>
-                              <th className="px-6 py-3">{t('class.name')}</th>
-                              <th className="px-6 py-3">{t('timetable.sessionsPerWeek')}</th>
-                              {isAdmin && <th className="px-6 py-3 text-right"></th>}
-                          </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                          {assignments.map(assign => (
-                              <tr key={assign.id} className="hover:bg-gray-50/50 group">
-                                  <td className="px-6 py-2">
-                                      <select disabled={!isAdmin} className={`w-full bg-transparent border-none focus:ring-0 text-sm font-medium text-gray-900 ${isAdmin ? 'cursor-pointer' : 'cursor-default'}`} value={assign.teacherId} onChange={(e) => handleAssignmentChange(assign.id, 'teacherId', e.target.value)}>
-                                          {teachersList.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                                      </select>
-                                  </td>
-                                  <td className="px-6 py-2">
-                                      <select disabled={!isAdmin} className={`w-full bg-transparent border-none focus:ring-0 text-sm text-gray-700 ${isAdmin ? 'cursor-pointer' : 'cursor-default'}`} value={assign.subjectId} onChange={(e) => handleAssignmentChange(assign.id, 'subjectId', e.target.value)}>
-                                          {subjectsList.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
-                                      </select>
-                                  </td>
-                                  <td className="px-6 py-2">
-                                      <select disabled={!isAdmin} className={`w-full bg-transparent border-none focus:ring-0 text-sm text-gray-700 ${isAdmin ? 'cursor-pointer' : 'cursor-default'}`} value={assign.classId} onChange={(e) => handleAssignmentChange(assign.id, 'classId', e.target.value)}>
-                                          {classesList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                      </select>
-                                  </td>
-                                  <td className="px-6 py-2"><input type="number" min="1" max="30" disabled={!isAdmin} className={`w-20 px-2 py-1 bg-gray-50 border border-gray-200 rounded text-center text-sm font-bold text-indigo-600 focus:outline-none focus:border-indigo-500 ${!isAdmin && 'opacity-70'}`} value={assign.sessionsPerWeek} onChange={(e) => handleAssignmentChange(assign.id, 'sessionsPerWeek', parseInt(e.target.value) || 0)} /></td>
-                                  {isAdmin && <td className="px-6 py-2 text-right"><button onClick={() => handleDeleteAssignment(assign.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors opacity-0 group-hover:opacity-100"><Trash2 className="h-4 w-4" /></button></td>}
-                              </tr>
-                          ))}
-                      </tbody>
-                  </table>
-              </div>
-              <div className="p-4 border-t border-gray-100 bg-gray-50 rounded-b-xl flex justify-between">
-                  {isAdmin ? <button onClick={handleAddAssignment} className="flex items-center text-indigo-600 font-bold text-sm hover:text-indigo-800 px-2 py-1"><Plus className="h-4 w-4 mr-1" /> {t('timetable.addAssignment')}</button> : <div></div>}
-                  <div className="flex gap-2">
-                     <button onClick={onClose} className="px-5 py-2 text-gray-600 hover:bg-gray-200 rounded-lg text-sm font-bold transition-colors">{t('common.cancel')}</button>
-                     {isAdmin && <button onClick={handleSaveAssignments} className="px-6 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 shadow-md transition-colors">{t('common.save')}</button>}
-                  </div>
-              </div>
-          </div>
-        </div>
-      );
-  };
 
   const EditSlotModal = ({ info, onClose }: { info: EditingSlotInfo, onClose: () => void }) => {
     const isNew = !info.item;
@@ -546,19 +568,21 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
   };
 
   const renderScheduleTable = (session: 'Morning' | 'Afternoon', slots: TimeSlot[]) => (
-    <div className={`bg-white rounded-xl shadow-sm border overflow-hidden mb-8 transition-colors duration-300 ${isEditing ? 'border-indigo-300 ring-2 ring-indigo-100' : 'border-gray-200'}`}>
-      <div className={`px-6 py-4 border-b border-gray-200 flex items-center gap-2 ${session === 'Morning' ? 'bg-amber-50' : 'bg-indigo-50'}`}>
-         {session === 'Morning' ? <Sun className="h-5 w-5 text-amber-600" /> : <Moon className="h-5 w-5 text-indigo-600" />}
-         <h3 className={`font-bold text-lg ${session === 'Morning' ? 'text-amber-800' : 'text-indigo-800'}`}>
+    <div className={`bg-white rounded-[24px] shadow-sm border overflow-hidden mb-8 transition-all duration-500 ${isEditing ? 'border-indigo-300 ring-4 ring-indigo-50 shadow-lg' : 'border-gray-100 hover:shadow-md'}`}>
+      <div className={`px-6 py-5 border-b border-gray-100 flex items-center gap-4 ${session === 'Morning' ? 'bg-amber-50/50' : 'bg-indigo-50/50'}`}>
+         <div className={`p-2.5 rounded-xl ${session === 'Morning' ? 'bg-amber-100 text-amber-600' : 'bg-indigo-100 text-indigo-600'}`}>
+           {session === 'Morning' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+         </div>
+         <h3 className={`font-heading font-bold text-xl tracking-tight ${session === 'Morning' ? 'text-amber-900' : 'text-indigo-900'}`}>
             {session === 'Morning' ? t('timetable.morning') : t('timetable.afternoon')}
          </h3>
-         {isEditing && <span className="ml-auto text-xs font-bold uppercase text-indigo-600 bg-white px-2 py-1 rounded shadow-sm">{t('timetable.editingMode')}</span>}
+         {isEditing && <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-white px-3 py-1.5 rounded-lg shadow-sm border border-indigo-100 flex items-center"><Edit2 className="h-3 w-3 mr-1.5" />{t('timetable.editingMode')}</span>}
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto custom-scrollbar">
         <div className="min-w-[900px]">
-          <div className="grid grid-cols-6 border-b border-gray-200 bg-gray-50/50">
-             <div className="p-4 font-bold text-gray-500 text-xs uppercase text-center border-r border-gray-100 tracking-wider">
+          <div className="grid grid-cols-6 border-b border-gray-100 bg-gray-50/50">
+             <div className="p-4 font-bold text-slate-400 text-[11px] uppercase text-center border-r border-gray-100 tracking-widest flex items-center justify-center">
                 {t('timetable.periodTime')}
              </div>
              {days.map((day, idx) => {
@@ -566,22 +590,23 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
                  const dateStr = formatDate(date);
                  const isToday = new Date().toDateString() === date.toDateString();
                  return (
-                   <div key={day} className={`p-4 text-center border-r border-gray-100 last:border-r-0 ${isToday ? 'bg-indigo-50/50' : ''}`}>
-                     <div className={`font-bold text-sm ${isToday ? 'text-indigo-700' : 'text-gray-800'}`}>{day}</div>
-                     <div className={`text-xs mt-1 ${isToday ? 'text-indigo-500 font-bold' : 'text-gray-400'}`}>{dateStr}</div>
+                   <div key={day} className={`p-4 text-center border-r border-gray-100 last:border-r-0 relative overflow-hidden ${isToday ? 'bg-indigo-50/50' : ''}`}>
+                     {isToday && <div className="absolute top-0 left-0 w-full h-1 bg-indigo-500"></div>}
+                     <div className={`font-heading font-bold text-[15px] ${isToday ? 'text-indigo-700' : 'text-slate-700'}`}>{day}</div>
+                     <div className={`text-xs mt-0.5 ${isToday ? 'text-indigo-500 font-bold' : 'text-slate-400 font-medium'}`}>{dateStr}</div>
                    </div>
                  )
              })}
           </div>
           
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100 bg-white">
             {slots.map((slot) => (
-              <div key={slot.period} className="grid grid-cols-6 min-h-[110px]">
-                <div className="p-4 flex flex-col items-center justify-center text-sm bg-gray-50/30 border-r border-gray-100">
-                   <span className="font-bold text-gray-900 bg-white border border-gray-200 rounded-full w-8 h-8 flex items-center justify-center mb-1 shadow-sm">
+              <div key={slot.period} className="grid grid-cols-6 min-h-[125px] group/row">
+                <div className="p-4 flex flex-col items-center justify-center text-sm border-r border-gray-100 bg-gray-50/30 group-hover/row:bg-gray-50 transition-colors">
+                   <div className="w-8 h-8 rounded-xl bg-white border border-gray-200 shadow-sm flex items-center justify-center mb-1.5 font-bold text-slate-700">
                       {slot.period}
-                   </span>
-                   <span className="text-xs text-gray-500 font-medium">{slot.time}</span>
+                   </div>
+                   <span className="text-[11px] text-slate-400 font-medium tracking-wide">{slot.time}</span>
                 </div>
 
                 {days.map((day, idx) => {
@@ -600,7 +625,7 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
                   const editable = canEditSlot(entry);
 
                   return (
-                    <div key={`${day}-${slot.period}`} className={`p-2 border-r border-gray-100 last:border-r-0 relative group transition-colors ${isEditing && editable ? 'hover:bg-indigo-50/30 cursor-pointer' : isEditing ? 'bg-gray-50/50' : isToday ? 'bg-indigo-50/20' : 'hover:bg-gray-50'}`}>
+                    <div key={`${day}-${slot.period}`} className={`p-2.5 border-r border-gray-100 last:border-r-0 relative transition-colors ${isEditing && editable ? 'hover:bg-indigo-50/30 cursor-pointer' : isEditing ? 'bg-gray-50/80' : isToday ? 'bg-indigo-50/10' : 'hover:bg-gray-50/50'}`}>
                       {entry ? (
                         <div 
                           onClick={() => {
@@ -610,31 +635,33 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
                                setSelectedSlot({ item: entry, timeSlot: slot, date: `${day} ${dateStr}` });
                              }
                           }}
-                          className={`h-full w-full rounded-lg p-3 border shadow-sm transition-all flex flex-col justify-center relative ${
+                          className={`h-full w-full rounded-[16px] p-3.5 border transition-all duration-300 flex flex-col relative overflow-hidden group/card ${
                              isEditing 
-                               ? (editable ? 'border-indigo-300 ring-1 ring-indigo-200 bg-white hover:scale-[1.02] shadow-md cursor-pointer' : 'border-gray-200 bg-gray-100 opacity-60 cursor-not-allowed')
+                               ? (editable ? 'border-indigo-200 ring-2 ring-indigo-100 bg-white hover:scale-[1.02] shadow-sm hover:shadow-md cursor-pointer' : 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed')
                                : session === 'Morning' 
-                                  ? 'bg-amber-50/50 border-amber-100 hover:bg-amber-100/50 hover:shadow-md hover:-translate-y-1 cursor-pointer' 
-                                  : 'bg-indigo-50/50 border-indigo-100 hover:bg-indigo-100/50 hover:shadow-md hover:-translate-y-1 cursor-pointer'
+                                  ? 'bg-gradient-to-br from-amber-50 to-white border-amber-100/60 hover:-translate-y-1 hover:shadow-[0_8px_20px_rgba(251,191,36,0.15)] hover:border-amber-200 cursor-pointer' 
+                                  : 'bg-gradient-to-br from-indigo-50 to-white border-indigo-100/60 hover:-translate-y-1 hover:shadow-[0_8px_20px_rgba(99,102,241,0.15)] hover:border-indigo-200 cursor-pointer'
                           }`}
                         >
-                           {isEditing && editable && <div className="absolute top-1 right-1 text-indigo-500"><Edit2 className="h-3 w-3" /></div>}
+                           <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-white/40 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity rounded-bl-full pointer-events-none"></div>
+                           {isEditing && editable && <div className="absolute top-2 right-2 text-indigo-500 bg-white shadow-sm p-1.5 rounded-full"><Edit2 className="h-3 w-3" /></div>}
                            
-                          <div className={`font-bold text-sm mb-1.5 line-clamp-2 ${session === 'Morning' && !isEditing ? 'text-amber-900' : 'text-indigo-900'}`}>
+                          <div className={`font-heading font-bold text-[14px] leading-tight mb-2 line-clamp-2 ${session === 'Morning' && !isEditing ? 'text-amber-900' : isEditing ? 'text-slate-800' : 'text-indigo-900'}`}>
                              {getSubjectName(entry.subjectId)}
                           </div>
                           
                           {/* Dynamic Content based on View Mode */}
-                          <div className="flex items-center justify-between mt-auto">
-                            <div className="text-xs text-gray-500 flex items-center bg-white/60 px-1.5 py-0.5 rounded">
-                              <MapPin className="h-3 w-3 mr-1" /> {entry.room}
+                          <div className="flex flex-col gap-1.5 mt-auto relative z-10">
+                            <div className="text-[11px] font-medium text-slate-500 flex items-center w-fit bg-white/60 backdrop-blur-sm px-2 py-0.5 rounded-md border border-white max-w-full">
+                              <MapPin className="h-3 w-3 mr-1 shrink-0 text-slate-400" /> 
+                              <span className="truncate">{entry.room}</span>
                             </div>
                              {viewMode === 'class' ? (
-                                <div className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/60 text-gray-600 truncate max-w-[60px]" title={getTeacherName(entry.teacherId)}>
-                                    {getTeacherName(entry.teacherId).split(' ').pop()}
+                                <div className="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-md bg-white border border-white text-slate-600 truncate w-fit max-w-full shadow-[0_2px_4px_rgba(0,0,0,0.02)]" title={getTeacherName(entry.teacherId)}>
+                                    {getTeacherName(entry.teacherId)}
                                 </div>
                              ) : (
-                                <div className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/60 text-gray-600">
+                                <div className="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-md bg-white border border-white text-slate-600 truncate w-fit max-w-full shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
                                     {getClassName(entry.classId)}
                                 </div>
                              )}
@@ -666,10 +693,10 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
   return (
     <div className="space-y-6 animate-fade-in pb-10">
       {/* Header Area */}
-      <div className="flex flex-col xl:flex-row justify-between xl:items-end gap-6">
+      <div className="flex flex-col xl:flex-row justify-between xl:items-end gap-6 mb-2">
         <div>
-           <h2 className="text-3xl font-bold text-gray-900 tracking-tight">{t('timetable.title')}</h2>
-           <p className="text-gray-500 mt-1">{t('timetable.subtitle')}</p>
+           <h2 className="text-3xl font-heading font-extrabold text-slate-900 tracking-tight drop-shadow-sm">{t('timetable.title')}</h2>
+           <p className="text-slate-500 mt-2 font-medium">{t('timetable.subtitle')}</p>
         </div>
         
         <div className="flex flex-col md:flex-row gap-4">
@@ -737,29 +764,29 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
            </div>
 
            {/* Actions */}
-           {!isStudent && (
            <div className="flex gap-2">
-               <button 
-                 onClick={() => setShowAssignmentsModal(true)}
-                 className="p-2.5 bg-white border border-gray-200 text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-xl transition shadow-sm"
-                 title="Manage Assignments"
-               >
-                 <BookUser className="h-5 w-5" />
-               </button>
+               {!isStudent && (
+                 <button 
+                   onClick={() => setIsEditing(!isEditing)} 
+                   className={`px-4 py-2.5 rounded-xl text-sm font-medium transition shadow-lg flex items-center ${
+                      isEditing 
+                      ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/30' 
+                      : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/30'
+                   }`}
+                 >
+                   {isEditing ? <Check className="h-4 w-4 mr-2" /> : <Edit2 className="h-4 w-4 mr-2" />}
+                   {isEditing ? t('timetable.done') : t('common.edit')}
+                 </button>
+               )}
 
                <button 
-                 onClick={() => setIsEditing(!isEditing)} 
-                 className={`px-4 py-2.5 rounded-xl text-sm font-medium transition shadow-lg flex items-center ${
-                    isEditing 
-                    ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/30' 
-                    : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/30'
-                 }`}
+                 onClick={handleExportExcel}
+                 className="px-4 py-2.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl text-sm font-medium transition shadow-lg shadow-emerald-500/30 flex items-center"
                >
-                 {isEditing ? <Check className="h-4 w-4 mr-2" /> : <Edit2 className="h-4 w-4 mr-2" />}
-                 {isEditing ? t('timetable.done') : t('common.edit')}
+                 <FileDown className="h-4 w-4 mr-2" />
+                 Xuất Excel
                </button>
            </div>
-           )}
         </div>
       </div>
 
@@ -777,7 +804,6 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
       
       {selectedSlot && <ScheduleDetailModal info={selectedSlot} onClose={() => setSelectedSlot(null)} />}
       {editingSlot && <EditSlotModal info={editingSlot} onClose={() => setEditingSlot(null)} />}
-      {showAssignmentsModal && <AssignmentsModal onClose={() => setShowAssignmentsModal(false)} />}
     </div>
   );
 };

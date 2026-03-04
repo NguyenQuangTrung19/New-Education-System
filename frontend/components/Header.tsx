@@ -67,15 +67,15 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 md:px-8 shadow-sm">
+    <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-gray-200/60 h-16 flex items-center justify-between px-4 md:px-8 shadow-sm transition-all duration-300">
       <div className="flex items-center">
         <button 
           onClick={toggleSidebar}
-          className="p-2 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-700 md:hidden mr-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="p-2 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-indigo-600 md:hidden mr-4 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           <Menu className="h-6 w-6" />
         </button>
-        <h1 className="text-xl font-semibold text-gray-800 capitalize hidden sm:block">{title}</h1>
+        <h1 className="text-xl font-heading font-bold text-slate-800 capitalize hidden sm:block tracking-tight drop-shadow-sm">{title}</h1>
       </div>
 
       <div className="flex items-center space-x-2 md:space-x-4">
@@ -104,9 +104,9 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
 
           {isNotificationsOpen && (
-            <div className="absolute right-0 mt-3 w-80 md:w-96 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-scale-in origin-top-right">
-              <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 backdrop-blur-sm">
-                <h3 className="font-bold text-gray-900">{t('notifications.title')}</h3>
+            <div className="absolute right-0 mt-3 w-80 md:w-96 bg-white/95 backdrop-blur-2xl rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 overflow-hidden z-50 animate-scale-in origin-top-right">
+              <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <h3 className="font-heading font-bold text-gray-900 tracking-tight">{t('notifications.title')}</h3>
                 {unreadCount > 0 && (
                   <button 
                     onClick={() => onMarkAsRead()} 
@@ -173,14 +173,14 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="pl-4 border-l border-gray-200">
           <button 
             onClick={onProfileClick}
-            className="flex items-center space-x-3 hover:bg-gray-50 rounded-lg p-2 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-100"
+            className="flex items-center space-x-3 hover:bg-slate-50 rounded-xl p-2 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-100 group"
             title="View Profile"
           >
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-medium text-gray-900">{user?.name || t('header.admin')}</p>
-              <p className="text-xs text-gray-500">{user?.role || t('header.role')}</p>
+              <p className="text-sm font-bold text-slate-900 leading-tight">{user?.name || t('header.admin')}</p>
+              <p className="text-[11px] font-medium text-slate-500 uppercase tracking-widest mt-0.5">{user?.role || t('header.role')}</p>
             </div>
-            <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 ring-2 ring-white shadow-sm overflow-hidden">
+            <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 ring-2 ring-white shadow-sm overflow-hidden transition-transform duration-300 group-hover:scale-105">
               {user?.avatarUrl ? (
                 <img src={user.avatarUrl} alt="Profile" className="h-full w-full object-cover" />
               ) : (
