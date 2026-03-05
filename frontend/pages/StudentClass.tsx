@@ -6,6 +6,7 @@ import {
   AlertTriangle, Search, Lock, ChevronRight, BookOpen, AlertCircle, 
   Flag, ArrowLeft, Send, Check, Menu, X, Timer, ArrowRight, ChevronLeft
 } from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
 
 import api from '../src/api/client';
 
@@ -24,6 +25,7 @@ interface StudentClassProps {
 }
 
 export const StudentClass: React.FC<StudentClassProps> = ({ currentUser }) => {
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<'assignments' | 'materials'>('assignments');
   const [viewState, setViewState] = useState<ViewState>('dashboard');
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
@@ -133,7 +135,7 @@ export const StudentClass: React.FC<StudentClassProps> = ({ currentUser }) => {
 
   const handleAssignmentClick = (assignment: Assignment) => {
     if (assignment.status === 'graded' || assignment.status === 'submitted') {
-        alert("Bạn đã hoàn thành bài tập này.");
+        showToast('warning', "Bạn đã hoàn thành bài tập này.");
         return;
     }
     setSelectedAssignment(assignment);
@@ -180,7 +182,7 @@ export const StudentClass: React.FC<StudentClassProps> = ({ currentUser }) => {
         const totalQ = selectedAssignment?.questions?.length || 0;
         const answered = Object.keys(quizAnswers).length;
         
-        alert(`Nộp bài thành công!\nBạn đã trả lời ${answered}/${totalQ} câu hỏi.\nKết quả sẽ được giáo viên chấm và cập nhật sau.`);
+        showToast('success', `Nộp bài thành công!\nBạn đã trả lời ${answered}/${totalQ} câu hỏi.\nKết quả sẽ được cập nhật sau.`);
         
         // Refresh assignments to update status (if we had logic to show submitted)
         // For now, maybe just locally mark it?
@@ -188,7 +190,7 @@ export const StudentClass: React.FC<StudentClassProps> = ({ currentUser }) => {
 
     } catch (error) {
         console.error("Submit failed", error);
-        alert("Nộp bài thất bại. Vui lòng thử lại.");
+        showToast('error', "Nộp bài thất bại. Vui lòng thử lại.");
     }
   };
 

@@ -16,6 +16,7 @@ import { ScheduleModule } from './schedule/schedule.module';
 import { ImportsModule } from './imports/imports.module';
 import { TimetableModule } from './timetable/timetable.module';
 import { TeachingAssignmentsModule } from './teaching-assignments/teaching-assignments.module';
+import { GradesModule } from './grades/grades.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { TeachingAssignmentsModule } from './teaching-assignments/teaching-assig
     ScheduleModule,
     TimetableModule,
     TeachingAssignmentsModule,
+    GradesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -19,7 +19,7 @@ import { TeacherResources } from './pages/TeacherResources';
 import { Leaderboard } from './pages/Leaderboard';
 import { Tuition } from './pages/Tuition'; 
 import { AdminTuition } from './pages/AdminTuition'; 
-import { AdminAssignments } from './pages/AdminAssignments';
+import { TeachingAssignments } from './pages/TeachingAssignments';
 import { Settings } from './pages/Settings';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
@@ -82,7 +82,7 @@ const App: React.FC = () => {
         'leaderboard',
         'notifications',
         'admin-tuition',
-        'admin-assignments',
+        'teaching-assignments',
         'profile',
         'settings'
       ],
@@ -223,7 +223,7 @@ const App: React.FC = () => {
       'leaderboard': <Leaderboard currentUser={currentUser!} />,
       'tuition': <Tuition currentUser={currentUser!} />,
       'admin-tuition': <AdminTuition currentUser={currentUser!} />,
-      'admin-assignments': <AdminAssignments currentUser={currentUser!} />,
+      'teaching-assignments': <TeachingAssignments currentUser={currentUser!} />,
       'settings': <Settings />
     };
 
@@ -249,7 +249,7 @@ const App: React.FC = () => {
       case 'leaderboard': return t('menu.leaderboard') || 'Bảng Xếp Hạng';
       case 'tuition': return t('menu.tuition') || 'Học phí & Dịch vụ';
       case 'admin-tuition': return t('menu.adminTuition') || 'Quản lý Học phí';
-      case 'admin-assignments': return 'Assignment Allocation';
+      case 'teaching-assignments': return 'Phân công giảng dạy';
       case 'settings': return t('menu.settings') || 'Cài đặt';
       default: return 'EduSphere';
     }

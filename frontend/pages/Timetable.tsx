@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import api from '../src/api/client';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useToast } from '../contexts/ToastContext';
+import { useConfirm } from '../contexts/ConfirmContext';
 import { 
   CalendarDays, Clock, MapPin, ChevronDown, Sun, Moon, Search, X, 
   User as UserIcon, Plus, Edit2, Trash2, Check, FileDown, 
@@ -8,7 +10,9 @@ import {
 } from 'lucide-react';
 import { ScheduleItem, User, UserRole, Subject, Teacher, ClassGroup } from '../types';
 import ExcelJS from 'exceljs';
-import { saveAs } from 'file-saver';interface TimetableProps {
+import { saveAs } from 'file-saver';
+
+interface TimetableProps {
   currentUser: User | null;
   onNavigate?: (page: string, params?: any) => void;
 }
@@ -50,6 +54,8 @@ type ViewMode = 'class' | 'teacher';
 
 export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate }) => {
   const { t } = useLanguage();
+  const { showToast } = useToast();
+  const { confirm } = useConfirm();
   const isStudent = currentUser?.role === UserRole.STUDENT;
   const isTeacher = currentUser?.role === UserRole.TEACHER;
   const isAdmin = currentUser?.role === UserRole.ADMIN;
@@ -66,6 +72,7 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
   const [subjectsList, setSubjectsList] = useState<Subject[]>([]);
   const [classesList, setClassesList] = useState<ClassGroup[]>([]);
   const [teachersList, setTeachersList] = useState<Teacher[]>([]);
+  const [allocations, setAllocations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Modes
@@ -116,15 +123,18 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
     useEffect(() => {
     const fetchData = async () => {
         try {
-            const [subjRes, classRes, teachRes] = await Promise.all([
+            const [subjRes, classRes, teachRes, allocRes] = await Promise.all([
                 api.get('/subjects'),
                 api.get('/classes'),
-                // api.get('/teachers') // Try to include this in parallel if reliable
-                api.get('/teachers').catch(() => ({ data: [] })) // Safe fallback
+                api.get('/teachers').catch(() => ({ data: [] })), // Safe fallback
+                api.get('/teaching-assignments').catch(() => ({ data: [] }))
             ]);
             setSubjectsList(subjRes.data);
             setClassesList(classRes.data);
             setTeachersList(teachRes.data.map((t: any) => ({ ...t, name: t.user?.name || t.name })));
+            
+            const allocData = allocRes.data?.data || allocRes.data || [];
+            setAllocations(allocData);
 
         } catch (error) {
             console.error("Failed to fetch reference data", error);
@@ -211,8 +221,35 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
     const targetTeacherId = viewMode === 'teacher' ? selectedTeacherId : formData.teacherId;
 
     if (!targetClassId || !targetTeacherId) {
-        alert(t('timetable.missingInfo'));
+        showToast('error', t('timetable.missingInfo'));
         return;
+    }
+
+    // Check allocation limit
+    const teacherAllocations = allocations.filter(a => a.teacherId === targetTeacherId);
+    const specificAllocation = teacherAllocations.find(a => a.classId === targetClassId && a.subjectId === formData.subjectId);
+    
+    if (specificAllocation) {
+        const currentCount = schedule.filter(s => 
+            s.teacherId === targetTeacherId && 
+            s.classId === targetClassId && 
+            s.subjectId === formData.subjectId &&
+            (!editingSlot?.item || s.id !== editingSlot.item.id)
+        ).length;
+        
+        if (currentCount + 1 > specificAllocation.sessionsPerWeek) {
+            const confirmMsg = `Cảnh báo: Giáo viên này đã được xếp ${currentCount + 1}/${specificAllocation.sessionsPerWeek} tiết đăng ký cho môn này ở lớp này. Bạn có chắc chắn muốn lưu không?`;
+            const isConfirmed = await confirm({ title: 'Cảnh báo vượt quá số tiết', message: confirmMsg, isDanger: true });
+            if (!isConfirmed) {
+                return;
+            }
+        }
+    } else if (isAdmin) {
+       const confirmMsg = `Cảnh báo: Giáo viên này chưa được Phân công dạy môn này ở lớp này. Bạn có muốn xếp lịch chéo không?`;
+       const isConfirmed = await confirm({ title: 'Xếp lịch chéo', message: confirmMsg, isDanger: true });
+       if (!isConfirmed) {
+           return;
+       }
     }
 
     try {
@@ -240,9 +277,10 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
           setSchedule([...schedule, data]);
         }
         setEditingSlot(null);
+        showToast('success', 'Đã lưu thiết lập tiết học thành công.');
     } catch(e) {
         console.error("Save slot failed", e);
-        alert(t('timetable.saveFailed'));
+        showToast('error', t('timetable.saveFailed'));
     }
   };
 
@@ -378,19 +416,21 @@ const handleExportExcel = async () => {
 
     } catch (error) {
         console.error("Export Excel failed", error);
-        alert("Có lỗi xảy ra khi xuất file Excel!");
+        showToast('error', "Có lỗi xảy ra khi xuất file Excel!");
     }
 };
 
   const handleDeleteSlot = async (id: string) => {
-    if(window.confirm(t('common.confirmDelete'))) {
+    const isConfirmed = await confirm({ title: t('common.confirmDelete'), message: t('common.confirmDelete') || 'Bạn có chắc chắn muốn xóa?', isDanger: true });
+    if(isConfirmed) {
       try {
           await api.delete(`/schedule/${id}`);
           setSchedule(schedule.filter(s => s.id !== id));
           setEditingSlot(null);
+          showToast('success', 'Đã xóa tiết học thành công.');
       } catch(e) {
           console.error("Delete failed", e);
-          alert(t('timetable.deleteFailed'));
+          showToast('error', t('timetable.deleteFailed'));
       }
     }
   };
@@ -448,7 +488,31 @@ const handleExportExcel = async () => {
                      <label className="block text-xs font-bold text-gray-700 uppercase mb-1">{t('timetable.selectTeacher')}</label>
                      <select disabled={isTeacher && !isAdmin} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" value={formData.teacherId} onChange={(e) => setFormData({...formData, teacherId: e.target.value})}>
                        <option value="">-- Select Teacher --</option>
-                       {teachersList.map(t => <option key={t.id} value={t.id}>{t.name} ({t.subjects?.join(', ') || ''})</option>)}
+                       {(() => {
+                          const selectedSubject = subjectsList.find(s => s.id === formData.subjectId);
+                          let displayTeachers = teachersList;
+                          
+                          if (selectedSubject) {
+                              const subjectName = selectedSubject.name;
+                              const exactMatches = teachersList.filter(t => t.subjects?.includes(subjectName) || t.subjects?.includes(selectedSubject.code));
+                              const otherTeachers = teachersList.filter(t => !exactMatches.includes(t));
+                              
+                              if (exactMatches.length > 0) {
+                                 return (
+                                    <>
+                                       <optgroup label={`Giáo viên bộ môn ${subjectName}`}>
+                                          {exactMatches.map(t => <option key={t.id} value={t.id}>{t.name} ({t.subjects?.join(', ') || ''})</option>)}
+                                       </optgroup>
+                                       <optgroup label="Các giáo viên khác">
+                                          {otherTeachers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                                       </optgroup>
+                                    </>
+                                 );
+                              }
+                          }
+                          
+                          return displayTeachers.map(t => <option key={t.id} value={t.id}>{t.name} ({t.subjects?.join(', ') || ''})</option>);
+                       })()}
                      </select>
                   </div>
               ) : (
@@ -693,49 +757,49 @@ const handleExportExcel = async () => {
   return (
     <div className="space-y-6 animate-fade-in pb-10">
       {/* Header Area */}
-      <div className="flex flex-col xl:flex-row justify-between xl:items-end gap-6 mb-2">
+      <div className="flex flex-col xl:flex-row justify-between xl:items-end gap-5 mb-4">
         <div>
-           <h2 className="text-3xl font-heading font-extrabold text-slate-900 tracking-tight drop-shadow-sm">{t('timetable.title')}</h2>
-           <p className="text-slate-500 mt-2 font-medium">{t('timetable.subtitle')}</p>
+           <h2 className="text-2xl font-heading font-bold text-slate-800 tracking-tight">{t('timetable.title')}</h2>
+           <p className="text-slate-500 mt-1 text-sm font-medium">{t('timetable.subtitle')}</p>
         </div>
         
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-wrap items-center gap-3">
            {/* View Toggle */}
            {!isStudent && (
-           <div className="bg-white p-1 rounded-xl border border-gray-200 shadow-sm flex">
+           <div className="bg-gray-100/80 p-0.5 rounded-lg border border-gray-200/60 shadow-inner flex items-center">
                <button 
                   onClick={() => setViewMode('class')}
-                  className={`flex items-center px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'class' ? 'bg-indigo-600 text-white shadow' : 'text-gray-500 hover:bg-gray-50'}`}
+                  className={`flex items-center px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 ${viewMode === 'class' ? 'bg-white text-indigo-700 shadow-sm border border-gray-200/50' : 'text-gray-500 hover:text-gray-700'}`}
                >
-                  <GraduationCap className="h-4 w-4 mr-2" /> {t('timetable.byClass')}
+                  <GraduationCap className="h-3.5 w-3.5 mr-1.5" /> {t('timetable.byClass')}
                </button>
                <button 
                   onClick={() => setViewMode('teacher')}
-                  className={`flex items-center px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'teacher' ? 'bg-indigo-600 text-white shadow' : 'text-gray-500 hover:bg-gray-50'}`}
+                  className={`flex items-center px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 ${viewMode === 'teacher' ? 'bg-white text-indigo-700 shadow-sm border border-gray-200/50' : 'text-gray-500 hover:text-gray-700'}`}
                >
-                  <Users className="h-4 w-4 mr-2" /> {t('timetable.byTeacher')}
+                  <Users className="h-3.5 w-3.5 mr-1.5" /> {t('timetable.byTeacher')}
                </button>
            </div>
            )}
 
            {/* Week Navigator */}
-           <div className="flex items-center bg-white rounded-xl border border-gray-200 shadow-sm p-1">
-                <button onClick={() => handleWeekChange('prev')} className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 transition"><ChevronLeft className="h-5 w-5" /></button>
-                <div className="px-4 text-center min-w-[140px]">
-                    <div className="text-[10px] text-gray-400 uppercase font-bold">{t('timetable.weekOf')}</div>
-                    <div className="text-sm font-bold text-gray-900 cursor-pointer hover:text-indigo-600" onClick={jumpToToday}>{formatDate(currentWeekStart)}</div>
+           <div className="flex items-center bg-white rounded-lg border border-gray-200 shadow-sm p-0.5">
+                <button onClick={() => handleWeekChange('prev')} className="p-1.5 hover:bg-gray-50 rounded-md text-gray-500 transition-colors"><ChevronLeft className="h-4 w-4" /></button>
+                <div className="px-3 text-center min-w-[120px]">
+                    <div className="text-[9px] text-gray-400 uppercase font-bold tracking-wider">{t('timetable.weekOf')}</div>
+                    <div className="text-xs font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors" onClick={jumpToToday}>{formatDate(currentWeekStart)}</div>
                 </div>
-                <button onClick={() => handleWeekChange('next')} className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 transition"><ChevronRight className="h-5 w-5" /></button>
+                <button onClick={() => handleWeekChange('next')} className="p-1.5 hover:bg-gray-50 rounded-md text-gray-500 transition-colors"><ChevronRight className="h-4 w-4" /></button>
            </div>
 
            {/* Dynamic Selector based on View Mode */}
-           <div className="relative min-w-[200px]">
+           <div className="relative min-w-[160px]">
                {viewMode === 'class' ? (
                    <div className="relative">
-                       <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                       <GraduationCap className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
                        <select 
-                          disabled={isStudent} // Students locked to their class
-                          className={`w-full pl-10 pr-8 py-2.5 bg-white border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none appearance-none font-medium shadow-sm ${isStudent ? 'bg-gray-50 cursor-not-allowed text-gray-600' : ''}`}
+                          disabled={isStudent}
+                          className={`w-full pl-8 pr-8 py-1.5 bg-white border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none appearance-none font-semibold text-slate-700 shadow-sm transition-all ${isStudent ? 'bg-gray-50 cursor-not-allowed text-gray-500' : 'hover:border-gray-300'}`}
                           value={selectedClassId}
                           onChange={(e) => setSelectedClassId(e.target.value)}
                        >
@@ -743,14 +807,14 @@ const handleExportExcel = async () => {
                            <option key={cls.id} value={cls.id}>{cls.name} - {cls.room}</option>
                          ))}
                        </select>
-                       {!isStudent && <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />}
+                       {!isStudent && <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />}
                    </div>
                ) : (
                    <div className="relative">
-                       <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                       <UserIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
                        <select 
                           disabled={isTeacher} // Teachers can only view themselves
-                          className={`w-full pl-10 pr-8 py-2.5 bg-white border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none appearance-none font-medium shadow-sm ${isTeacher ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                          className={`w-full pl-8 pr-8 py-1.5 bg-white border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none appearance-none font-semibold text-slate-700 shadow-sm transition-all ${isTeacher ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'hover:border-gray-300'}`}
                           value={selectedTeacherId}
                           onChange={(e) => setSelectedTeacherId(e.target.value)}
                        >
@@ -758,7 +822,7 @@ const handleExportExcel = async () => {
                            <option key={t.id} value={t.id}>{t.name}</option>
                          ))}
                        </select>
-                       <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                       <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
                    </div>
                )}
            </div>
@@ -768,22 +832,22 @@ const handleExportExcel = async () => {
                {!isStudent && (
                  <button 
                    onClick={() => setIsEditing(!isEditing)} 
-                   className={`px-4 py-2.5 rounded-xl text-sm font-medium transition shadow-lg flex items-center ${
+                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-sm flex items-center border ${
                       isEditing 
-                      ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/30' 
-                      : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/30'
+                      ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200/60' 
+                      : 'bg-white hover:bg-gray-50 text-slate-700 border-gray-200'
                    }`}
                  >
-                   {isEditing ? <Check className="h-4 w-4 mr-2" /> : <Edit2 className="h-4 w-4 mr-2" />}
+                   {isEditing ? <Check className="h-3.5 w-3.5 mr-1.5 text-amber-600" /> : <Edit2 className="h-3.5 w-3.5 mr-1.5 text-slate-500" />}
                    {isEditing ? t('timetable.done') : t('common.edit')}
                  </button>
                )}
 
                <button 
                  onClick={handleExportExcel}
-                 className="px-4 py-2.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl text-sm font-medium transition shadow-lg shadow-emerald-500/30 flex items-center"
+                 className="px-3 py-1.5 bg-emerald-50 border border-emerald-200/60 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-semibold transition-all shadow-sm flex items-center"
                >
-                 <FileDown className="h-4 w-4 mr-2" />
+                 <FileDown className="h-3.5 w-3.5 mr-1.5 text-emerald-600" />
                  Xuất Excel
                </button>
            </div>

@@ -10,6 +10,7 @@ import {
   FileSpreadsheet, File as FileIcon, Download, Pencil, AlertTriangle, BookOpen, Timer
 } from 'lucide-react';
 import { isDateInFutureOrToday } from '../utils';
+import { useToast } from '../contexts/ToastContext';
 
 interface TeacherAssignmentsProps {
   currentUser: User;
@@ -58,6 +59,7 @@ interface Submission {
 }
 
 export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentUser }) => {
+  const { showToast } = useToast();
   const [view, setView] = useState<'list' | 'create' | 'submissions'>('list');
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
   
@@ -355,7 +357,7 @@ export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentU
                     setEditingId(null);
                   } catch(e) {
                       console.error("Delete failed", e);
-                      alert("Xóa thất bại!");
+                      showToast('error', "Xóa thất bại!");
                   }
               }
               setShowSecurityModal(false);
@@ -385,7 +387,7 @@ export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentU
                 status: 'active', // or preserve
                 createdAt: a.createdAt
             } : a));
-            alert("Đã cập nhật bài tập thành công!");
+            showToast('success', "Đã cập nhật bài tập thành công!");
         } else {
             // Create
             const { data } = await api.post('/assignments', payload);
@@ -396,11 +398,11 @@ export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentU
               createdAt: data.createdAt || new Date().toISOString()
             };
             setAssignments(prev => [finalAssignment, ...prev]);
-            alert("Đã tạo bài tập thành công!");
+            showToast('success', "Đã tạo bài tập thành công!");
         }
       } catch (error) {
           console.error("Publish failed", error);
-          alert("Có lỗi xảy ra khi lưu bài tập.");
+          showToast('error', "Có lỗi xảy ra khi lưu bài tập.");
       }
       
       setShowSecurityModal(false);
@@ -410,7 +412,7 @@ export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentU
   const handleExport = (e: React.MouseEvent, type: 'excel' | 'pdf', assignmentTitle: string) => {
       e.preventDefault();
       e.stopPropagation();
-      alert(`Đang xuất kết quả bài tập "${assignmentTitle}" dưới dạng ${type.toUpperCase()}...\nFile sẽ tự động tải xuống sau giây lát.`);
+      showToast('info', `Đang xuất kết quả bài tập "${assignmentTitle}" dưới dạng ${type.toUpperCase()}...\nFile sẽ tự động tải xuống sau giây lát.`);
   };
 
   const handleViewSubmissions = async (e: React.MouseEvent, assignment: StoredAssignment) => {
@@ -428,7 +430,7 @@ export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentU
           setView('submissions');
       } catch (error) {
           console.error("Failed to load submissions", error);
-          alert("Không thể tải danh sách bài làm.");
+          showToast('error', "Không thể tải danh sách bài làm.");
       } finally {
           setLoading(false);
       }
@@ -461,10 +463,10 @@ export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentU
 
           setShowGradeModal(false);
           setGradingSubmission(null);
-          alert("Đã chấm điểm thành công!");
+          showToast('success', "Đã chấm điểm thành công!");
       } catch (error) {
           console.error("Grade failed", error);
-          alert("Lỗi khi lưu điểm.");
+          showToast('error', "Lỗi khi lưu điểm.");
       }
   };
 

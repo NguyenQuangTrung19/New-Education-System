@@ -2,6 +2,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { User, ClassGroup, LearningMaterial } from '../types';
+import { useToast } from '../contexts/ToastContext';
+import { useConfirm } from '../contexts/ConfirmContext';
 import { 
   FolderOpen, Package, Plus, Search, FileText, Video, Link, 
   Download, Trash2, X, UploadCloud, ChevronRight, ArrowLeft,
@@ -216,6 +218,8 @@ interface TeacherResourcesProps {
 }
 
 export const TeacherResources: React.FC<TeacherResourcesProps> = ({ currentUser }) => {
+  const { showToast } = useToast();
+  const { confirm } = useConfirm();
   const [selectedClass, setSelectedClass] = useState<ClassGroup | null>(null);
   
   // -- State Persistence for Materials --
@@ -282,7 +286,7 @@ export const TeacherResources: React.FC<TeacherResourcesProps> = ({ currentUser 
       if (!newGroupData.name) return;
 
       if (newGroupClasses.length === 0) {
-          alert("Vui lòng chọn ít nhất một lớp áp dụng cho kho tài liệu này.");
+          showToast('warning', "Vui lòng chọn ít nhất một lớp áp dụng cho kho tài liệu này.");
           return;
       }
 
@@ -323,12 +327,14 @@ export const TeacherResources: React.FC<TeacherResourcesProps> = ({ currentUser 
       );
   };
 
-  const handleDeleteGroup = (e: React.MouseEvent, groupId: string) => {
+  const handleDeleteGroup = async (e: React.MouseEvent, groupId: string) => {
       e.stopPropagation();
-      if (window.confirm("Bạn có chắc chắn muốn xóa kho tài liệu này? Tất cả tài liệu bên trong sẽ bị mất.")) {
+      const isConfirmed = await confirm({ title: 'Xóa kho tài liệu', message: 'Bạn có chắc chắn muốn xóa kho tài liệu này? Tất cả tài liệu bên trong sẽ bị mất.', isDanger: true });
+      if (isConfirmed) {
           setCustomGroups(prev => prev.filter(g => g.id !== groupId));
           // Also cleanup materials
           setMaterials(prev => prev.filter(m => m.classId !== groupId));
+          showToast('success', 'Đã xóa kho tài liệu.');
       }
   };
 
