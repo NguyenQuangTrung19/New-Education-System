@@ -290,7 +290,7 @@ const App: React.FC = () => {
           onNavigate={handleNavigate}
         />
 
-        <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8 lg:px-10 custom-scrollbar relative z-0">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto p-2 sm:p-4 md:p-8 lg:px-10 custom-scrollbar relative z-0">
           <div className="max-w-[1400px] mx-auto h-full">
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full h-full">
                {renderContent()}

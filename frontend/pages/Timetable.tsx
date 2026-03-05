@@ -633,31 +633,37 @@ const handleExportExcel = async () => {
 
   const renderScheduleTable = (session: 'Morning' | 'Afternoon', slots: TimeSlot[]) => (
     <div className={`bg-white rounded-[24px] shadow-sm border overflow-hidden mb-8 transition-all duration-500 ${isEditing ? 'border-indigo-300 ring-4 ring-indigo-50 shadow-lg' : 'border-gray-100 hover:shadow-md'}`}>
-      <div className={`px-6 py-5 border-b border-gray-100 flex items-center gap-4 ${session === 'Morning' ? 'bg-amber-50/50' : 'bg-indigo-50/50'}`}>
-         <div className={`p-2.5 rounded-xl ${session === 'Morning' ? 'bg-amber-100 text-amber-600' : 'bg-indigo-100 text-indigo-600'}`}>
-           {session === 'Morning' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+      <div className={`px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 flex items-center gap-3 sm:gap-4 ${session === 'Morning' ? 'bg-amber-50/50' : 'bg-indigo-50/50'}`}>
+         <div className={`p-2 sm:p-2.5 rounded-xl ${session === 'Morning' ? 'bg-amber-100 text-amber-600' : 'bg-indigo-100 text-indigo-600'}`}>
+           {session === 'Morning' ? <Sun className="h-4 w-4 sm:h-5 sm:w-5" /> : <Moon className="h-4 w-4 sm:h-5 sm:w-5" />}
          </div>
-         <h3 className={`font-heading font-bold text-xl tracking-tight ${session === 'Morning' ? 'text-amber-900' : 'text-indigo-900'}`}>
+         <h3 className={`font-heading font-bold text-lg sm:text-xl tracking-tight ${session === 'Morning' ? 'text-amber-900' : 'text-indigo-900'}`}>
             {session === 'Morning' ? t('timetable.morning') : t('timetable.afternoon')}
          </h3>
-         {isEditing && <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-white px-3 py-1.5 rounded-lg shadow-sm border border-indigo-100 flex items-center"><Edit2 className="h-3 w-3 mr-1.5" />{t('timetable.editingMode')}</span>}
+         {isEditing && <span className="ml-auto text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg shadow-sm border border-indigo-100 flex items-center"><Edit2 className="h-3 w-3 sm:mr-1.5" /><span className="hidden sm:inline">{t('timetable.editingMode')}</span></span>}
       </div>
 
       <div className="overflow-x-auto custom-scrollbar">
-        <div className="min-w-[900px]">
-          <div className="grid grid-cols-6 border-b border-gray-100 bg-gray-50/50">
-             <div className="p-4 font-bold text-slate-400 text-[11px] uppercase text-center border-r border-gray-100 tracking-widest flex items-center justify-center">
-                {t('timetable.periodTime')}
+        <div className="min-w-full lg:min-w-[900px]">
+          <div className="grid grid-cols-[3fr_4fr_4fr_4fr_4fr_4fr] sm:grid-cols-6 border-b border-gray-100 bg-gray-50/50">
+             <div className="p-1 sm:p-4 font-bold text-slate-400 text-[9px] sm:text-[11px] uppercase text-center border-r border-gray-100 tracking-widest flex items-center justify-center">
+                <span className="hidden sm:inline">{t('timetable.periodTime')}</span>
+                <span className="sm:hidden"><Clock className="w-4 h-4" /></span>
              </div>
              {days.map((day, idx) => {
                  const date = addDays(currentWeekStart, idx);
                  const dateStr = formatDate(date);
                  const isToday = new Date().toDateString() === date.toDateString();
+                 // Shorten day names for mobile
+                 const shortDay = day.substring(0, 3);
                  return (
-                   <div key={day} className={`p-4 text-center border-r border-gray-100 last:border-r-0 relative overflow-hidden ${isToday ? 'bg-indigo-50/50' : ''}`}>
+                   <div key={day} className={`p-1 sm:p-4 text-center border-r border-gray-100 last:border-r-0 relative overflow-hidden flex flex-col justify-center ${isToday ? 'bg-indigo-50/50' : ''}`}>
                      {isToday && <div className="absolute top-0 left-0 w-full h-1 bg-indigo-500"></div>}
-                     <div className={`font-heading font-bold text-[15px] ${isToday ? 'text-indigo-700' : 'text-slate-700'}`}>{day}</div>
-                     <div className={`text-xs mt-0.5 ${isToday ? 'text-indigo-500 font-bold' : 'text-slate-400 font-medium'}`}>{dateStr}</div>
+                     <div className={`font-heading font-bold text-[12px] sm:text-[15px] ${isToday ? 'text-indigo-700' : 'text-slate-700'}`}>
+                        <span className="hidden sm:inline">{day}</span>
+                        <span className="sm:hidden">{shortDay}</span>
+                     </div>
+                     <div className={`text-[9px] sm:text-xs mt-0 sm:mt-0.5 ${isToday ? 'text-indigo-500 font-bold' : 'text-slate-400 font-medium'}`}>{dateStr}</div>
                    </div>
                  )
              })}
@@ -665,12 +671,12 @@ const handleExportExcel = async () => {
           
           <div className="divide-y divide-gray-100 bg-white">
             {slots.map((slot) => (
-              <div key={slot.period} className="grid grid-cols-6 min-h-[125px] group/row">
-                <div className="p-4 flex flex-col items-center justify-center text-sm border-r border-gray-100 bg-gray-50/30 group-hover/row:bg-gray-50 transition-colors">
-                   <div className="w-8 h-8 rounded-xl bg-white border border-gray-200 shadow-sm flex items-center justify-center mb-1.5 font-bold text-slate-700">
+              <div key={slot.period} className="grid grid-cols-[3fr_4fr_4fr_4fr_4fr_4fr] sm:grid-cols-6 min-h-[80px] sm:min-h-[125px] group/row">
+                <div className="p-1 sm:p-4 flex flex-col items-center justify-center text-sm border-r border-gray-100 bg-gray-50/30 group-hover/row:bg-gray-50 transition-colors">
+                   <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-[8px] sm:rounded-xl bg-white border border-gray-200 shadow-sm flex items-center justify-center mb-0 sm:mb-1.5 font-bold text-slate-700 text-xs sm:text-sm">
                       {slot.period}
                    </div>
-                   <span className="text-[11px] text-slate-400 font-medium tracking-wide">{slot.time}</span>
+                   <span className="text-[8px] sm:text-[11px] text-slate-400 font-medium tracking-tight sm:tracking-wide mt-1 sm:mt-0 leading-tight text-center">{slot.time}</span>
                 </div>
 
                 {days.map((day, idx) => {
@@ -689,7 +695,7 @@ const handleExportExcel = async () => {
                   const editable = canEditSlot(entry);
 
                   return (
-                    <div key={`${day}-${slot.period}`} className={`p-2.5 border-r border-gray-100 last:border-r-0 relative transition-colors ${isEditing && editable ? 'hover:bg-indigo-50/30 cursor-pointer' : isEditing ? 'bg-gray-50/80' : isToday ? 'bg-indigo-50/10' : 'hover:bg-gray-50/50'}`}>
+                    <div key={`${day}-${slot.period}`} className={`p-1 sm:p-2.5 border-r border-gray-100 last:border-r-0 relative transition-colors ${isEditing && editable ? 'hover:bg-indigo-50/30 cursor-pointer' : isEditing ? 'bg-gray-50/80' : isToday ? 'bg-indigo-50/10' : 'hover:bg-gray-50/50'}`}>
                       {entry ? (
                         <div 
                           onClick={() => {
@@ -699,7 +705,7 @@ const handleExportExcel = async () => {
                                setSelectedSlot({ item: entry, timeSlot: slot, date: `${day} ${dateStr}` });
                              }
                           }}
-                          className={`h-full w-full rounded-[16px] p-3.5 border transition-all duration-300 flex flex-col relative overflow-hidden group/card ${
+                          className={`h-full w-full rounded-[8px] sm:rounded-[16px] p-1.5 sm:p-3.5 border transition-all duration-300 flex flex-col relative overflow-hidden group/card ${
                              isEditing 
                                ? (editable ? 'border-indigo-200 ring-2 ring-indigo-100 bg-white hover:scale-[1.02] shadow-sm hover:shadow-md cursor-pointer' : 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed')
                                : session === 'Morning' 
@@ -707,25 +713,28 @@ const handleExportExcel = async () => {
                                   : 'bg-gradient-to-br from-indigo-50 to-white border-indigo-100/60 hover:-translate-y-1 hover:shadow-[0_8px_20px_rgba(99,102,241,0.15)] hover:border-indigo-200 cursor-pointer'
                           }`}
                         >
-                           <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-white/40 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity rounded-bl-full pointer-events-none"></div>
-                           {isEditing && editable && <div className="absolute top-2 right-2 text-indigo-500 bg-white shadow-sm p-1.5 rounded-full"><Edit2 className="h-3 w-3" /></div>}
+                           <div className="absolute top-0 right-0 w-8 h-8 sm:w-16 sm:h-16 bg-gradient-to-bl from-white/40 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity rounded-bl-full pointer-events-none"></div>
+                           {isEditing && editable && <div className="absolute top-1 right-1 sm:top-2 sm:right-2 text-indigo-500 bg-white shadow-sm p-1 sm:p-1.5 rounded-full"><Edit2 className="h-2 w-2 sm:h-3 sm:w-3" /></div>}
                            
-                          <div className={`font-heading font-bold text-[14px] leading-tight mb-2 line-clamp-2 ${session === 'Morning' && !isEditing ? 'text-amber-900' : isEditing ? 'text-slate-800' : 'text-indigo-900'}`}>
+                          <div className={`font-heading font-bold text-[10px] sm:text-[14px] leading-tight mb-1 sm:mb-2 line-clamp-3 sm:line-clamp-2 break-words ${session === 'Morning' && !isEditing ? 'text-amber-900' : isEditing ? 'text-slate-800' : 'text-indigo-900'}`}>
                              {getSubjectName(entry.subjectId)}
                           </div>
                           
                           {/* Dynamic Content based on View Mode */}
-                          <div className="flex flex-col gap-1.5 mt-auto relative z-10">
-                            <div className="text-[11px] font-medium text-slate-500 flex items-center w-fit bg-white/60 backdrop-blur-sm px-2 py-0.5 rounded-md border border-white max-w-full">
+                          <div className="flex flex-col gap-1 sm:gap-1.5 mt-auto relative z-10 w-full">
+                            <div className="hidden sm:flex text-[11px] font-medium text-slate-500 items-center w-fit bg-white/60 backdrop-blur-sm px-2 py-0.5 rounded-md border border-white max-w-full">
                               <MapPin className="h-3 w-3 mr-1 shrink-0 text-slate-400" /> 
                               <span className="truncate">{entry.room}</span>
                             </div>
+                            <div className="sm:hidden text-[8px] font-medium text-slate-500 truncate w-full">
+                               {entry.room}
+                            </div>
                              {viewMode === 'class' ? (
-                                <div className="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-md bg-white border border-white text-slate-600 truncate w-fit max-w-full shadow-[0_2px_4px_rgba(0,0,0,0.02)]" title={getTeacherName(entry.teacherId)}>
+                                <div className="hidden sm:block text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-md bg-white border border-white text-slate-600 truncate w-fit max-w-full shadow-[0_2px_4px_rgba(0,0,0,0.02)]" title={getTeacherName(entry.teacherId)}>
                                     {getTeacherName(entry.teacherId)}
                                 </div>
                              ) : (
-                                <div className="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-md bg-white border border-white text-slate-600 truncate w-fit max-w-full shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+                                <div className="hidden sm:block text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-md bg-white border border-white text-slate-600 truncate w-fit max-w-full shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
                                     {getClassName(entry.classId)}
                                 </div>
                              )}
@@ -757,13 +766,13 @@ const handleExportExcel = async () => {
   return (
     <div className="space-y-6 animate-fade-in pb-10">
       {/* Header Area */}
-      <div className="flex flex-col xl:flex-row justify-between xl:items-end gap-5 mb-4">
+      <div className="flex flex-col xl:flex-row justify-between xl:items-end gap-3 sm:gap-5 mb-4">
         <div>
-           <h2 className="text-2xl font-heading font-bold text-slate-800 tracking-tight">{t('timetable.title')}</h2>
-           <p className="text-slate-500 mt-1 text-sm font-medium">{t('timetable.subtitle')}</p>
+           <h2 className="text-xl sm:text-2xl font-heading font-bold text-slate-800 tracking-tight">{t('timetable.title')}</h2>
+           <p className="text-slate-500 mt-0.5 sm:mt-1 text-xs sm:text-sm font-medium">{t('timetable.subtitle')}</p>
         </div>
         
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
            {/* View Toggle */}
            {!isStudent && (
            <div className="bg-gray-100/80 p-0.5 rounded-lg border border-gray-200/60 shadow-inner flex items-center">
@@ -783,17 +792,17 @@ const handleExportExcel = async () => {
            )}
 
            {/* Week Navigator */}
-           <div className="flex items-center bg-white rounded-lg border border-gray-200 shadow-sm p-0.5">
+           <div className="flex flex-1 sm:flex-none justify-between sm:justify-start items-center bg-white rounded-lg border border-gray-200 shadow-sm p-0.5 w-full sm:w-auto mt-2 sm:mt-0 order-last sm:order-none">
                 <button onClick={() => handleWeekChange('prev')} className="p-1.5 hover:bg-gray-50 rounded-md text-gray-500 transition-colors"><ChevronLeft className="h-4 w-4" /></button>
-                <div className="px-3 text-center min-w-[120px]">
-                    <div className="text-[9px] text-gray-400 uppercase font-bold tracking-wider">{t('timetable.weekOf')}</div>
-                    <div className="text-xs font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors" onClick={jumpToToday}>{formatDate(currentWeekStart)}</div>
+                <div className="px-2 sm:px-3 text-center flex-1 sm:min-w-[120px]">
+                    <div className="text-[8px] sm:text-[9px] text-gray-400 uppercase font-bold tracking-wider">{t('timetable.weekOf')}</div>
+                    <div className="text-[11px] sm:text-xs font-bold text-slate-700 cursor-pointer hover:text-indigo-600 transition-colors" onClick={jumpToToday}>{formatDate(currentWeekStart)}</div>
                 </div>
                 <button onClick={() => handleWeekChange('next')} className="p-1.5 hover:bg-gray-50 rounded-md text-gray-500 transition-colors"><ChevronRight className="h-4 w-4" /></button>
            </div>
 
            {/* Dynamic Selector based on View Mode */}
-           <div className="relative min-w-[160px]">
+           <div className="relative flex-1 sm:flex-none min-w-[140px] sm:min-w-[160px]">
                {viewMode === 'class' ? (
                    <div className="relative">
                        <GraduationCap className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
