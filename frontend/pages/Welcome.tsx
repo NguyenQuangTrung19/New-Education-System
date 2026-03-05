@@ -3,6 +3,7 @@ import React from 'react';
 import { ArrowRight, BookOpen, Users, LayoutDashboard, Calendar, Bell } from 'lucide-react';
 import { SCHOOL_INFO } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
+import { SchoolLogo } from '../components/SchoolLogo';
 
 interface WelcomeProps {
   onComplete: (target?: string) => void;
@@ -20,8 +21,8 @@ export const Welcome: React.FC<WelcomeProps> = ({ onComplete }) => {
       {/* Navbar Stub */}
       <div className="relative z-10 px-8 py-6 flex justify-between items-center max-w-7xl mx-auto w-full">
          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                <img src={SCHOOL_INFO.logo} onError={(e) => {e.currentTarget.src = SCHOOL_INFO.logoFallback}} alt="Logo" className="h-6 w-6 object-contain" />
+            <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center shadow-lg p-0.5">
+                <SchoolLogo className="h-full w-full object-contain" />
             </div>
             <span className="text-white font-extrabold text-xl tracking-tight">{SCHOOL_INFO.name}</span>
          </div>

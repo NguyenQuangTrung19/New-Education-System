@@ -5,6 +5,7 @@ import { Lock, User as UserIcon, ArrowRight, Eye, EyeOff, ShieldCheck, Graduatio
 import { User as UserType, UserRole } from '../types';
 import { SCHOOL_INFO } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
+import { SchoolLogo } from '../components/SchoolLogo';
 import api from '../src/api/client';
 
 interface LoginProps {
@@ -84,12 +85,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 </button>
                 <div className="absolute -bottom-10 left-8 flex items-end">
                     <div className="w-20 h-20 bg-white rounded-2xl p-2 shadow-lg">
-                        <img 
-                            src={SCHOOL_INFO.logo} 
-                            onError={(e) => {e.currentTarget.src = SCHOOL_INFO.logoFallback}}
-                            alt="Logo" 
-                            className="w-full h-full object-contain" 
-                        />
+                        <SchoolLogo className="w-full h-full object-contain" />
                     </div>
                     <div className="ml-4 mb-2 text-white drop-shadow-md">
                         <h2 className="text-2xl font-black tracking-tight">{SCHOOL_INFO.name}</h2>
@@ -298,13 +294,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
           {/* Logo Area */}
           <div className="text-center mb-8 relative z-10">
-            <div className="inline-flex items-center justify-center w-28 h-28 rounded-3xl bg-white shadow-xl mb-6 transform hover:scale-105 transition-transform duration-500 ring-4 ring-white/30">
-               <img 
-                 src={SCHOOL_INFO.logo} 
-                 onError={(e) => {e.currentTarget.src = SCHOOL_INFO.logoFallback}}
-                 alt={SCHOOL_INFO.name} 
-                 className="h-16 w-16 object-contain" 
-               />
+            <div className="inline-flex items-center justify-center w-28 h-28 rounded-3xl bg-white shadow-xl mb-6 transform hover:scale-105 transition-transform duration-500 ring-4 ring-white/30 p-2">
+               <SchoolLogo className="w-full h-full object-contain" />
             </div>
             <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight uppercase drop-shadow-md">{SCHOOL_INFO.name}</h1>
             <div className="flex items-center justify-center gap-2 mt-2">

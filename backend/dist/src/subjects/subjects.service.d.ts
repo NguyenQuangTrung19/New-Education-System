@@ -20,12 +20,12 @@ export declare class SubjectsService {
             teacherId: string;
             description: string | null;
             subjectId: string;
-            status: import(".prisma/client").$Enums.HomeworkStatus;
             title: string;
             classIds: string[];
             dueDate: Date;
             duration: number | null;
             questions: import("@prisma/client/runtime/library").JsonValue | null;
+            status: import(".prisma/client").$Enums.HomeworkStatus;
         }[];
     } & {
         name: string;
@@ -78,12 +78,12 @@ export declare class SubjectsService {
             teacherId: string;
             description: string | null;
             subjectId: string;
-            status: import(".prisma/client").$Enums.HomeworkStatus;
             title: string;
             classIds: string[];
             dueDate: Date;
             duration: number | null;
             questions: import("@prisma/client/runtime/library").JsonValue | null;
+            status: import(".prisma/client").$Enums.HomeworkStatus;
         }[];
     } & {
         name: string;

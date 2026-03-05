@@ -26,6 +26,7 @@ import {
 import { useLanguage } from '../contexts/LanguageContext';
 import { User, UserRole } from '../types';
 import { SCHOOL_INFO } from '../constants';
+import { SchoolLogo } from './SchoolLogo';
 
 interface SidebarProps {
   activePage: string;
@@ -110,13 +111,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className={`h-24 flex items-center relative ${isCollapsed ? 'justify-center px-0' : 'px-8'}`}>
         <div className="relative group cursor-pointer transition-transform duration-300 hover:scale-105">
             <div className="absolute inset-0 bg-white blur-xl opacity-30 rounded-full group-hover:opacity-50 transition-opacity"></div>
-            <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center overflow-hidden shrink-0 shadow-lg ring-2 ring-white/40 relative z-10">
-              <img 
-                src={SCHOOL_INFO.logo} 
-                onError={(e) => {e.currentTarget.src = SCHOOL_INFO.logoFallback}}
-                alt="Logo" 
-                className="h-8 w-8 object-contain" 
-              />
+            <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center overflow-hidden shrink-0 shadow-lg ring-2 ring-white/40 relative z-10 p-1">
+              <SchoolLogo className="w-full h-full object-contain" />
             </div>
         </div>
         
