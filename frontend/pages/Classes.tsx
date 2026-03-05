@@ -4,6 +4,8 @@ import { createPortal } from 'react-dom';
 
 import { ClassGroup, User, UserRole, Teacher } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useToast } from '../contexts/ToastContext';
+import { useConfirm } from '../contexts/ConfirmContext';
 import { 
   Search, Plus, MapPin, Users, Eye, MoreVertical, X, Check, School, 
   User as UserIcon, MessageSquare, Send, Calendar, TrendingUp, Award, BarChart2, Pencil, Trash2, Filter, ChevronDown, FileSpreadsheet
@@ -22,6 +24,8 @@ interface ClassesProps {
 
 export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
   const { t } = useLanguage();
+  const { showToast } = useToast();
+  const { confirm } = useConfirm();
   const [classes, setClasses] = useState<ClassGroup[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -157,14 +161,16 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm(t('common.confirmDelete'))) {
+    const isConfirmed = await confirm({ title: t('common.confirmDelete'), message: t('common.confirmDelete') || 'Bạn có chắc chắn muốn xóa?', isDanger: true });
+    if (isConfirmed) {
       try {
         await api.delete(`/classes/${id}`);
         setClasses(classes.filter(c => c.id !== id));
         if (selectedClass?.id === id) setSelectedClass(null);
+        showToast('success', 'Đã xóa thành công.');
       } catch (err) {
         console.error("Failed to delete class", err);
-        alert("Failed to delete class");
+        showToast('error', "Failed to delete class");
       }
     }
   };
@@ -205,9 +211,10 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
         setClasses([...classes, response.data]);
       }
       setIsFormOpen(false);
+      showToast('success', 'Đã lưu lớp học thành công.');
     } catch (err) {
       console.error("Failed to save class", err);
-      // alert("Failed to save class"); // Optional: show user error
+      showToast('error', "Failed to save class");
     } finally {
       setIsSubmitting(false);
     }

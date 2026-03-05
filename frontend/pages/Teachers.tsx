@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Teacher, User, UserRole, ClassGroup } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useToast } from '../contexts/ToastContext';
+import { useConfirm } from '../contexts/ConfirmContext';
 import { 
   Search, Plus, Mail, Phone, BookOpen, Eye, X, 
   Clock, Users, GraduationCap, Check, User as UserIcon, MessageSquare, Send, 
@@ -456,6 +458,8 @@ const SlideOverForm: React.FC<SlideOverFormProps & { isLoading?: boolean }> = ({
 
 export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
   const { t } = useLanguage();
+  const { showToast } = useToast();
+  const { confirm } = useConfirm();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(true);
   const [classes, setClasses] = useState<ClassGroup[]>([]);
@@ -530,7 +534,7 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
       // We'll pass a constructed object.
       const userId = (teacher as any).userId || (teacher as any).user?.id;
       if (!userId) {
-          alert("Không thể tìm thấy ID người dùng hệ thống. Vui lòng kiểm tra lại dữ liệu.");
+          showToast('error', "Không thể tìm thấy ID người dùng hệ thống. Vui lòng kiểm tra lại dữ liệu.");
           return;
       }
       setSelectedUserForPassword({ id: teacher.id, name: teacher.name, userId: userId }); // pass password for View? Or fetch it? The teacher object has it currently.
@@ -548,7 +552,7 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
               // We need the User ID (UUID), not the Teacher ID (GV...)
               const userId = selectedUserForPassword?.userId;
               if (!userId) {
-                  alert("Không tìm thấy ID người dùng.");
+                  showToast('error', "Không tìm thấy ID người dùng.");
                   return;
               }
               
@@ -563,7 +567,7 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
               setRevealModalOpen(true);
           } catch (error) {
               console.error("Failed to fetch credentials:", error);
-              alert("Không thể lấy mật khẩu. Vui lòng kiểm tra quyền admin.");
+              showToast('error', "Không thể lấy mật khẩu. Vui lòng kiểm tra quyền admin.");
           }
       }
   };
@@ -630,14 +634,16 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm(t('common.confirmDelete'))) {
+    const isConfirmed = await confirm({ title: t('common.confirmDelete'), message: t('common.confirmDelete') || 'Bạn có chắc chắn muốn xóa?', isDanger: true });
+    if (isConfirmed) {
         try {
             await api.delete(`/teachers/${id}`);
             setTeachers(teachers.filter(t => t.id !== id));
             if (selectedTeacher?.id === id) setSelectedTeacher(null);
+            showToast('success', 'Đã xóa thành công.');
         } catch (err) {
             console.error("Failed to delete teacher", err);
-            alert("Failed to delete teacher");
+            showToast('error', "Failed to delete teacher");
         }
     }
   };
@@ -732,9 +738,10 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
         setTimeout(() => {
             setIsFormOpen(false);
         }, 300);
+        showToast('success', 'Đã lưu giáo viên thành công.');
     } catch (error) {
         console.error("Failed to save teacher", error);
-        alert("Failed to save teacher. Please try again.");
+        showToast('error', "Failed to save teacher. Please try again.");
     } finally {
         setIsSubmitting(false);
     }

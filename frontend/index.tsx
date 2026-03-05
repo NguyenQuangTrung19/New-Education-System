@@ -5,8 +5,11 @@ import App from './App';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import './index.css';
-
 import { ErrorBoundary } from './components/ErrorBoundary';
+
+// Import global notification contexts
+import { ToastProvider } from './contexts/ToastContext';
+import { ConfirmProvider } from './contexts/ConfirmContext';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -19,7 +22,11 @@ root.render(
     <ErrorBoundary>
       <LanguageProvider>
         <ThemeProvider>
-          <App />
+          <ToastProvider>
+            <ConfirmProvider>
+              <App />
+            </ConfirmProvider>
+          </ToastProvider>
         </ThemeProvider>
       </LanguageProvider>
     </ErrorBoundary>

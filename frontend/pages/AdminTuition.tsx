@@ -7,6 +7,7 @@ import {
   Receipt, Building, Check, Search, Plus, Save, Users, Layers, AlertCircle
 } from 'lucide-react';
 import { getCurrentAcademicYear, isDateInFutureOrToday } from '../utils';
+import { useToast } from '../contexts/ToastContext';
 
 interface AdminTuitionProps {
   currentUser: User;
@@ -22,6 +23,7 @@ interface NewFeeForm {
 
 export const AdminTuition: React.FC<AdminTuitionProps> = ({ currentUser }) => {
   const { t } = useLanguage();
+  const { showToast } = useToast();
   
   if (currentUser.role !== UserRole.ADMIN) {
       return <div className="p-8 text-center text-red-500">Access Denied. Admins only.</div>;
@@ -103,9 +105,9 @@ export const AdminTuition: React.FC<AdminTuitionProps> = ({ currentUser }) => {
       
       if (!isFormValid) {
           if (feeForm.dueDate && !isDateInFutureOrToday(feeForm.dueDate)) {
-              alert("Hạn nộp phải là ngày trong tương lai hoặc hôm nay.");
+              showToast('warning', "Hạn nộp phải là ngày trong tương lai hoặc hôm nay.");
           } else {
-              alert("Vui lòng điền đầy đủ thông tin bắt buộc và chọn ít nhất một học sinh.");
+              showToast('error', "Vui lòng điền đầy đủ thông tin bắt buộc và chọn ít nhất một học sinh.");
           }
           return;
       }
@@ -152,7 +154,7 @@ export const AdminTuition: React.FC<AdminTuitionProps> = ({ currentUser }) => {
       });
 
       setTuitionRecords(newRecords);
-      alert(`${t('adminTuition.success')} Đã áp dụng cho ${selectedStudentIds.length} học sinh.`);
+      showToast('success', `${t('adminTuition.success')} Đã áp dụng cho ${selectedStudentIds.length} học sinh.`);
       
       // Reset form (optional)
       setSelectedStudentIds([]);

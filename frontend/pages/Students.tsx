@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Student, User, UserRole, ClassGroup } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useToast } from '../contexts/ToastContext';
+import { useConfirm } from '../contexts/ConfirmContext';
 import { 
   Search, Plus, Mail, BookOpen, Eye, X, GraduationCap, Check, User as UserIcon, 
   MessageSquare, Send, Filter, Award, Calendar, MapPin, Phone, 
@@ -385,6 +387,8 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({
 
 export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
   const { t } = useLanguage();
+  const { showToast } = useToast();
+  const { confirm } = useConfirm();
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<ClassGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -424,7 +428,7 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
       // Assuming student.userId is available from fetch
       const userId = (student as any).userId || (student as any).user?.id;
       if (!userId) {
-          alert("Không thể tìm thấy ID người dùng hệ thống.");
+          showToast('error', "Không thể tìm thấy ID người dùng hệ thống.");
           return;
       }
       setSelectedUserForPassword({ id: student.id, name: student.name, userId: userId });
@@ -452,7 +456,7 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
               setRevealModalOpen(true);
           } catch (error) {
               console.error("Failed to fetch credentials:", error);
-              alert("Không thể lấy mật khẩu. Kiểm tra quyền admin.");
+              showToast('error', "Không thể lấy mật khẩu. Kiểm tra quyền admin.");
           }
       }
   };
@@ -560,14 +564,16 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm(t('common.confirmDelete'))) {
+    const isConfirmed = await confirm({ title: t('common.confirmDelete'), message: t('common.confirmDelete') || 'Bạn có chắc chắn muốn xóa?', isDanger: true });
+    if (isConfirmed) {
         try {
             await api.delete(`/students/${id}`);
             setStudents(students.filter(s => s.id !== id));
             if (selectedStudent?.id === id) setSelectedStudent(null);
+            showToast('success', 'Đã xóa thành công.');
         } catch (err) {
             console.error("Failed to delete student", err);
-            alert("Failed to delete student");
+            showToast('error', "Failed to delete student");
         }
     }
   };
@@ -646,9 +652,10 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
             await fetchStudents();
         }
         setIsFormOpen(false);
+        showToast('success', 'Đã lưu học sinh thành công.');
     } catch (error) {
         console.error("Failed to save student", error);
-        alert(t('common.error'));
+        showToast('error', t('common.error') || 'Có lỗi xảy ra.');
     } finally {
         setIsSubmitting(false);
     }

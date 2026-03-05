@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { X, Upload, FileSpreadsheet, AlertTriangle, CheckCircle, Download } from 'lucide-react';
 import api from '../src/api/client';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useToast } from '../contexts/ToastContext';
 
 interface ExcelImportModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface ExcelImportModalProps {
 
 const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onClose, type, onSuccess }) => {
   const { t } = useLanguage();
+  const { showToast } = useToast();
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState<any[]>([]);
@@ -42,7 +44,7 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onClose, ty
         link.remove();
     } catch (error) {
         console.error('Download failed', error);
-        alert(t('import.downloadFailed') || 'Download failed');
+        showToast('error', t('import.downloadFailed') || 'Download failed');
     }
   };
 

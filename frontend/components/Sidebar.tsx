@@ -88,7 +88,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       }
 
       if (currentUser?.role === UserRole.ADMIN) {
-          const adminAssignmentsItem = { id: 'admin-assignments', label: 'Assignment Allocation', icon: ClipboardList };
+          const adminAssignmentsItem = { id: 'teaching-assignments', label: 'Phân công giảng dạy', icon: ClipboardList };
           const adminTuitionItem = { id: 'admin-tuition', label: t('menu.adminTuition'), icon: CreditCard };
           items.splice(3, 0, adminAssignmentsItem, adminTuitionItem);
       }

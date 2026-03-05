@@ -8,6 +8,8 @@ import {
   LayoutGrid, Table as TableIcon, GraduationCap, ClipboardList, MessageSquareText, Home, Save, Ban, ShieldCheck, ArrowRight,
   ListTodo
 } from 'lucide-react';
+import api from '../src/api/client';
+import { useToast } from '../contexts/ToastContext';
 
 interface MyClassesProps {
   currentUser: User;
@@ -55,6 +57,8 @@ const calculateAverage = (grade: StudentGrade): number | null => {
 
 export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassId }) => {
   const { t } = useLanguage();
+  const { showToast } = useToast();
+  const [loading, setLoading] = useState(true);
   const [selectedClassId, setSelectedClassId] = useState<string | null>(initialClassId || null);
   const [activeView, setActiveView] = useState<'grading' | 'journal' | 'evaluations'>('grading');
   
@@ -167,12 +171,96 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
 
   // --- Data Logic ---
 
-  const myClasses = useMemo(() => [], [currentUser.id]);
+  const [myClasses, setMyClasses] = useState<any[]>([]);
+  const [mySubjects, setMySubjects] = useState<any[]>([]);
+
+  const fetchMyClasses = async () => {
+      setLoading(true);
+      try {
+          // Fetch assignments for the current teacher to determine their classes
+          const assignmentsRes = await api.get('/teaching-assignments');
+          const assignments = assignmentsRes.data?.data || assignmentsRes.data || [];
+          
+          const teacherAssignments = assignments.filter((a: any) => a.teacherId === currentUser.id);
+          
+          // Identify unique classes assigned to this teacher
+          const classMap = new Map();
+          const subjectMap = new Map();
+          
+          teacherAssignments.forEach((a: any) => {
+              if (a.class) {
+                  classMap.set(a.classId, {
+                      id: a.classId,
+                      name: a.class.name,
+                      room: a.class.room || '',
+                      studentCount: a.class.studentCount || 0,
+                      teacherId: a.class.teacherId // to check if homeroom
+                  });
+              }
+              if (a.subject) {
+                  subjectMap.set(a.classId, {
+                      id: a.subjectId,
+                      name: a.subject.name
+                  });
+              }
+          });
+          
+          setMyClasses(Array.from(classMap.values()));
+          setMySubjects(Array.from(subjectMap.entries()).map(([cId, sub]) => ({classId: cId, ...sub})));
+      } catch (err) {
+          console.error("Failed to load classes", err);
+      } finally {
+          setLoading(false);
+      }
+  };
+
+  useEffect(() => {
+      if (currentUser.id) fetchMyClasses();
+  }, [currentUser.id]);
 
   const selectedClass = myClasses.find(c => c.id === selectedClassId);
   const isHomeroom = selectedClass?.teacherId === currentUser.id;
 
-  const classStudents = useMemo(() => [], [selectedClassId]);
+  const [classStudents, setClassStudents] = useState<Student[]>([]);
+
+  const fetchStudentsAndGrades = async (classId: string, subjectId: string) => {
+      try {
+          const [studentsRes, gradesRes] = await Promise.all([
+              api.get(`/students?classId=${classId}&limit=100`),
+              api.get(`/grades?classId=${classId}&subjectId=${subjectId}`)
+          ]);
+          
+          const studentsData = studentsRes.data?.data || studentsRes.data || [];
+          // Map backend User data to Student name if needed
+          const formattedStudents = studentsData.map((s: any) => ({
+              ...s,
+              name: s.user?.name || s.name || s.id
+          }));
+          
+          setClassStudents(formattedStudents);
+          setGrades(gradesRes.data?.data || gradesRes.data || []);
+      } catch (err) {
+          console.error("Failed to load students and grades", err);
+      }
+  };
+
+  const currentSubjectId = useMemo(() => {
+      if (!selectedClassId) return null;
+      const sub = mySubjects.find(s => s.classId === selectedClassId);
+      return sub ? sub.id : null;
+  }, [selectedClassId, mySubjects]);
+
+  const currentSubjectName = useMemo(() => {
+      if (!selectedClassId) return 'N/A';
+      const sub = mySubjects.find(s => s.classId === selectedClassId);
+      return sub ? sub.name : 'N/A';
+  }, [selectedClassId, mySubjects]);
+
+  useEffect(() => {
+      if (selectedClassId && currentSubjectId) {
+          fetchStudentsAndGrades(selectedClassId, currentSubjectId);
+      }
+  }, [selectedClassId, currentSubjectId]);
 
   useEffect(() => {
       const evals: Record<string, string> = {};
@@ -181,11 +269,6 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
       });
       setStudentEvaluations(evals);
   }, [classStudents]);
-
-  const currentSubjectId = useMemo(() => {
-      if (!selectedClassId) return null;
-      return null;
-  }, [selectedClassId, currentUser.id]);
 
   // --- PENDING SIGNATURES LOGIC ---
   const pendingSignatures = useMemo(() => {
@@ -331,12 +414,18 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
 
   // --- SHARED ACTION LOGIC (Grades & Feedback) ---
 
-  const commitGrades = () => {
-      setGrades(JSON.parse(JSON.stringify(tempGrades))); 
-      setHasUnsavedChanges(false);
-      setPendingAction(null);
-      setIsSecurityModalOpen(false);
-      alert(t('myClasses.alerts.gradesUpdated'));
+  const commitGrades = async () => {
+      try {
+          await api.post('/grades/bulk', tempGrades);
+          setGrades(JSON.parse(JSON.stringify(tempGrades))); 
+          setHasUnsavedChanges(false);
+          setPendingAction(null);
+          setIsSecurityModalOpen(false);
+          showToast('success', t('myClasses.alerts.gradesUpdated'));
+      } catch (err) {
+          console.error("Failed to save grades", err);
+          setSecurityError("Failed to save grades to server.");
+      }
   };
 
   const executeFeedbackSubmission = () => {
@@ -357,7 +446,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
       setFeedbackModalOpen(false);
       setPendingAction(null);
       setIsSecurityModalOpen(false);
-      alert(t('myClasses.alerts.feedbackSubmitted'));
+      showToast('success', t('myClasses.alerts.feedbackSubmitted'));
   };
 
   // The Action Trigger (Checks session)
@@ -522,7 +611,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
   };
 
   const handleSaveEvaluation = (studentId: string) => {
-      alert(t('myClasses.evaluations.saved'));
+      showToast('success', t('myClasses.evaluations.saved'));
   };
 
   // --- UI Render ---
@@ -591,7 +680,8 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {myClasses.map(cls => {
                   const isHomeroomClass = cls.teacherId === currentUser.id;
-                  const subjectName = 'Subject';
+                  const sub = mySubjects.find(s => s.classId === cls.id);
+                  const subjectName = sub ? sub.name : 'Subject';
                   
                   // Check if this specific class has pending signatures from our computed list
                   const classPending = pendingSignatures.find(p => p.classId === cls.id)?.count || 0;
@@ -669,7 +759,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
                     )}
                     <span className="text-sm font-normal text-gray-500 bg-white px-2 py-1 rounded border border-gray-200">{selectedClass?.room}</span>
                 </h2>
-                <p className="text-sm text-indigo-600 font-medium">{t('myClasses.dashboard.subject')}: {'N/A'}</p>
+                <p className="text-sm text-indigo-600 font-medium">{t('myClasses.dashboard.subject')}: {currentSubjectName}</p>
             </div>
             
             {/* View Switcher / Navigation */}
