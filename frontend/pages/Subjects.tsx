@@ -4,6 +4,8 @@ import { createPortal } from 'react-dom';
 import api from '../src/api/client';
 import { Subject, Teacher, User, UserRole } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useToast } from '../contexts/ToastContext';
+import { useConfirm } from '../contexts/ConfirmContext';
 import { 
   Search, Plus, BookOpen, Eye, X, Check, MessageSquare, Send, 
   School, Trash2, Pencil, Users, BarChart3, Tag, Layers, TrendingUp
@@ -16,6 +18,8 @@ interface SubjectsProps {
 
 export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
   const { t } = useLanguage();
+  const { showToast } = useToast();
+  const { confirm } = useConfirm();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -92,14 +96,16 @@ export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm(t('common.confirmDelete'))) {
+    const isConfirmed = await confirm({ title: t('common.confirmDelete'), message: t('common.confirmDelete') || 'Bạn có chắc chắn muốn xóa?', isDanger: true });
+    if (isConfirmed) {
       try {
         await api.delete(`/subjects/${id}`);
         setSubjects(subjects.filter(s => s.id !== id));
         if (selectedSubject?.id === id) setSelectedSubject(null);
+        showToast('success', 'Đã xóa thành công.');
       } catch (error) {
         console.error("Failed to delete subject", error);
-        alert(t('common.error'));
+        showToast('error', t('common.error') || 'Có lỗi xảy ra.');
       }
     }
   };
@@ -119,9 +125,10 @@ export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
             setSubjects([...subjects, newSubject]);
         }
         setIsFormOpen(false);
+        showToast('success', 'Đã lưu môn học thành công.');
     } catch (error) {
         console.error("Failed to save subject", error);
-        alert(t('common.error'));
+        showToast('error', t('common.error') || 'Có lỗi xảy ra.');
     }
   };
 

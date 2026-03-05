@@ -65,12 +65,12 @@ export declare class AssignmentsService {
         teacherId: string;
         description: string | null;
         subjectId: string;
+        status: import(".prisma/client").$Enums.HomeworkStatus;
         title: string;
         classIds: string[];
         dueDate: Date;
         duration: number | null;
         questions: import("@prisma/client/runtime/library").JsonValue | null;
-        status: import(".prisma/client").$Enums.HomeworkStatus;
     }>;
     findAll(teacherId?: string, classId?: string): Promise<({
         teacher: {
@@ -125,11 +125,11 @@ export declare class AssignmentsService {
         }[];
         submissions: {
             id: string;
-            score: number | null;
-            status: import(".prisma/client").$Enums.AssignmentStatus;
             studentId: string;
-            answers: import("@prisma/client/runtime/library").JsonValue | null;
             feedback: string | null;
+            status: import(".prisma/client").$Enums.AssignmentStatus;
+            score: number | null;
+            answers: import("@prisma/client/runtime/library").JsonValue | null;
             assignmentId: string;
             submittedAt: Date;
         }[];
@@ -141,12 +141,12 @@ export declare class AssignmentsService {
         teacherId: string;
         description: string | null;
         subjectId: string;
+        status: import(".prisma/client").$Enums.HomeworkStatus;
         title: string;
         classIds: string[];
         dueDate: Date;
         duration: number | null;
         questions: import("@prisma/client/runtime/library").JsonValue | null;
-        status: import(".prisma/client").$Enums.HomeworkStatus;
     })[]>;
     findOne(id: string): Promise<{
         teacher: {
@@ -232,11 +232,11 @@ export declare class AssignmentsService {
             };
         } & {
             id: string;
-            score: number | null;
-            status: import(".prisma/client").$Enums.AssignmentStatus;
             studentId: string;
-            answers: import("@prisma/client/runtime/library").JsonValue | null;
             feedback: string | null;
+            status: import(".prisma/client").$Enums.AssignmentStatus;
+            score: number | null;
+            answers: import("@prisma/client/runtime/library").JsonValue | null;
             assignmentId: string;
             submittedAt: Date;
         })[];
@@ -248,12 +248,12 @@ export declare class AssignmentsService {
         teacherId: string;
         description: string | null;
         subjectId: string;
+        status: import(".prisma/client").$Enums.HomeworkStatus;
         title: string;
         classIds: string[];
         dueDate: Date;
         duration: number | null;
         questions: import("@prisma/client/runtime/library").JsonValue | null;
-        status: import(".prisma/client").$Enums.HomeworkStatus;
     }>;
     update(id: string, dto: UpdateAssignmentDto): Promise<{
         teacher: {
@@ -314,12 +314,12 @@ export declare class AssignmentsService {
         teacherId: string;
         description: string | null;
         subjectId: string;
+        status: import(".prisma/client").$Enums.HomeworkStatus;
         title: string;
         classIds: string[];
         dueDate: Date;
         duration: number | null;
         questions: import("@prisma/client/runtime/library").JsonValue | null;
-        status: import(".prisma/client").$Enums.HomeworkStatus;
     }>;
     remove(id: string): Promise<{
         id: string;
@@ -329,30 +329,30 @@ export declare class AssignmentsService {
         teacherId: string;
         description: string | null;
         subjectId: string;
+        status: import(".prisma/client").$Enums.HomeworkStatus;
         title: string;
         classIds: string[];
         dueDate: Date;
         duration: number | null;
         questions: import("@prisma/client/runtime/library").JsonValue | null;
-        status: import(".prisma/client").$Enums.HomeworkStatus;
     }>;
     submit(assignmentId: string, submitDto: SubmitAssignmentDto): Promise<{
         id: string;
-        score: number | null;
-        status: import(".prisma/client").$Enums.AssignmentStatus;
         studentId: string;
-        answers: import("@prisma/client/runtime/library").JsonValue | null;
         feedback: string | null;
+        status: import(".prisma/client").$Enums.AssignmentStatus;
+        score: number | null;
+        answers: import("@prisma/client/runtime/library").JsonValue | null;
         assignmentId: string;
         submittedAt: Date;
     }>;
     grade(submissionId: string, gradeDto: GradeSubmissionDto): Promise<{
         id: string;
-        score: number | null;
-        status: import(".prisma/client").$Enums.AssignmentStatus;
         studentId: string;
-        answers: import("@prisma/client/runtime/library").JsonValue | null;
         feedback: string | null;
+        status: import(".prisma/client").$Enums.AssignmentStatus;
+        score: number | null;
+        answers: import("@prisma/client/runtime/library").JsonValue | null;
         assignmentId: string;
         submittedAt: Date;
     }>;
