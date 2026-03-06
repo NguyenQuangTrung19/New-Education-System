@@ -21,7 +21,7 @@ export const Welcome: React.FC<WelcomeProps> = ({ onComplete }) => {
       {/* Navbar Stub */}
       <div className="relative z-10 px-8 py-6 flex justify-between items-center max-w-7xl mx-auto w-full">
          <div className="flex items-center gap-3 group cursor-pointer">
-            <div className="h-20 w-20 flex items-center justify-center overflow-visible drop-shadow-xl relative hover:scale-110 transition-transform duration-300">
+            <div className="h-28 w-28 flex items-center justify-center overflow-visible drop-shadow-xl relative hover:scale-110 transition-transform duration-300">
                 <div className="absolute inset-0 bg-white/30 blur-2xl rounded-full opacity-60"></div>
                 <SchoolLogo className="h-full w-full object-contain relative z-10" />
             </div>

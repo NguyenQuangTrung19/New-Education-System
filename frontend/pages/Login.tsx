@@ -84,7 +84,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     <X className="h-5 w-5" />
                 </button>
                 <div className="absolute -bottom-12 left-8 flex items-end group">
-                    <div className="w-28 h-28 flex items-center justify-center overflow-visible drop-shadow-2xl group-hover:scale-105 transition-transform duration-500 relative">
+                    <div className="w-32 h-32 flex items-center justify-center overflow-visible drop-shadow-2xl group-hover:scale-105 transition-transform duration-500 relative">
                         <div className="absolute inset-0 bg-white/30 blur-2xl rounded-full opacity-60"></div>
                         <SchoolLogo className="w-full h-full object-contain relative z-10" />
                     </div>
@@ -295,7 +295,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
           {/* Logo Area */}
           <div className="text-center mb-8 relative z-10">
-            <div className="relative inline-flex items-center justify-center w-40 h-40 mb-2 transform hover:scale-110 transition-transform duration-500 overflow-visible filter drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)]">
+            <div className="relative inline-flex items-center justify-center w-48 h-48 mb-2 transform hover:scale-110 transition-transform duration-500 overflow-visible filter drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)]">
                <div className="absolute inset-0 bg-white/30 blur-3xl rounded-full opacity-50"></div>
                <SchoolLogo className="w-full h-full object-contain relative z-10" />
             </div>
