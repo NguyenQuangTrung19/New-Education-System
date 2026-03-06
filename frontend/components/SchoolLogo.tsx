@@ -9,7 +9,7 @@ export const SchoolLogo: React.FC<SchoolLogoProps> = ({ className = 'w-12 h-12' 
     <img 
       src="/LogoNewEdu.png" 
       alt="School Logo" 
-      className={`object-contain ${className}`}
+      className={`object-contain scale-[1.25] ${className}`}
     />
   );
 };

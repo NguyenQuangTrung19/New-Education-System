@@ -108,17 +108,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
       }}
     >
       {/* Header Logo Area */}
-      <div className={`h-24 flex items-center relative ${isCollapsed ? 'justify-center px-0' : 'px-8'}`}>
+      <div className={`h-24 flex items-center relative ${isCollapsed ? 'justify-center px-0' : 'px-6'}`}>
         <div className="relative group cursor-pointer transition-transform duration-300 hover:scale-105">
             <div className="absolute inset-0 bg-white blur-xl opacity-30 rounded-full group-hover:opacity-50 transition-opacity"></div>
-            <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center overflow-hidden shrink-0 shadow-lg ring-2 ring-white/40 relative z-10 p-1">
-              <SchoolLogo className="w-full h-full object-contain" />
+            <div className={`${isCollapsed ? 'h-12 w-12' : 'h-14 w-14'} rounded-xl bg-white flex items-center justify-center overflow-visible shrink-0 shadow-lg ring-2 ring-white/40 relative z-10 p-0`}>
+              <SchoolLogo className="w-[85%] h-[85%] object-contain" />
             </div>
         </div>
         
         {!isCollapsed && (
           <div className="ml-4 flex flex-col justify-center animate-fade-in-up">
-            <span className="font-heading font-extrabold text-xl tracking-tight leading-none drop-shadow-sm truncate max-w-[150px]" style={{color: 'var(--sidebar-text)'}}>{SCHOOL_INFO.name}</span>
+            <span className="font-heading font-extrabold text-lg tracking-tight leading-none drop-shadow-sm truncate max-w-[160px]" style={{color: 'var(--sidebar-text)'}}>{SCHOOL_INFO.name}</span>
             <span className="text-[11px] font-bold uppercase tracking-widest mt-1" style={{color: 'var(--sidebar-text-muted)'}}>Management</span>
           </div>
         )}

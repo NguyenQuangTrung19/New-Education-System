@@ -21,8 +21,8 @@ export const Welcome: React.FC<WelcomeProps> = ({ onComplete }) => {
       {/* Navbar Stub */}
       <div className="relative z-10 px-8 py-6 flex justify-between items-center max-w-7xl mx-auto w-full">
          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center shadow-lg p-0.5">
-                <SchoolLogo className="h-full w-full object-contain" />
+            <div className="h-14 w-14 bg-white rounded-xl flex items-center justify-center shadow-lg p-0 overflow-visible">
+                <SchoolLogo className="h-[85%] w-[85%] object-contain" />
             </div>
             <span className="text-white font-extrabold text-xl tracking-tight">{SCHOOL_INFO.name}</span>
          </div>
