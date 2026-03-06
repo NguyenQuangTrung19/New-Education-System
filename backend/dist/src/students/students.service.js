@@ -98,7 +98,6 @@ let StudentsService = class StudentsService {
         const { username, password, name, email, classId, ...studentData } = createStudentDto;
         const plainPassword = password || 'student123';
         const hashedPassword = await this.passwordService.hashPassword(plainPassword);
-        const encryptedPassword = this.passwordService.encryptPassword(plainPassword);
         return this.prisma.$transaction(async (prisma) => {
             const enrollmentYear = studentData.enrollmentYear || new Date().getFullYear();
             const studentId = await this.idGenerator.generateStudentId(enrollmentYear);
@@ -106,7 +105,6 @@ let StudentsService = class StudentsService {
                 data: {
                     username,
                     password: hashedPassword,
-                    passwordEncrypted: encryptedPassword,
                     name,
                     email,
                     role: 'STUDENT',

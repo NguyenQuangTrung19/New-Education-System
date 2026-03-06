@@ -11,6 +11,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LoginDto = void 0;
 const class_validator_1 = require("class-validator");
+var UserRole;
+(function (UserRole) {
+    UserRole["ADMIN"] = "ADMIN";
+    UserRole["TEACHER"] = "TEACHER";
+    UserRole["STUDENT"] = "STUDENT";
+})(UserRole || (UserRole = {}));
 class LoginDto {
     username;
     password;
@@ -19,14 +25,18 @@ class LoginDto {
 exports.LoginDto = LoginDto;
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.MaxLength)(100),
     __metadata("design:type", String)
 ], LoginDto.prototype, "username", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.MaxLength)(128),
     __metadata("design:type", String)
 ], LoginDto.prototype, "password", void 0);
 __decorate([
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsEnum)(UserRole, { message: 'Role must be ADMIN, TEACHER, or STUDENT' }),
     __metadata("design:type", String)
 ], LoginDto.prototype, "role", void 0);
 //# sourceMappingURL=login.dto.js.map

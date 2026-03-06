@@ -20,7 +20,7 @@ export class AuthService {
       (await this.usersService.verifyPassword(user.id, pass)) &&
       user.role === role
     ) {
-      const { password, passwordEncrypted, ...result } = user;
+      const { password, ...result } = user;
       return result;
     }
     return null;

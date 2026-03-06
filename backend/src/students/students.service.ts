@@ -94,12 +94,10 @@ export class StudentsService {
     const { username, password, name, email, classId, ...studentData } =
       createStudentDto;
 
-    // Hash password or set default
+    // Hash password (one-way bcrypt only — no reversible encryption)
     const plainPassword = password || 'student123';
     const hashedPassword =
       await this.passwordService.hashPassword(plainPassword);
-    const encryptedPassword =
-      this.passwordService.encryptPassword(plainPassword);
 
     return this.prisma.$transaction(async (prisma) => {
       const enrollmentYear =
@@ -111,7 +109,6 @@ export class StudentsService {
         data: {
           username,
           password: hashedPassword,
-          passwordEncrypted: encryptedPassword,
           name,
           email,
           role: 'STUDENT',

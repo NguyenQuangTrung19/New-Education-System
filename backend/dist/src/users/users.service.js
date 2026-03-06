@@ -30,14 +30,11 @@ let UsersService = class UsersService {
         });
     }
     async createUser(data) {
-        const plainPassword = data.password;
-        const hashedPassword = await this.passwordService.hashPassword(plainPassword);
-        const encryptedPassword = this.passwordService.encryptPassword(plainPassword);
+        const hashedPassword = await this.passwordService.hashPassword(data.password);
         return this.prisma.user.create({
             data: {
                 ...data,
                 password: hashedPassword,
-                passwordEncrypted: encryptedPassword,
             },
         });
     }
@@ -48,38 +45,19 @@ let UsersService = class UsersService {
     }
     async updatePassword(id, password) {
         const hashedPassword = await this.passwordService.hashPassword(password);
-        const encryptedPassword = this.passwordService.encryptPassword(password);
         return this.prisma.user.update({
             where: { id },
-            data: { password: hashedPassword, passwordEncrypted: encryptedPassword },
+            data: { password: hashedPassword },
         });
-    }
-    async getUserCredentials(id) {
-        const user = await this.prisma.user.findUnique({
-            where: { id },
-            select: { passwordEncrypted: true },
-        });
-        if (!user?.passwordEncrypted) {
-            return { password: null };
-        }
-        const password = this.passwordService.decryptPassword(user.passwordEncrypted);
-        return { password };
     }
     async verifyPassword(id, plainPassword) {
         const user = await this.prisma.user.findUnique({
             where: { id },
-            select: { password: true, passwordEncrypted: true },
+            select: { password: true },
         });
         if (!user?.password)
             return false;
-        const isValid = await this.passwordService.verifyPassword(plainPassword, user.password);
-        if (!isValid &&
-            !user.passwordEncrypted &&
-            user.password === plainPassword) {
-            await this.updatePassword(id, plainPassword);
-            return true;
-        }
-        return isValid;
+        return this.passwordService.verifyPassword(plainPassword, user.password);
     }
 };
 exports.UsersService = UsersService;

@@ -35,38 +35,21 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const client_1 = require("@prisma/client");
 const bcrypt = __importStar(require("bcryptjs"));
-const crypto_1 = require("crypto");
 const prisma = new client_1.PrismaClient();
-const rawKey = process.env.PASSWORD_ENCRYPTION_KEY;
-if (!rawKey) {
-    throw new Error('PASSWORD_ENCRYPTION_KEY is required for seeding');
-}
-const encryptionKey = Buffer.from(rawKey, 'base64');
-if (encryptionKey.length != 32) {
-    throw new Error('PASSWORD_ENCRYPTION_KEY must be 32 bytes (base64)');
-}
-const encryptPassword = (plain) => {
-    const iv = (0, crypto_1.randomBytes)(12);
-    const cipher = (0, crypto_1.createCipheriv)('aes-256-gcm', encryptionKey, iv);
-    const encrypted = Buffer.concat([cipher.update(plain, 'utf8'), cipher.final()]);
-    const tag = cipher.getAuthTag();
-    return [iv, tag, encrypted].map((part) => part.toString('base64')).join('.');
+const SALT_ROUNDS = 12;
+const hashPassword = async (plain) => {
+    return bcrypt.hash(plain, SALT_ROUNDS);
 };
-const buildPassword = async (plain) => ({
-    hash: await bcrypt.hash(plain, 10),
-    encrypted: encryptPassword(plain),
-});
 async function main() {
     console.log('Seeding database...');
-    const defaultPassword = await buildPassword('password123');
+    const defaultPasswordHash = await hashPassword('password123');
     try {
         const admin = await prisma.user.upsert({
             where: { username: 'admin' },
             update: {},
             create: {
                 username: 'admin',
-                password: defaultPassword.hash,
-                passwordEncrypted: defaultPassword.encrypted,
+                password: defaultPasswordHash,
                 email: 'admin@thcsphuoctan.edu.vn',
                 name: 'Quản trị viên hệ thống',
                 role: client_1.UserRole.ADMIN,
@@ -83,8 +66,7 @@ async function main() {
             update: {},
             create: {
                 username: 'gv.nguyenvanan',
-                password: defaultPassword.hash,
-                passwordEncrypted: defaultPassword.encrypted,
+                password: defaultPasswordHash,
                 email: 'nguyenvanan@thcsphuoctan.edu.vn',
                 name: 'Nguyễn Văn An',
                 role: client_1.UserRole.TEACHER,
@@ -109,8 +91,7 @@ async function main() {
             update: {},
             create: {
                 username: 'gv.tranthib',
-                password: defaultPassword.hash,
-                passwordEncrypted: defaultPassword.encrypted,
+                password: defaultPasswordHash,
                 email: 'tranthib@thcsphuoctan.edu.vn',
                 name: 'Trần Thị Bình',
                 role: client_1.UserRole.TEACHER,
@@ -163,8 +144,7 @@ async function main() {
             update: {},
             create: {
                 username: 'hs.lethimai',
-                password: defaultPassword.hash,
-                passwordEncrypted: defaultPassword.encrypted,
+                password: defaultPasswordHash,
                 email: 'lethimai@thcsphuoctan.edu.vn',
                 name: 'Lê Thị Mai',
                 role: client_1.UserRole.STUDENT,
@@ -192,8 +172,7 @@ async function main() {
             update: {},
             create: {
                 username: 'hs.phamvanminh',
-                password: defaultPassword.hash,
-                passwordEncrypted: defaultPassword.encrypted,
+                password: defaultPasswordHash,
                 email: 'phamvanminh@thcsphuoctan.edu.vn',
                 name: 'Phạm Văn Minh',
                 role: client_1.UserRole.STUDENT,

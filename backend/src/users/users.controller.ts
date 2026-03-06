@@ -1,21 +1,15 @@
 import {
   Controller,
   Patch,
-  Param,
   Body,
   UseGuards,
   Request,
-  Get,
   UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { Roles } from '../auth/roles.decorator';
-import { RolesGuard } from '../auth/roles.guard';
-import { UserRole } from '@prisma/client';
 import {
-  AdminUpdatePasswordDto,
   ChangeOwnPasswordDto,
 } from './dto/password.dto';
 
@@ -43,22 +37,5 @@ export class UsersController {
     }
     await this.usersService.updatePassword(req.user.userId, body.newPassword);
     return { success: true };
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
-  @Patch(':id/password')
-  async updatePassword(
-    @Param('id') id: string,
-    @Body() body: AdminUpdatePasswordDto,
-  ) {
-    return this.usersService.updatePassword(id, body.password);
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
-  @Get(':id/credentials')
-  async getCredentials(@Param('id') id: string) {
-    return this.usersService.getUserCredentials(id);
   }
 }

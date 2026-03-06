@@ -1,7 +1,5 @@
 export declare class PasswordService {
-    private getEncryptionKey;
+    private readonly SALT_ROUNDS;
     hashPassword(plain: string): Promise<string>;
     verifyPassword(plain: string, hash: string): Promise<boolean>;
-    encryptPassword(plain: string): string;
-    decryptPassword(payload: string): string;
 }

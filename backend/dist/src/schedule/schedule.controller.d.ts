@@ -21,7 +21,6 @@ export declare class ScheduleController {
                 id: string;
                 username: string;
                 password: string;
-                passwordEncrypted: string | null;
                 email: string;
                 role: import(".prisma/client").$Enums.UserRole;
                 avatarUrl: string | null;
@@ -82,7 +81,6 @@ export declare class ScheduleController {
                 id: string;
                 username: string;
                 password: string;
-                passwordEncrypted: string | null;
                 email: string;
                 role: import(".prisma/client").$Enums.UserRole;
                 avatarUrl: string | null;

@@ -16,9 +16,6 @@ exports.UsersController = void 0;
 const common_1 = require("@nestjs/common");
 const users_service_1 = require("./users.service");
 const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
-const roles_decorator_1 = require("../auth/roles.decorator");
-const roles_guard_1 = require("../auth/roles.guard");
-const client_1 = require("@prisma/client");
 const password_dto_1 = require("./dto/password.dto");
 let UsersController = class UsersController {
     usersService;
@@ -36,12 +33,6 @@ let UsersController = class UsersController {
         await this.usersService.updatePassword(req.user.userId, body.newPassword);
         return { success: true };
     }
-    async updatePassword(id, body) {
-        return this.usersService.updatePassword(id, body.password);
-    }
-    async getCredentials(id) {
-        return this.usersService.getUserCredentials(id);
-    }
 };
 exports.UsersController = UsersController;
 __decorate([
@@ -53,25 +44,6 @@ __decorate([
     __metadata("design:paramtypes", [Object, password_dto_1.ChangeOwnPasswordDto]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "changeOwnPassword", null);
-__decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
-    (0, common_1.Patch)(':id/password'),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, password_dto_1.AdminUpdatePasswordDto]),
-    __metadata("design:returntype", Promise)
-], UsersController.prototype, "updatePassword", null);
-__decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN),
-    (0, common_1.Get)(':id/credentials'),
-    __param(0, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], UsersController.prototype, "getCredentials", null);
 exports.UsersController = UsersController = __decorate([
     (0, common_1.Controller)('users'),
     __metadata("design:paramtypes", [users_service_1.UsersService])

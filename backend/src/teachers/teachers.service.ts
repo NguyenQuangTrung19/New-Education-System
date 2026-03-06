@@ -143,8 +143,6 @@ export class TeachersService {
     const plainPassword = password || 'teacher123';
     const hashedPassword =
       await this.passwordService.hashPassword(plainPassword);
-    const encryptedPassword =
-      this.passwordService.encryptPassword(plainPassword);
 
     return this.prisma.$transaction(async (prisma) => {
       const joinYear = teacherData.joinYear || new Date().getFullYear();
@@ -154,7 +152,6 @@ export class TeachersService {
         data: {
           username,
           password: hashedPassword,
-          passwordEncrypted: encryptedPassword,
           name,
           email,
           role: 'TEACHER',

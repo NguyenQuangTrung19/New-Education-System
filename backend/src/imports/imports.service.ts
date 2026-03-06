@@ -328,12 +328,10 @@ export class ImportsService {
   private async saveData(data: any[], type: string) {
     let count = 0;
 
-    // Compute default passwords outside the transaction to prevent timeout
+    // Compute default password hash outside the transaction to prevent timeout
     let defaultPass = '';
-    let encryptedPass = '';
     if (type !== 'classes') {
       defaultPass = await this.passwordService.hashPassword('123456');
-      encryptedPass = this.passwordService.encryptPassword('123456');
     }
 
     await this.prisma.$transaction(async (tx) => {
@@ -358,7 +356,6 @@ export class ImportsService {
             data: {
               username: item.username,
               password: defaultPass,
-              passwordEncrypted: encryptedPass,
               name: item.full_name,
               email: item.email || `${item.username}@school.edu`,
               role: type === 'students' ? 'STUDENT' : 'TEACHER',

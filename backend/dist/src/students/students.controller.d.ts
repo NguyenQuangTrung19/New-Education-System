@@ -96,7 +96,6 @@ export declare class StudentsController {
             id: string;
             username: string;
             password: string;
-            passwordEncrypted: string | null;
             email: string;
             role: import(".prisma/client").$Enums.UserRole;
             avatarUrl: string | null;
@@ -137,30 +136,30 @@ export declare class StudentsController {
         } & {
             id: string;
             academicYear: string;
-            subjectId: string;
             studentId: string;
-            feedback: string | null;
+            subjectId: string;
             semester: string;
             oralScore: number | null;
             fifteenMinScores: number[];
             midTermScore: number | null;
             finalScore: number | null;
             average: number | null;
+            feedback: string | null;
         })[];
         attendance: {
             id: string;
-            status: import(".prisma/client").$Enums.AttendanceStatus;
             studentId: string;
             scheduleId: string | null;
             date: Date;
+            status: import(".prisma/client").$Enums.AttendanceStatus;
             note: string | null;
         }[];
         tuitions: {
             id: string;
             academicYear: string;
-            status: import(".prisma/client").$Enums.TuitionSemesterStatus;
             studentId: string;
             semester: string;
+            status: import(".prisma/client").$Enums.TuitionSemesterStatus;
             totalAmount: number;
             totalPaid: number;
         }[];
@@ -187,7 +186,6 @@ export declare class StudentsController {
             id: string;
             username: string;
             password: string;
-            passwordEncrypted: string | null;
             email: string;
             role: import(".prisma/client").$Enums.UserRole;
             avatarUrl: string | null;
@@ -232,7 +230,6 @@ export declare class StudentsController {
         id: string;
         username: string;
         password: string;
-        passwordEncrypted: string | null;
         email: string;
         role: import(".prisma/client").$Enums.UserRole;
         avatarUrl: string | null;

@@ -16,15 +16,15 @@ export declare class GradesController {
     } & {
         id: string;
         academicYear: string;
-        subjectId: string;
         studentId: string;
-        feedback: string | null;
+        subjectId: string;
         semester: string;
         oralScore: number | null;
         fifteenMinScores: number[];
         midTermScore: number | null;
         finalScore: number | null;
         average: number | null;
+        feedback: string | null;
     })[]>;
     bulkSave(payload: any[]): Promise<{
         success: boolean;

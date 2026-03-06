@@ -25,7 +25,7 @@ let AuthService = class AuthService {
         if (user &&
             (await this.usersService.verifyPassword(user.id, pass)) &&
             user.role === role) {
-            const { password, passwordEncrypted, ...result } = user;
+            const { password, ...result } = user;
             return result;
         }
         return null;

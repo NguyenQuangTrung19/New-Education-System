@@ -13,17 +13,11 @@ export declare class UsersService {
         id: string;
         username: string;
         password: string;
-        passwordEncrypted: string | null;
         email: string;
         role: import(".prisma/client").$Enums.UserRole;
         avatarUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
-    }>;
-    getUserCredentials(id: string): Promise<{
-        password: null;
-    } | {
-        password: string;
     }>;
     verifyPassword(id: string, plainPassword: string): Promise<boolean>;
 }

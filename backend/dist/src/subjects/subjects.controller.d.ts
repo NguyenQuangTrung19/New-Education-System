@@ -21,12 +21,12 @@ export declare class SubjectsController {
             teacherId: string;
             description: string | null;
             subjectId: string;
+            status: import(".prisma/client").$Enums.HomeworkStatus;
             title: string;
             classIds: string[];
             dueDate: Date;
             duration: number | null;
             questions: import("@prisma/client/runtime/library").JsonValue | null;
-            status: import(".prisma/client").$Enums.HomeworkStatus;
         }[];
     } & {
         name: string;
@@ -43,7 +43,6 @@ export declare class SubjectsController {
                     id: string;
                     username: string;
                     password: string;
-                    passwordEncrypted: string | null;
                     email: string;
                     role: import(".prisma/client").$Enums.UserRole;
                     avatarUrl: string | null;
@@ -79,12 +78,12 @@ export declare class SubjectsController {
             teacherId: string;
             description: string | null;
             subjectId: string;
+            status: import(".prisma/client").$Enums.HomeworkStatus;
             title: string;
             classIds: string[];
             dueDate: Date;
             duration: number | null;
             questions: import("@prisma/client/runtime/library").JsonValue | null;
-            status: import(".prisma/client").$Enums.HomeworkStatus;
         }[];
     } & {
         name: string;

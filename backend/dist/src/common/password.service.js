@@ -11,52 +11,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PasswordService = void 0;
 const common_1 = require("@nestjs/common");
-const crypto_1 = require("crypto");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 let PasswordService = class PasswordService {
-    getEncryptionKey() {
-        const rawKey = process.env.PASSWORD_ENCRYPTION_KEY;
-        if (!rawKey) {
-            throw new Error('PASSWORD_ENCRYPTION_KEY is required');
-        }
-        const key = Buffer.from(rawKey, 'base64');
-        if (key.length !== 32) {
-            throw new Error('PASSWORD_ENCRYPTION_KEY must be 32 bytes (base64)');
-        }
-        return key;
-    }
+    SALT_ROUNDS = 12;
     async hashPassword(plain) {
-        return bcryptjs_1.default.hash(plain, 10);
+        return bcryptjs_1.default.hash(plain, this.SALT_ROUNDS);
     }
     async verifyPassword(plain, hash) {
         return bcryptjs_1.default.compare(plain, hash);
-    }
-    encryptPassword(plain) {
-        const key = this.getEncryptionKey();
-        const iv = (0, crypto_1.randomBytes)(12);
-        const cipher = (0, crypto_1.createCipheriv)('aes-256-gcm', key, iv);
-        const encrypted = Buffer.concat([
-            cipher.update(plain, 'utf8'),
-            cipher.final(),
-        ]);
-        const tag = cipher.getAuthTag();
-        return [iv, tag, encrypted]
-            .map((part) => part.toString('base64'))
-            .join('.');
-    }
-    decryptPassword(payload) {
-        const key = this.getEncryptionKey();
-        const [ivB64, tagB64, dataB64] = payload.split('.');
-        if (!ivB64 || !tagB64 || !dataB64) {
-            throw new Error('Invalid encrypted password format');
-        }
-        const iv = Buffer.from(ivB64, 'base64');
-        const tag = Buffer.from(tagB64, 'base64');
-        const data = Buffer.from(dataB64, 'base64');
-        const decipher = (0, crypto_1.createDecipheriv)('aes-256-gcm', key, iv);
-        decipher.setAuthTag(tag);
-        const decrypted = Buffer.concat([decipher.update(data), decipher.final()]);
-        return decrypted.toString('utf8');
     }
 };
 exports.PasswordService = PasswordService;

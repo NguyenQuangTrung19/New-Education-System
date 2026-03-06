@@ -57,7 +57,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
       sessionStorage.setItem('user_data', JSON.stringify(frontendUser));
       onLogin(frontendUser);
     } catch (err: any) {
-      console.error('Login failed', err);
+      console.error('Login failed');
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
