@@ -3,7 +3,7 @@ import { School } from 'lucide-react';
 
 export const SCHOOL_INFO = {
   name: "THCS Phước Tân",
-  logo: "/logo.png", 
+  logo: "/LogoNewEdu.png", 
   logoFallback: "https://cdn-icons-png.flaticon.com/512/1673/1673062.png" 
 };
 
