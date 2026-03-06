@@ -83,13 +83,14 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 >
                     <X className="h-5 w-5" />
                 </button>
-                <div className="absolute -bottom-10 left-8 flex items-end">
-                    <div className="w-24 h-24 bg-white rounded-2xl p-0 flex items-center justify-center shadow-lg overflow-visible">
-                        <SchoolLogo className="w-[85%] h-[85%] object-contain" />
+                <div className="absolute -bottom-12 left-8 flex items-end group">
+                    <div className="w-28 h-28 flex items-center justify-center overflow-visible drop-shadow-2xl group-hover:scale-105 transition-transform duration-500 relative">
+                        <div className="absolute inset-0 bg-white/30 blur-2xl rounded-full opacity-60"></div>
+                        <SchoolLogo className="w-full h-full object-contain relative z-10" />
                     </div>
-                    <div className="ml-4 mb-2 text-white drop-shadow-md">
-                        <h2 className="text-2xl font-black tracking-tight">{SCHOOL_INFO.name}</h2>
-                        <p className="text-xs font-medium text-white/90 uppercase tracking-wider">{t('guest.title')}</p>
+                    <div className="ml-4 mb-3 text-white drop-shadow-md">
+                        <h2 className="text-3xl font-black tracking-tight">{SCHOOL_INFO.name}</h2>
+                        <p className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('guest.title')}</p>
                     </div>
                 </div>
             </div>
@@ -294,13 +295,14 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
           {/* Logo Area */}
           <div className="text-center mb-8 relative z-10">
-            <div className="inline-flex items-center justify-center w-32 h-32 rounded-3xl bg-white shadow-xl mb-6 transform hover:scale-105 transition-transform duration-500 ring-4 ring-white/30 p-0 overflow-visible">
-               <SchoolLogo className="w-[85%] h-[85%] object-contain" />
+            <div className="relative inline-flex items-center justify-center w-40 h-40 mb-2 transform hover:scale-110 transition-transform duration-500 overflow-visible filter drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)]">
+               <div className="absolute inset-0 bg-white/30 blur-3xl rounded-full opacity-50"></div>
+               <SchoolLogo className="w-full h-full object-contain relative z-10" />
             </div>
-            <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight uppercase drop-shadow-md">{SCHOOL_INFO.name}</h1>
-            <div className="flex items-center justify-center gap-2 mt-2">
-                <GraduationCap className="h-5 w-5 text-white" />
-                <p className="text-white/90 text-sm font-bold tracking-wide">{t('login.title')}</p>
+            <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] relative z-10">{SCHOOL_INFO.name}</h1>
+            <div className="flex items-center justify-center gap-2 mt-3">
+                <GraduationCap className="h-5 w-5 text-white/90" />
+                <p className="text-white/90 text-sm font-bold tracking-wide drop-shadow-md">{t('login.title')}</p>
             </div>
           </div>
 
