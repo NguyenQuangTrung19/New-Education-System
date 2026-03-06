@@ -8,7 +8,7 @@ import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmContext';
 import { 
   Search, Plus, MapPin, Users, Eye, MoreVertical, X, Check, School, 
-  User as UserIcon, MessageSquare, Send, Calendar, TrendingUp, Award, BarChart2, Pencil, Trash2, Filter, ChevronDown, FileSpreadsheet
+  User as UserIcon, MessageSquare, Send, Calendar, TrendingUp, Award, BarChart2, Pencil, Trash2, Filter, ChevronDown, FileSpreadsheet, AlertTriangle
 } from 'lucide-react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area 
@@ -65,6 +65,7 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
   };
 
   const [formClass, setFormClass] = useState<Partial<ClassGroup>>(defaultClassState);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Auto-calculate grade from name (e.g., "10A1" -> 10)
   useEffect(() => {
@@ -151,12 +152,14 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
       id: `C${Date.now()}`,
       academicYear: currentYearDefault 
     });
+    setFormErrors({});
     setIsFormOpen(true);
   };
 
   const handleOpenEdit = (cls: ClassGroup) => {
     setEditingClass(cls);
     setFormClass({ ...cls });
+    setFormErrors({});
     setIsFormOpen(true);
   };
 
@@ -177,7 +180,14 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formClass.name || !formClass.room) return;
+    const errors: Record<string, string> = {};
+    if (!formClass.name?.trim()) errors.name = "Tên lớp không được để trống.";
+    if (!formClass.room?.trim()) errors.room = "Phòng học không được để trống.";
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    setFormErrors({});
 
     const classData: ClassGroup = {
       id: formClass.id || `C${Date.now()}`,
@@ -198,7 +208,7 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
 
     const classPayload = {
       ...classData,
-      gradeLevel: Number(classData.gradeLevel), // Ensure number
+      gradeLevel: Number(classData.gradeLevel),
     };
 
     try {
@@ -441,6 +451,7 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
             onClose={() => setIsFormOpen(false)}
             onSave={handleSave}
             teachers={teachers}
+            formErrors={formErrors}
         />
       )}
       {isAdmin && (
@@ -465,22 +476,34 @@ interface SlideOverFormProps {
     onClose: () => void;
     onSave: (e: React.FormEvent) => void;
     teachers: Teacher[];
+    formErrors: Record<string, string>;
 }
 
-const SlideOverForm: React.FC<SlideOverFormProps> = ({ editingClass, formClass, setFormClass, onClose, onSave, teachers }) => {
+const SlideOverForm: React.FC<SlideOverFormProps> = ({ editingClass, formClass, setFormClass, onClose, onSave, teachers, formErrors = {} }) => {
     const { t } = useLanguage();
+
+    const inputClass = (field: string) =>
+      `w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-colors ${
+        formErrors[field] ? 'border-red-400 input-error' : 'border-gray-300'
+      }`;
+
+    const renderError = (field: string) =>
+      formErrors[field] ? (
+        <p className="text-red-500 text-xs mt-1 flex items-center gap-1 animate-shake">
+          <AlertTriangle className="h-3 w-3 shrink-0" /> {formErrors[field]}
+        </p>
+      ) : null;
+
     return createPortal(
-    <div className="fixed inset-0 z-[100] overflow-hidden w-screen h-screen">
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 pl-10 max-w-full flex pointer-events-none">
-        <div className="w-screen max-w-md pointer-events-auto">
-          <div className="h-full flex flex-col bg-white shadow-2xl animate-slide-in-right">
-             <div className="px-6 py-6 bg-indigo-600 text-white shrink-0 shadow-md flex justify-between items-start">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 w-screen h-screen">
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-backdrop-enter" onClick={onClose} />
+      <div className="relative w-full max-w-xl max-h-[90vh] flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden animate-modal-enter">
+             <div className="px-6 py-5 bg-indigo-600 text-white shrink-0 shadow-md flex justify-between items-start">
                 <div>
                   <h2 className="text-xl font-bold">{editingClass ? t('classes.form.edit') : t('classes.form.new')}</h2>
                   <p className="text-indigo-100 text-sm mt-1">{formClass.academicYear}</p>
                 </div>
-                <button onClick={onClose} className="text-indigo-100 hover:text-white"><X className="h-6 w-6" /></button>
+                <button onClick={onClose} className="text-indigo-100 hover:text-white transition-colors"><X className="h-6 w-6" /></button>
              </div>
              
              <form onSubmit={onSave} className="flex-1 overflow-y-auto bg-gray-50">
@@ -489,8 +512,9 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({ editingClass, formClass, 
                    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
                       <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide border-b border-gray-100 pb-2">{t('classes.form.details')}</h3>
                       <div>
-                         <label className="block text-xs font-semibold text-gray-500 mb-1">{t('class.name')}</label>
-                         <input type="text" required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" value={formClass.name} onChange={e => setFormClass({...formClass, name: e.target.value})} placeholder="e.g. 10A1" />
+                         <label className="block text-xs font-semibold text-gray-500 mb-1">{t('class.name')} <span className="text-red-500">*</span></label>
+                         <input type="text" className={inputClass('name')} value={formClass.name} onChange={e => setFormClass({...formClass, name: e.target.value})} placeholder="e.g. 10A1" />
+                         {renderError('name')}
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                           <div>
@@ -498,46 +522,47 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({ editingClass, formClass, 
                              <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50" value={formClass.gradeLevel} readOnly />
                           </div>
                           <div>
-                             <label className="block text-xs font-semibold text-gray-500 mb-1">{t('class.room')}</label>
-                             <input type="text" required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" value={formClass.room} onChange={e => setFormClass({...formClass, room: e.target.value})} />
+                             <label className="block text-xs font-semibold text-gray-500 mb-1">{t('class.room')} <span className="text-red-500">*</span></label>
+                             <input type="text" className={inputClass('room')} value={formClass.room} onChange={e => setFormClass({...formClass, room: e.target.value})} />
+                             {renderError('room')}
                           </div>
                       </div>
                       <div>
                          <label className="block text-xs font-semibold text-gray-500 mb-1">{t('class.academicYear')}</label>
-                         <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" value={formClass.academicYear} onChange={e => setFormClass({...formClass, academicYear: e.target.value})} />
+                         <input type="text" className={inputClass('academicYear')} value={formClass.academicYear} onChange={e => setFormClass({...formClass, academicYear: e.target.value})} />
                       </div>
                       <div>
                          <label className="block text-xs font-semibold text-gray-500 mb-1">{t('class.homeroomTeacher')}</label>
-                          <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white" value={formClass.teacherId} onChange={e => setFormClass({...formClass, teacherId: e.target.value})}>
+                          <select className={`${inputClass('teacherId')} bg-white`} value={formClass.teacherId} onChange={e => setFormClass({...formClass, teacherId: e.target.value})}>
                              <option value="">{t('timetable.selectTeacher')}</option>
                              {teachers.map(t => <option key={t.id} value={t.id}>{t.name} ({t.subjects?.join(', ') || 'N/A'})</option>)}
                           </select>
                       </div>
                        <div>
                          <label className="block text-xs font-semibold text-gray-500 mb-1">{t('class.description')}</label>
-                         <textarea className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" rows={3} value={formClass.description} onChange={e => setFormClass({...formClass, description: e.target.value})} />
+                         <textarea className={inputClass('description')} rows={3} value={formClass.description} onChange={e => setFormClass({...formClass, description: e.target.value})} />
                       </div>
                    </div>
 
-                   {/* Statistics (Manual Entry for now, ideally calculated) */}
+                   {/* Statistics */}
                    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
                       <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide border-b border-gray-100 pb-2">{t('classes.form.initialStats')}</h3>
                       <div className="grid grid-cols-2 gap-4">
                           <div>
                              <label className="block text-xs font-semibold text-gray-500 mb-1">{t('class.totalStudents')}</label>
-                             <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" value={formClass.studentCount} onChange={e => setFormClass({...formClass, studentCount: parseInt(e.target.value)})} />
+                             <input type="number" className={inputClass('studentCount')} value={formClass.studentCount} onChange={e => setFormClass({...formClass, studentCount: parseInt(e.target.value)})} />
                           </div>
                           <div>
                              <label className="block text-xs font-semibold text-gray-500 mb-1">{t('class.avgGpa')}</label>
-                             <input type="number" step="0.1" max="10" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" value={formClass.averageGpa} onChange={e => setFormClass({...formClass, averageGpa: parseFloat(e.target.value)})} />
+                             <input type="number" step="0.1" max="10" className={inputClass('averageGpa')} value={formClass.averageGpa} onChange={e => setFormClass({...formClass, averageGpa: parseFloat(e.target.value)})} />
                           </div>
                           <div>
                              <label className="block text-xs font-semibold text-gray-500 mb-1">{t('class.male')}</label>
-                             <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" value={formClass.maleStudentCount} onChange={e => setFormClass({...formClass, maleStudentCount: parseInt(e.target.value)})} />
+                             <input type="number" className={inputClass('maleStudentCount')} value={formClass.maleStudentCount} onChange={e => setFormClass({...formClass, maleStudentCount: parseInt(e.target.value)})} />
                           </div>
                           <div>
                              <label className="block text-xs font-semibold text-gray-500 mb-1">{t('class.female')}</label>
-                             <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" value={formClass.femaleStudentCount} onChange={e => setFormClass({...formClass, femaleStudentCount: parseInt(e.target.value)})} />
+                             <input type="number" className={inputClass('femaleStudentCount')} value={formClass.femaleStudentCount} onChange={e => setFormClass({...formClass, femaleStudentCount: parseInt(e.target.value)})} />
                           </div>
                       </div>
                    </div>
@@ -550,8 +575,6 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({ editingClass, formClass, 
                   <Check className="h-4 w-4 mr-2" /> {t('common.save')}
                </button>
             </div>
-          </div>
-        </div>
       </div>
     </div>,
     document.body

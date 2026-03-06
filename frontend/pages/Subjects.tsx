@@ -8,7 +8,7 @@ import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmContext';
 import { 
   Search, Plus, BookOpen, Eye, X, Check, MessageSquare, Send, 
-  School, Trash2, Pencil, Users, BarChart3, Tag, Layers, TrendingUp
+  School, Trash2, Pencil, Users, BarChart3, Tag, Layers, TrendingUp, AlertTriangle
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
@@ -39,6 +39,7 @@ export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
   };
 
   const [formSubject, setFormSubject] = useState<Partial<Subject>>(defaultSubjectState);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const [availableDepartments, setAvailableDepartments] = useState<string[]>([]);
 
@@ -86,12 +87,14 @@ export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
   const handleOpenAdd = () => {
     setEditingSubject(null);
     setFormSubject({ ...defaultSubjectState });
+    setFormErrors({});
     setIsFormOpen(true);
   };
 
   const handleOpenEdit = (subject: Subject) => {
     setEditingSubject(subject);
     setFormSubject({ ...subject });
+    setFormErrors({});
     setIsFormOpen(true);
   };
 
@@ -112,7 +115,14 @@ export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formSubject.name || !formSubject.code) return;
+    const errors: Record<string, string> = {};
+    if (!formSubject.name?.trim()) errors.name = "Tên môn học không được để trống.";
+    if (!formSubject.code?.trim()) errors.code = "Mã môn học không được để trống.";
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    setFormErrors({});
 
     try {
         if (editingSubject) {
@@ -120,7 +130,6 @@ export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
              setSubjects(subjects.map(s => s.id === editingSubject.id ? { ...s, ...data } : s));
         } else {
             const { data } = await api.post('/subjects', formSubject);
-            // Ensure local shape matches
             const newSubject = { ...data, averageGpaHistory: [], notes: [] };
             setSubjects([...subjects, newSubject]);
         }
@@ -269,6 +278,7 @@ export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
             onClose={() => setIsFormOpen(false)}
             onSave={handleSave}
             availableDepartments={availableDepartments}
+            formErrors={formErrors}
         />
       )}
     </div>
@@ -284,22 +294,34 @@ interface SlideOverFormProps {
     onClose: () => void;
     onSave: (e: React.FormEvent) => void;
     availableDepartments: string[];
+    formErrors: Record<string, string>;
 }
 
-const SlideOverForm: React.FC<SlideOverFormProps> = ({ editingSubject, formSubject, setFormSubject, onClose, onSave, availableDepartments }) => {
+const SlideOverForm: React.FC<SlideOverFormProps> = ({ editingSubject, formSubject, setFormSubject, onClose, onSave, availableDepartments, formErrors = {} }) => {
     const { t } = useLanguage();
+
+    const inputClass = (field: string) =>
+      `w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-colors ${
+        formErrors[field] ? 'border-red-400 input-error' : 'border-gray-300'
+      }`;
+
+    const renderError = (field: string) =>
+      formErrors[field] ? (
+        <p className="text-red-500 text-xs mt-1 flex items-center gap-1 animate-shake">
+          <AlertTriangle className="h-3 w-3 shrink-0" /> {formErrors[field]}
+        </p>
+      ) : null;
+
     return createPortal(
-    <div className="fixed inset-0 z-[100] overflow-hidden w-screen h-screen">
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 pl-10 max-w-full flex pointer-events-none">
-        <div className="w-screen max-w-md pointer-events-auto">
-          <div className="h-full flex flex-col bg-white shadow-2xl animate-slide-in-right">
-             <div className="px-6 py-6 bg-indigo-600 text-white shrink-0 shadow-md flex justify-between items-start">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 w-screen h-screen">
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-backdrop-enter" onClick={onClose} />
+      <div className="relative w-full max-w-lg max-h-[90vh] flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden animate-modal-enter">
+             <div className="px-6 py-5 bg-indigo-600 text-white shrink-0 shadow-md flex justify-between items-start">
                 <div>
                   <h2 className="text-xl font-bold">{editingSubject ? t('subjects.form.edit') : t('subjects.form.new')}</h2>
                   <p className="text-indigo-100 text-sm mt-1">{t('subject.description')}</p>
                 </div>
-                <button onClick={onClose} className="text-indigo-100 hover:text-white"><X className="h-6 w-6" /></button>
+                <button onClick={onClose} className="text-indigo-100 hover:text-white transition-colors"><X className="h-6 w-6" /></button>
              </div>
              
              <form onSubmit={onSave} className="flex-1 overflow-y-auto bg-gray-50">
@@ -311,16 +333,18 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({ editingSubject, formSubje
                       </div>
                       <div>
                          <label className="block text-xs font-semibold text-gray-500 mb-1">{t('subject.name')} <span className="text-red-500">*</span></label>
-                         <input type="text" required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" value={formSubject.name} onChange={e => setFormSubject({...formSubject, name: e.target.value})} placeholder="e.g. Mathematics" />
+                         <input type="text" className={inputClass('name')} value={formSubject.name} onChange={e => setFormSubject({...formSubject, name: e.target.value})} placeholder="e.g. Mathematics" />
+                         {renderError('name')}
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                           <div>
                              <label className="block text-xs font-semibold text-gray-500 mb-1">{t('subject.code')} <span className="text-red-500">*</span></label>
-                             <input type="text" required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" value={formSubject.code} onChange={e => setFormSubject({...formSubject, code: e.target.value})} placeholder="e.g. Math" />
+                             <input type="text" className={inputClass('code')} value={formSubject.code} onChange={e => setFormSubject({...formSubject, code: e.target.value})} placeholder="e.g. Math" />
+                             {renderError('code')}
                           </div>
                           <div>
                              <label className="block text-xs font-semibold text-gray-500 mb-1">{t('subject.department')}</label>
-                             <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white" value={formSubject.department} onChange={e => setFormSubject({...formSubject, department: e.target.value})}>
+                             <select className={`${inputClass('department')} bg-white`} value={formSubject.department} onChange={e => setFormSubject({...formSubject, department: e.target.value})}>
                                 <option value="">{t('subject.selectDepartment')}</option>
                                 {availableDepartments.map(dept => (
                                     <option key={dept} value={dept}>{dept}</option>
@@ -330,7 +354,7 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({ editingSubject, formSubje
                       </div>
                       <div>
                          <label className="block text-xs font-semibold text-gray-500 mb-1">{t('subject.description')}</label>
-                         <textarea className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" rows={4} value={formSubject.description} onChange={e => setFormSubject({...formSubject, description: e.target.value})} placeholder="Enter course description..." />
+                         <textarea className={inputClass('description')} rows={4} value={formSubject.description} onChange={e => setFormSubject({...formSubject, description: e.target.value})} placeholder="Enter course description..." />
                       </div>
                    </div>
                 </div>
@@ -342,8 +366,6 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({ editingSubject, formSubje
                   <Check className="h-4 w-4 mr-2" /> {t('common.save')}
                </button>
             </div>
-          </div>
-        </div>
       </div>
     </div>,
     document.body

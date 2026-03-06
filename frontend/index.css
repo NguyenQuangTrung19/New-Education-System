@@ -355,3 +355,44 @@ input, select, textarea {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--theme-500);
 }
+
+/* ─── Modal Animations ─── */
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modal-backdrop-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+.animate-modal-enter {
+  animation: modal-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-backdrop-enter {
+  animation: modal-backdrop-enter 0.2s ease-out forwards;
+}
+
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+/* Input error state */
+.input-error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15) !important;
+}

@@ -28,7 +28,7 @@ interface SlideOverFormProps {
   formTeacher: Partial<Teacher>;
   setFormTeacher: (val: Partial<Teacher>) => void;
   onSave: (e: React.FormEvent) => void;
-  formErrors: string[];
+  formErrors: Record<string, string>;
   availableSubjects: string[];
   onChangePassword?: () => void;
 }
@@ -263,7 +263,7 @@ const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({ teacher, onClos
 
 const SlideOverForm: React.FC<SlideOverFormProps & { isLoading?: boolean }> = ({
   isOpen, onClose, isEditing, editingId,
-  formTeacher, setFormTeacher, onSave, formErrors = [], availableSubjects, onChangePassword, isLoading
+  formTeacher, setFormTeacher, onSave, formErrors = {}, availableSubjects, onChangePassword, isLoading
 }) => {
   const { t } = useLanguage();
 
@@ -279,14 +279,24 @@ const SlideOverForm: React.FC<SlideOverFormProps & { isLoading?: boolean }> = ({
       setFormTeacher({...formTeacher, subjects: formTeacher.subjects?.filter(s => s !== sub)});
   };
 
+  const inputClass = (field: string) =>
+    `w-full px-4 py-2.5 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none ${
+      formErrors[field] ? 'border-red-400 input-error' : 'border-gray-300'
+    }`;
+
+  const renderError = (field: string) =>
+    formErrors[field] ? (
+      <p className="text-red-500 text-xs mt-1 flex items-center gap-1 animate-shake">
+        <AlertTriangle className="h-3 w-3 shrink-0" /> {formErrors[field]}
+      </p>
+    ) : null;
+
   return createPortal(
-    <div className="fixed inset-0 z-[100] overflow-hidden w-screen h-screen">
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 max-w-full flex pointer-events-none">
-        <div className="w-full sm:max-w-md pointer-events-auto">
-          <div className="h-full flex flex-col bg-white shadow-2xl animate-slide-in-right">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 w-screen h-screen">
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-backdrop-enter" onClick={onClose} />
+      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden animate-modal-enter">
             {/* Header */}
-            <div className="px-6 py-6 bg-indigo-600 text-white shrink-0 shadow-md">
+            <div className="px-6 py-5 bg-indigo-600 text-white shrink-0 shadow-md">
               <div className="flex items-start justify-between">
                 <div>
                   <h2 className="text-xl font-bold">{isEditing ? t('teachers.form.edit') : t('teachers.form.new')}</h2>
@@ -300,18 +310,7 @@ const SlideOverForm: React.FC<SlideOverFormProps & { isLoading?: boolean }> = ({
 
             {/* Form Content */}
             <form onSubmit={onSave} className="flex-1 overflow-y-auto bg-gray-50">
-               <div className="p-6 space-y-8">
-                  {/* Validation Errors */}
-                  {formErrors.length > 0 && (
-                      <div className="bg-red-50 border border-red-200 rounded-xl p-4 animate-shake">
-                          <h4 className="flex items-center text-red-700 font-bold text-sm mb-2">
-                              <AlertTriangle className="h-4 w-4 mr-2" /> Vui lòng kiểm tra lại:
-                          </h4>
-                          <ul className="list-disc list-inside text-xs text-red-600 space-y-1">
-                              {formErrors.map((err, idx) => <li key={idx}>{err}</li>)}
-                          </ul>
-                      </div>
-                  )}
+               <div className="p-6 space-y-6">
 
                   {/* Section 1 */}
                   <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
@@ -322,29 +321,31 @@ const SlideOverForm: React.FC<SlideOverFormProps & { isLoading?: boolean }> = ({
                      <div className="space-y-4">
                         <div>
                            <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('student.name')} <span className="text-red-500">*</span></label>
-                           <input type="text" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" placeholder="e.g. Sarah Connor" value={formTeacher.name} onChange={e => setFormTeacher({...formTeacher, name: e.target.value})} disabled={isLoading} />
+                           <input type="text" className={inputClass('name')} placeholder="e.g. Sarah Connor" value={formTeacher.name} onChange={e => setFormTeacher({...formTeacher, name: e.target.value})} disabled={isLoading} />
+                           {renderError('name')}
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                              <div>
                                 <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('teacher.username')} <span className="text-red-500">*</span></label>
                                 <input 
                                     type="text" 
-                                    required 
-                                    className={`w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none ${isEditing ? 'opacity-60 cursor-not-allowed bg-gray-100' : ''}`} 
+                                    className={`${inputClass('username')} ${isEditing ? 'opacity-60 cursor-not-allowed' : ''}`} 
                                     value={formTeacher.username} 
                                     onChange={e => setFormTeacher({...formTeacher, username: e.target.value})} 
                                     disabled={isEditing || isLoading}
                                 />
+                                {renderError('username')}
                              </div>
                              <div>
                                 <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('teacher.joinYear')}</label>
-                                <input type="number" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.joinYear} onChange={e => setFormTeacher({...formTeacher, joinYear: parseInt(e.target.value) || new Date().getFullYear()})} disabled={isLoading} />
+                                <input type="number" className={inputClass('joinYear')} value={formTeacher.joinYear} onChange={e => setFormTeacher({...formTeacher, joinYear: parseInt(e.target.value) || new Date().getFullYear()})} disabled={isLoading} />
                              </div>
                         </div>
                         {!isEditing && (
                         <div>
                              <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('teacher.password')} <span className="text-red-500">*</span></label>
-                             <input type="password" placeholder="••••••" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.password} onChange={e => setFormTeacher({...formTeacher, password: e.target.value})} disabled={isLoading} />
+                             <input type="password" placeholder="••••••" className={inputClass('password')} value={formTeacher.password} onChange={e => setFormTeacher({...formTeacher, password: e.target.value})} disabled={isLoading} />
+                             {renderError('password')}
                         </div>
                         )}
                         {isEditing && (
@@ -367,11 +368,12 @@ const SlideOverForm: React.FC<SlideOverFormProps & { isLoading?: boolean }> = ({
                         <div className="grid grid-cols-2 gap-4">
                              <div>
                                 <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('teacher.dob')} <span className="text-red-500">*</span></label>
-                                <input type="date" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.dateOfBirth ? new Date(formTeacher.dateOfBirth).toISOString().split('T')[0] : ''} onChange={e => setFormTeacher({...formTeacher, dateOfBirth: e.target.value})} disabled={isLoading} />
+                                <input type="date" className={inputClass('dateOfBirth')} value={formTeacher.dateOfBirth ? new Date(formTeacher.dateOfBirth).toISOString().split('T')[0] : ''} onChange={e => setFormTeacher({...formTeacher, dateOfBirth: e.target.value})} disabled={isLoading} />
+                                {renderError('dateOfBirth')}
                              </div>
                              <div>
                                 <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('teacher.gender')}</label>
-                                 <select className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.gender} onChange={e => setFormTeacher({...formTeacher, gender: e.target.value as any})} disabled={isLoading}>
+                                 <select className={inputClass('gender')} value={formTeacher.gender} onChange={e => setFormTeacher({...formTeacher, gender: e.target.value as any})} disabled={isLoading}>
                                    <option value="Male">{t('common.male')}</option>
                                    <option value="Female">{t('common.female')}</option>
                                    <option value="Other">{t('common.other')}</option>
@@ -380,19 +382,22 @@ const SlideOverForm: React.FC<SlideOverFormProps & { isLoading?: boolean }> = ({
                         </div>
                         <div>
                            <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('teacher.citizenId')} (12 số) <span className="text-red-500">*</span></label>
-                           <input type="text" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.citizenId} onChange={e => setFormTeacher({...formTeacher, citizenId: e.target.value})} disabled={isLoading} />
+                           <input type="text" className={inputClass('citizenId')} value={formTeacher.citizenId} onChange={e => setFormTeacher({...formTeacher, citizenId: e.target.value})} disabled={isLoading} />
+                           {renderError('citizenId')}
                         </div>
                         <div>
                            <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('teacher.email')} <span className="text-red-500">*</span></label>
-                           <input type="email" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.email} onChange={e => setFormTeacher({...formTeacher, email: e.target.value})} disabled={isLoading} />
+                           <input type="email" className={inputClass('email')} value={formTeacher.email} onChange={e => setFormTeacher({...formTeacher, email: e.target.value})} disabled={isLoading} />
+                           {renderError('email')}
                         </div>
                         <div>
                            <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('teacher.phone')} <span className="text-red-500">*</span></label>
-                           <input type="tel" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" placeholder="0xxxxxxxxx" value={formTeacher.phone} onChange={e => setFormTeacher({...formTeacher, phone: e.target.value})} disabled={isLoading} />
+                           <input type="tel" className={inputClass('phone')} placeholder="0xxxxxxxxx" value={formTeacher.phone} onChange={e => setFormTeacher({...formTeacher, phone: e.target.value})} disabled={isLoading} />
+                           {renderError('phone')}
                         </div>
                         <div>
                            <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('teacher.address')}</label>
-                           <input type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none" value={formTeacher.address} onChange={e => setFormTeacher({...formTeacher, address: e.target.value})} disabled={isLoading} />
+                           <input type="text" className={inputClass('address')} value={formTeacher.address} onChange={e => setFormTeacher({...formTeacher, address: e.target.value})} disabled={isLoading} />
                         </div>
                      </div>
                   </div>
@@ -406,7 +411,7 @@ const SlideOverForm: React.FC<SlideOverFormProps & { isLoading?: boolean }> = ({
                      <div>
                         <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('teacher.subjects')}</label>
                         <select 
-                           className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm outline-none mb-3"
+                           className={`${inputClass('subjects')} mb-3`}
                            onChange={(e) => { handleAddSubject(e.target.value); e.target.value = ''; }}
                            disabled={isLoading}
                         >
@@ -447,8 +452,6 @@ const SlideOverForm: React.FC<SlideOverFormProps & { isLoading?: boolean }> = ({
                   )}
                </button>
             </div>
-          </div>
-        </div>
       </div>
     </div>,
     document.body
@@ -491,7 +494,7 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
   }, [selectedSubject]);
   
   // Validation State
-  const [formErrors, setFormErrors] = useState<string[]>([]);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Security Modal State
   const [securityModalOpen, setSecurityModalOpen] = useState(false);
@@ -611,7 +614,7 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
   const handleOpenAdd = () => {
     setEditingTeacher(null);
     setFormTeacher({ ...defaultTeacherState, id: `GV${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}` });
-    setFormErrors([]);
+    setFormErrors({});
     setIsFormOpen(true);
   };
 
@@ -648,34 +651,34 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
     }
   };
 
-  const validateTeacherForm = (data: Partial<Teacher>): string[] => {
-      const errors: string[] = [];
+  const validateTeacherForm = (data: Partial<Teacher>): Record<string, string> => {
+      const errors: Record<string, string> = {};
 
       // Required fields
-      if (!data.name?.trim()) errors.push("Họ tên không được để trống.");
-      if (!data.username?.trim()) errors.push("Tên đăng nhập không được để trống.");
-      if (!editingTeacher && !data.password?.trim()) errors.push("Mật khẩu không được để trống.");
-      if (!data.email?.trim()) errors.push("Email không được để trống.");
-      if (!data.phone?.trim()) errors.push("Số điện thoại không được để trống.");
-      if (!data.dateOfBirth) errors.push("Ngày sinh không được để trống.");
-      if (!data.citizenId?.trim()) errors.push("CCCD không được để trống.");
+      if (!data.name?.trim()) errors.name = "Họ tên không được để trống.";
+      if (!data.username?.trim()) errors.username = "Tên đăng nhập không được để trống.";
+      if (!editingTeacher && !data.password?.trim()) errors.password = "Mật khẩu không được để trống.";
+      if (!data.email?.trim()) errors.email = "Email không được để trống.";
+      if (!data.phone?.trim()) errors.phone = "Số điện thoại không được để trống.";
+      if (!data.dateOfBirth) errors.dateOfBirth = "Ngày sinh không được để trống.";
+      if (!data.citizenId?.trim()) errors.citizenId = "CCCD không được để trống.";
 
       // Age Check (> 18)
       if (data.dateOfBirth) {
           const age = calculateAge(data.dateOfBirth);
           if (age < 18) {
-              errors.push(`Giáo viên phải trên 18 tuổi (Hiện tại: ${age} tuổi).`);
+              errors.dateOfBirth = `Giáo viên phải trên 18 tuổi (Hiện tại: ${age} tuổi).`;
           }
       }
 
       // Phone Check
       if (data.phone && !isValidPhone(data.phone)) {
-          errors.push("Số điện thoại phải bắt đầu bằng số 0 và có đủ 10 số.");
+          errors.phone = "Số điện thoại phải bắt đầu bằng số 0 và có đủ 10 số.";
       }
 
       // Citizen ID Check
       if (data.citizenId && !isValidCitizenId(data.citizenId)) {
-          errors.push("Số CCCD phải có đủ 12 số.");
+          errors.citizenId = "Số CCCD phải có đủ 12 số.";
       }
 
       return errors;
@@ -693,7 +696,7 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
     setFormTeacher(formattedData);
 
     const errors = validateTeacherForm(formattedData);
-    if (errors.length > 0) {
+    if (Object.keys(errors).length > 0) {
         setFormErrors(errors);
         return;
     }
