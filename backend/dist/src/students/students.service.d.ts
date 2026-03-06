@@ -8,14 +8,14 @@ export declare class StudentsService {
     constructor(prisma: PrismaService, idGenerator: IdGeneratorService, passwordService: PasswordService);
     findAll(params?: any): Promise<({
         user: {
-            name: string;
             username: string;
             email: string;
+            name: string;
             avatarUrl: string | null;
         };
         class: {
-            name: string;
             id: string;
+            name: string;
             notes: string[];
             gradeLevel: number;
             room: string | null;
@@ -48,14 +48,14 @@ export declare class StudentsService {
     })[] | {
         data: ({
             user: {
-                name: string;
                 username: string;
                 email: string;
+                name: string;
                 avatarUrl: string | null;
             };
             class: {
-                name: string;
                 id: string;
+                name: string;
                 notes: string[];
                 gradeLevel: number;
                 room: string | null;
@@ -95,19 +95,19 @@ export declare class StudentsService {
     }>;
     findOne(id: string): Promise<({
         user: {
-            name: string;
             id: string;
             username: string;
-            password: string;
             email: string;
+            password: string;
+            name: string;
             role: import(".prisma/client").$Enums.UserRole;
             avatarUrl: string | null;
             createdAt: Date;
             updatedAt: Date;
         };
         class: {
-            name: string;
             id: string;
+            name: string;
             notes: string[];
             gradeLevel: number;
             room: string | null;
@@ -130,8 +130,8 @@ export declare class StudentsService {
         }[];
         grades: ({
             subject: {
-                name: string;
                 id: string;
+                name: string;
                 department: string | null;
                 description: string | null;
                 code: string;
@@ -139,30 +139,30 @@ export declare class StudentsService {
         } & {
             id: string;
             academicYear: string;
-            studentId: string;
             subjectId: string;
+            studentId: string;
+            feedback: string | null;
             semester: string;
             oralScore: number | null;
             fifteenMinScores: number[];
             midTermScore: number | null;
             finalScore: number | null;
             average: number | null;
-            feedback: string | null;
         })[];
         attendance: {
             id: string;
+            status: import(".prisma/client").$Enums.AttendanceStatus;
             studentId: string;
             scheduleId: string | null;
             date: Date;
-            status: import(".prisma/client").$Enums.AttendanceStatus;
             note: string | null;
         }[];
         tuitions: {
             id: string;
             academicYear: string;
+            status: import(".prisma/client").$Enums.TuitionSemesterStatus;
             studentId: string;
             semester: string;
-            status: import(".prisma/client").$Enums.TuitionSemesterStatus;
             totalAmount: number;
             totalPaid: number;
         }[];
@@ -185,11 +185,11 @@ export declare class StudentsService {
     }) | null>;
     create(createStudentDto: any): Promise<{
         user: {
-            name: string;
             id: string;
             username: string;
-            password: string;
             email: string;
+            password: string;
+            name: string;
             role: import(".prisma/client").$Enums.UserRole;
             avatarUrl: string | null;
             createdAt: Date;
@@ -229,11 +229,11 @@ export declare class StudentsService {
         classId: string | null;
     }>;
     remove(id: string): Promise<{
-        name: string;
         id: string;
         username: string;
-        password: string;
         email: string;
+        password: string;
+        name: string;
         role: import(".prisma/client").$Enums.UserRole;
         avatarUrl: string | null;
         createdAt: Date;

@@ -4,27 +4,27 @@ export declare class GradesController {
     constructor(gradesService: GradesService);
     findAll(classId?: string, subjectId?: string, studentId?: string): Promise<({
         student: {
+            id: string;
             user: {
                 name: string;
             };
-            id: string;
         };
         subject: {
-            name: string;
             id: string;
+            name: string;
         };
     } & {
         id: string;
         academicYear: string;
-        studentId: string;
         subjectId: string;
+        studentId: string;
+        feedback: string | null;
         semester: string;
         oralScore: number | null;
         fifteenMinScores: number[];
         midTermScore: number | null;
         finalScore: number | null;
         average: number | null;
-        feedback: string | null;
     })[]>;
     bulkSave(payload: any[]): Promise<{
         success: boolean;

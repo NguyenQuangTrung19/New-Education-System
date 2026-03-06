@@ -27,8 +27,8 @@ export declare class ClassesController {
             students: number;
         };
     } & {
-        name: string;
         id: string;
+        name: string;
         notes: string[];
         gradeLevel: number;
         room: string | null;
@@ -65,8 +65,8 @@ export declare class ClassesController {
                 students: number;
             };
         } & {
-            name: string;
             id: string;
+            name: string;
             notes: string[];
             gradeLevel: number;
             room: string | null;
@@ -90,11 +90,11 @@ export declare class ClassesController {
     findOne(id: string): Promise<({
         teacher: ({
             user: {
-                name: string;
                 id: string;
                 username: string;
-                password: string;
                 email: string;
+                password: string;
+                name: string;
                 role: import(".prisma/client").$Enums.UserRole;
                 avatarUrl: string | null;
                 createdAt: Date;
@@ -117,11 +117,11 @@ export declare class ClassesController {
         teachingAssignments: ({
             teacher: {
                 user: {
-                    name: string;
                     id: string;
                     username: string;
-                    password: string;
                     email: string;
+                    password: string;
+                    name: string;
                     role: import(".prisma/client").$Enums.UserRole;
                     avatarUrl: string | null;
                     createdAt: Date;
@@ -142,8 +142,8 @@ export declare class ClassesController {
                 userId: string;
             };
             subject: {
-                name: string;
                 id: string;
+                name: string;
                 department: string | null;
                 description: string | null;
                 code: string;
@@ -158,11 +158,11 @@ export declare class ClassesController {
         scheduleItems: ({
             teacher: ({
                 user: {
-                    name: string;
                     id: string;
                     username: string;
-                    password: string;
                     email: string;
+                    password: string;
+                    name: string;
                     role: import(".prisma/client").$Enums.UserRole;
                     avatarUrl: string | null;
                     createdAt: Date;
@@ -183,8 +183,8 @@ export declare class ClassesController {
                 userId: string;
             }) | null;
             subject: {
-                name: string;
                 id: string;
+                name: string;
                 department: string | null;
                 description: string | null;
                 code: string;
@@ -201,11 +201,11 @@ export declare class ClassesController {
         })[];
         students: ({
             user: {
-                name: string;
                 id: string;
                 username: string;
-                password: string;
                 email: string;
+                password: string;
+                name: string;
                 role: import(".prisma/client").$Enums.UserRole;
                 avatarUrl: string | null;
                 createdAt: Date;
@@ -229,8 +229,8 @@ export declare class ClassesController {
             classId: string | null;
         })[];
     } & {
-        name: string;
         id: string;
+        name: string;
         notes: string[];
         gradeLevel: number;
         room: string | null;
@@ -245,8 +245,8 @@ export declare class ClassesController {
         weeklyScoreHistory: import("@prisma/client/runtime/library").JsonValue;
     }) | null>;
     create(createClassDto: CreateClassDto): Promise<{
-        name: string;
         id: string;
+        name: string;
         notes: string[];
         gradeLevel: number;
         room: string | null;
@@ -261,8 +261,8 @@ export declare class ClassesController {
         weeklyScoreHistory: import("@prisma/client/runtime/library").JsonValue;
     }>;
     update(id: string, updateClassDto: UpdateClassDto): Promise<{
-        name: string;
         id: string;
+        name: string;
         notes: string[];
         gradeLevel: number;
         room: string | null;
@@ -277,8 +277,8 @@ export declare class ClassesController {
         weeklyScoreHistory: import("@prisma/client/runtime/library").JsonValue;
     }>;
     remove(id: string): Promise<{
-        name: string;
         id: string;
+        name: string;
         notes: string[];
         gradeLevel: number;
         room: string | null;

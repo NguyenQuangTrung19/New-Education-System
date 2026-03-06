@@ -5,8 +5,8 @@ export declare class SubjectsService {
     static readonly DEPARTMENTS: string[];
     getDepartments(): string[];
     create(createSubjectDto: any): import(".prisma/client").Prisma.Prisma__SubjectClient<{
-        name: string;
         id: string;
+        name: string;
         department: string | null;
         description: string | null;
         code: string;
@@ -20,16 +20,16 @@ export declare class SubjectsService {
             teacherId: string;
             description: string | null;
             subjectId: string;
-            status: import(".prisma/client").$Enums.HomeworkStatus;
             title: string;
             classIds: string[];
             dueDate: Date;
             duration: number | null;
             questions: import("@prisma/client/runtime/library").JsonValue | null;
+            status: import(".prisma/client").$Enums.HomeworkStatus;
         }[];
     } & {
-        name: string;
         id: string;
+        name: string;
         department: string | null;
         description: string | null;
         code: string;
@@ -38,11 +38,11 @@ export declare class SubjectsService {
         teachingAssignments: ({
             teacher: {
                 user: {
-                    name: string;
                     id: string;
                     username: string;
-                    password: string;
                     email: string;
+                    password: string;
+                    name: string;
                     role: import(".prisma/client").$Enums.UserRole;
                     avatarUrl: string | null;
                     createdAt: Date;
@@ -77,30 +77,30 @@ export declare class SubjectsService {
             teacherId: string;
             description: string | null;
             subjectId: string;
-            status: import(".prisma/client").$Enums.HomeworkStatus;
             title: string;
             classIds: string[];
             dueDate: Date;
             duration: number | null;
             questions: import("@prisma/client/runtime/library").JsonValue | null;
+            status: import(".prisma/client").$Enums.HomeworkStatus;
         }[];
     } & {
-        name: string;
         id: string;
+        name: string;
         department: string | null;
         description: string | null;
         code: string;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
     update(id: string, updateSubjectDto: any): import(".prisma/client").Prisma.Prisma__SubjectClient<{
-        name: string;
         id: string;
+        name: string;
         department: string | null;
         description: string | null;
         code: string;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     remove(id: string): import(".prisma/client").Prisma.Prisma__SubjectClient<{
-        name: string;
         id: string;
+        name: string;
         department: string | null;
         description: string | null;
         code: string;

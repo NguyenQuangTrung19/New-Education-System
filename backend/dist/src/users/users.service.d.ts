@@ -9,11 +9,11 @@ export declare class UsersService {
     createUser(data: Prisma.UserCreateInput): Promise<User>;
     findById(id: string): Promise<User | null>;
     updatePassword(id: string, password: string): Promise<{
-        name: string;
         id: string;
         username: string;
-        password: string;
         email: string;
+        password: string;
+        name: string;
         role: import(".prisma/client").$Enums.UserRole;
         avatarUrl: string | null;
         createdAt: Date;

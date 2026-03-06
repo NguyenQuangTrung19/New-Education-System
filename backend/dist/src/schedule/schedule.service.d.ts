@@ -17,11 +17,11 @@ export declare class ScheduleService {
     findAll(query?: any): import(".prisma/client").Prisma.PrismaPromise<({
         teacher: ({
             user: {
-                name: string;
                 id: string;
                 username: string;
-                password: string;
                 email: string;
+                password: string;
+                name: string;
                 role: import(".prisma/client").$Enums.UserRole;
                 avatarUrl: string | null;
                 createdAt: Date;
@@ -42,15 +42,15 @@ export declare class ScheduleService {
             userId: string;
         }) | null;
         subject: {
-            name: string;
             id: string;
+            name: string;
             department: string | null;
             description: string | null;
             code: string;
         };
         class: {
-            name: string;
             id: string;
+            name: string;
             notes: string[];
             gradeLevel: number;
             room: string | null;
@@ -77,11 +77,11 @@ export declare class ScheduleService {
     findOne(id: string): import(".prisma/client").Prisma.Prisma__ScheduleItemClient<({
         teacher: ({
             user: {
-                name: string;
                 id: string;
                 username: string;
-                password: string;
                 email: string;
+                password: string;
+                name: string;
                 role: import(".prisma/client").$Enums.UserRole;
                 avatarUrl: string | null;
                 createdAt: Date;
@@ -102,15 +102,15 @@ export declare class ScheduleService {
             userId: string;
         }) | null;
         subject: {
-            name: string;
             id: string;
+            name: string;
             department: string | null;
             description: string | null;
             code: string;
         };
         class: {
-            name: string;
             id: string;
+            name: string;
             notes: string[];
             gradeLevel: number;
             room: string | null;
