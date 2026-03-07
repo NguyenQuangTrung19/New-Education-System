@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Lock, User as UserIcon, ArrowRight, Eye, EyeOff, ShieldCheck, GraduationCap, Info, MapPin, Phone, Globe, X, Code, Heart, History, Award, Facebook, Linkedin, Mail } from 'lucide-react';
+import { Lock, User as UserIcon, ArrowRight, Eye, EyeOff, ShieldCheck, GraduationCap, Info, MapPin, Phone, Globe, X, Code, Heart, History, Award, Facebook, Linkedin, Github, Mail } from 'lucide-react';
 import { User as UserType, UserRole } from '../types';
 import { SCHOOL_INFO } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -247,8 +247,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                             <a href="https://www.facebook.com/?locale=vi_VN" target="_blank" rel="noopener noreferrer" className="p-3 bg-blue-50 rounded-full text-blue-600 hover:bg-blue-100 hover:text-blue-800 transition-colors" title="Facebook">
                                 <Facebook className="h-5 w-5" />
                             </a>
-                            <a href="https://www.facebook.com/?locale=vi_VN" target="_blank" rel="noopener noreferrer" className="p-3 bg-blue-50 rounded-full text-blue-600 hover:bg-blue-100 hover:text-blue-800 transition-colors" title="Facebook">
-                                <Facebook className="h-5 w-5" />
+                            <a href="https://github.com/NguyenQuangTrung19" target="_blank" rel="noopener noreferrer" className="p-3 bg-gray-100 rounded-full text-gray-700 hover:bg-gray-200 hover:text-gray-900 transition-colors" title="GitHub">
+                                <Github className="h-5 w-5" />
                             </a>
                             <a href="https://www.linkedin.com/in/nguy%E1%BB%85n-quang-trung-178a2737a/" target="_blank" rel="noopener noreferrer" className="p-3 bg-sky-50 rounded-full text-sky-600 hover:bg-sky-100 hover:text-sky-800 transition-colors" title="LinkedIn">
                                 <Linkedin className="h-5 w-5" />
