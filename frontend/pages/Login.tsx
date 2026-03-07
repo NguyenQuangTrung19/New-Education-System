@@ -308,26 +308,26 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
 
       <div className="relative z-10 w-full max-w-md">
-        <div className="bg-white/10 backdrop-blur-xl p-8 rounded-[2rem] shadow-2xl border border-white/40 animate-fade-in-up relative overflow-hidden">
+        <div className="bg-white/10 backdrop-blur-xl p-6 sm:p-8 rounded-[2rem] shadow-2xl border border-white/40 animate-fade-in-up relative overflow-hidden">
           
           {/* Glass Reflection Highlight */}
           <div className="absolute top-0 left-0 w-full h-1/3 bg-gradient-to-b from-white/20 to-transparent pointer-events-none"></div>
 
           {/* Logo Area */}
-          <div className="text-center mb-8 relative z-10">
-            <div className="relative inline-flex items-center justify-center w-48 h-48 mb-2 transform hover:scale-110 transition-transform duration-500 overflow-visible filter drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)]">
+          <div className="text-center mb-6 relative z-10">
+            <div className="relative inline-flex items-center justify-center w-48 h-48 -mt-6 mb-0 transform hover:scale-110 transition-transform duration-500 overflow-visible filter drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)]">
                <div className="absolute inset-0 bg-white/30 blur-3xl rounded-full opacity-50"></div>
                <SchoolLogo className="w-full h-full object-contain relative z-10" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] relative z-10">{SCHOOL_INFO.name}</h1>
-            <div className="flex items-center justify-center gap-2 mt-3">
-                <GraduationCap className="h-5 w-5 text-white/90" />
+            <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] relative z-10">{SCHOOL_INFO.name}</h1>
+            <div className="flex items-center justify-center gap-2 mt-2">
+                <GraduationCap className="h-4 w-4 text-white/90" />
                 <p className="text-white/90 text-sm font-bold tracking-wide drop-shadow-md">{t('login.title')}</p>
             </div>
           </div>
 
           {/* Role Switcher */}
-          <div className="bg-black/20 p-1.5 rounded-2xl mb-8 flex relative backdrop-blur-sm border border-white/10">
+          <div className="bg-black/20 p-1.5 rounded-2xl mb-6 flex relative backdrop-blur-sm border border-white/10">
               {[
                   { r: UserRole.ADMIN, icon: ShieldCheck, label: t('login.role.admin') },
                   { r: UserRole.TEACHER, icon: UserIcon, label: t('login.role.teacher') },
@@ -337,7 +337,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       key={item.r}
                       type="button"
                       onClick={() => handleRoleChange(item.r)}
-                      className={`flex-1 flex items-center justify-center py-2.5 text-xs font-bold rounded-xl transition-all duration-300 relative z-10 ${role === item.r ? 'bg-slate-900 text-white shadow-lg scale-105 border border-white/10' : 'text-white/70 hover:text-white hover:bg-white/5'}`}
+                      className={`flex-1 flex items-center justify-center py-2 text-xs font-bold rounded-xl transition-all duration-300 relative z-10 ${role === item.r ? 'bg-slate-900 text-white shadow-lg scale-105 border border-white/10' : 'text-white/70 hover:text-white hover:bg-white/5'}`}
                   >
                       <item.icon className={`h-4 w-4 mr-1.5 ${role === item.r ? 'text-indigo-400' : ''}`} /> 
                       {item.label}
@@ -345,17 +345,17 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
               ))}
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
+          <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
             {/* Defeat aggressive browser autofill */}
             <input type="text" name="hidden_username" autoComplete="username" className="hidden" style={{display: 'none'}} />
             <input type="password" name="hidden_password" autoComplete="current-password" className="hidden" style={{display: 'none'}} />
             
             {error && (
-                <div className="bg-red-500/20 border border-red-500/50 p-3 rounded-xl text-white text-sm text-center font-medium backdrop-blur-sm">
+                <div className="bg-red-500/20 border border-red-500/50 p-2.5 rounded-xl text-white text-sm text-center font-medium backdrop-blur-sm">
                     {error}
                 </div>
             )}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <label htmlFor="auth-username" className="text-xs font-bold text-white/80 uppercase tracking-wider ml-1">Username</label>
               <div className="relative group">
                 <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors z-10" />
@@ -365,14 +365,14 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   type="text"
                   required
                   autoComplete="new-password"
-                  className="block w-full pl-12 pr-4 py-3.5 bg-white border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 shadow-lg transition-all font-medium"
+                  className="block w-full pl-12 pr-4 py-3 bg-white border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 shadow-lg transition-all font-medium"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <label htmlFor="auth-password" className="text-xs font-bold text-white/80 uppercase tracking-wider ml-1">{t('login.label.password')}</label>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors z-10" />
@@ -382,7 +382,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   type={showPassword ? "text" : "password"}
                   required
                   autoComplete="new-password"
-                  className="block w-full pl-12 pr-12 py-3.5 bg-white border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 shadow-lg transition-all font-medium"
+                  className="block w-full pl-12 pr-12 py-3 bg-white border border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 shadow-lg transition-all font-medium"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -399,7 +399,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full flex justify-center items-center py-3.5 px-4 rounded-xl shadow-xl text-sm font-bold text-white bg-indigo-600 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white transition-all transform active:scale-[0.98] mt-4 ${loading ? 'opacity-80 cursor-not-allowed' : 'hover:-translate-y-1'}`}
+              className={`w-full flex justify-center items-center py-3 px-4 rounded-xl shadow-xl text-sm font-bold text-white bg-indigo-600 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white transition-all transform active:scale-[0.98] mt-2 ${loading ? 'opacity-80 cursor-not-allowed' : 'hover:-translate-y-1'}`}
             >
               {loading ? (
                 <div className="flex items-center">
@@ -416,7 +416,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
 
           {/* Guest / Info Links */}
-          <div className="mt-6 pt-6 border-t border-white/10">
+          <div className="mt-5 pt-5 border-t border-white/10">
              <div className="flex flex-wrap justify-center gap-4 text-xs font-bold text-white/60">
                 <button onClick={() => openModal('about')} className="hover:text-white transition-colors flex items-center gap-1">
                     <Info className="h-3 w-3" /> {t('guest.tab.about')}
@@ -436,7 +436,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
         {/* Simple Copyright Footer */}
         <div className="text-center mt-8">
             <p className="text-[#64748b] text-xs font-medium">
-              © 2024 {SCHOOL_INFO.name}. {t('login.developer')} <span className="text-[#1e293b] font-bold">Nguyễn Quang Trung</span>
+              © 2026 {SCHOOL_INFO.name}. {t('login.developer')} <span className="text-[#1e293b] font-bold">Nguyễn Quang Trung</span>
             </p>
         </div>
       </div>
