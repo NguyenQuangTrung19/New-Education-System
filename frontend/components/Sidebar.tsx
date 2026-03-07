@@ -111,7 +111,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className={`h-28 flex items-center relative ${isCollapsed ? 'justify-center px-0' : 'px-4 gap-2'}`}>
         <div className="relative group cursor-pointer transition-transform duration-300 hover:scale-105 shrink-0">
             <div className="absolute inset-0 bg-white/20 blur-xl opacity-0 group-hover:opacity-60 transition-opacity rounded-full"></div>
-            <div className={`${isCollapsed ? 'h-16 w-16' : 'h-[72px] w-[72px]'} flex items-center justify-center overflow-visible relative z-10 drop-shadow-md`}>
+            <div className={`${isCollapsed ? 'h-16 w-16' : 'h-24 w-24'} flex items-center justify-center overflow-visible relative z-10 drop-shadow-md`}>
               <SchoolLogo className="w-full h-full object-contain scale-[1.1]" />
             </div>
         </div>
