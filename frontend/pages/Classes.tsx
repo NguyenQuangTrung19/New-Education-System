@@ -146,12 +146,18 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
   }
 
   const handleOpenAdd = () => {
-    setEditingClass(null);
-    setFormClass({ 
-      ...defaultClassState, 
-      id: `C${Date.now()}`,
-      academicYear: currentYearDefault 
-    });
+    if (editingClass !== null) {
+      setEditingClass(null);
+      setFormClass({ 
+        ...defaultClassState, 
+        id: `C${Date.now()}`,
+        academicYear: currentYearDefault 
+      });
+    } else {
+      if (!formClass.id) {
+         setFormClass(prev => ({ ...prev, id: `C${Date.now()}`, academicYear: currentYearDefault }));
+      }
+    }
     setFormErrors({});
     setIsFormOpen(true);
   };
@@ -221,6 +227,10 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
         setClasses([...classes, response.data]);
       }
       setIsFormOpen(false);
+      setTimeout(() => {
+        setFormClass(defaultClassState);
+        setEditingClass(null);
+      }, 300);
       showToast('success', 'Đã lưu lớp học thành công.');
     } catch (err) {
       console.error("Failed to save class", err);

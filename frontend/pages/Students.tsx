@@ -370,7 +370,7 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({
                                 <input type="text" className={inputClass('guardianJob')} value={formStudent.guardianJob} onChange={e => setFormStudent({...formStudent, guardianJob: e.target.value})} />
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold text-gray-500 mb-1">{t('student.guardianCitizenId')} <span className="text-red-500">*</span></label>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1">{t('student.guardianCitizenId')}</label>
                                 <input type="text" className={inputClass('guardianCitizenId')} value={formStudent.guardianCitizenId} onChange={e => setFormStudent({...formStudent, guardianCitizenId: e.target.value})} />
                                 {renderError('guardianCitizenId')}
                             </div>
@@ -563,9 +563,15 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
   }, [debouncedSearch, selectedClass]);
 
   const handleOpenAdd = () => {
-    setEditingStudent(null);
-    setFormStudent({ ...defaultStudentState, id: `S${Date.now().toString().slice(-5)}` });
-    setFormErrors([]);
+    if (editingStudent !== null) {
+      setEditingStudent(null);
+      setFormStudent({ ...defaultStudentState, id: `S${Date.now().toString().slice(-5)}` });
+    } else {
+      if (!formStudent.id) {
+         setFormStudent(prev => ({ ...prev, id: `S${Date.now().toString().slice(-5)}` }));
+      }
+    }
+    setFormErrors({});
     setIsFormOpen(true);
   };
 
@@ -590,12 +596,10 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
        // Required fields (Address is optional)
        if (!data.name?.trim()) errors.name = `${t('student.name')} ${t('student.validation.required')}`;
        if (!data.username?.trim()) errors.username = `${t('student.username')} ${t('student.validation.required')}`;
-       if (!editingStudent && !data.password?.trim()) errors.password = `${t('student.password')} ${t('student.validation.required')}`;
        if (!data.dateOfBirth) errors.dateOfBirth = `${t('student.dob')} ${t('student.validation.required')}`;
        if (!data.email?.trim()) errors.email = `${t('student.email')} ${t('student.validation.required')}`;
        if (!data.guardianName?.trim()) errors.guardianName = `${t('student.guardianName')} ${t('student.validation.required')}`;
        if (!data.guardianPhone?.trim()) errors.guardianPhone = `${t('student.guardianPhone')} ${t('student.validation.required')}`;
-       if (!data.guardianCitizenId?.trim()) errors.guardianCitizenId = `${t('student.guardianCitizenId')} ${t('student.validation.required')}`;
 
        // Age Validation (10 - 20)
        if (data.dateOfBirth) {
@@ -605,14 +609,27 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
            }
        }
 
+       // Email Validation
+       if (data.email) {
+           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+           if (!emailRegex.test(data.email)) {
+               errors.email = 'Email không hợp lệ'; // Or use translation if available
+           }
+       }
+
        // Phone Validation
-       if (data.guardianPhone && !isValidPhone(data.guardianPhone)) {
-           errors.guardianPhone = t('student.validation.phone');
+       if (data.guardianPhone) {
+           const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/g;
+           if (!phoneRegex.test(data.guardianPhone) || !isValidPhone(data.guardianPhone)) {
+               errors.guardianPhone = t('student.validation.phone');
+           }
        }
 
        // Citizen ID Validation
-       if (data.guardianCitizenId && !isValidCitizenId(data.guardianCitizenId)) {
-           errors.guardianCitizenId = t('student.validation.citizenId');
+       if (data.guardianCitizenId && data.guardianCitizenId.trim() !== '') {
+           if (!isValidCitizenId(data.guardianCitizenId)) {
+               errors.guardianCitizenId = t('student.validation.citizenId');
+           }
        }
 
        return errors;
@@ -644,6 +661,10 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
       guardianYearOfBirth: formattedData.guardianYearOfBirth || 1980,
     };
 
+    if (!editingStudent && !studentPayload.password) {
+        studentPayload.password = '123456';
+    }
+
     try {
         setIsSubmitting(true);
         if (editingStudent) {
@@ -656,6 +677,10 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
             await fetchStudents();
         }
         setIsFormOpen(false);
+        setTimeout(() => {
+            setFormStudent(defaultStudentState);
+            setEditingStudent(null);
+        }, 300);
         showToast('success', 'Đã lưu học sinh thành công.');
     } catch (error) {
         console.error("Failed to save student", error);

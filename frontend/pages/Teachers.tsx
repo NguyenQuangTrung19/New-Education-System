@@ -381,7 +381,7 @@ const SlideOverForm: React.FC<SlideOverFormProps & { isLoading?: boolean }> = ({
                              </div>
                         </div>
                         <div>
-                           <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('teacher.citizenId')} (12 số) <span className="text-red-500">*</span></label>
+                           <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('teacher.citizenId')} (12 số)</label>
                            <input type="text" className={inputClass('citizenId')} value={formTeacher.citizenId} onChange={e => setFormTeacher({...formTeacher, citizenId: e.target.value})} disabled={isLoading} />
                            {renderError('citizenId')}
                         </div>
@@ -612,8 +612,14 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
   }, [currentPage, debouncedSearch, selectedSubject]);
 
   const handleOpenAdd = () => {
-    setEditingTeacher(null);
-    setFormTeacher({ ...defaultTeacherState, id: `GV${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}` });
+    if (editingTeacher !== null) {
+      setEditingTeacher(null);
+      setFormTeacher({ ...defaultTeacherState, id: `GV${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}` });
+    } else {
+      if (!formTeacher.id) {
+         setFormTeacher(prev => ({ ...prev, id: `GV${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}` }));
+      }
+    }
     setFormErrors({});
     setIsFormOpen(true);
   };
@@ -657,11 +663,9 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
       // Required fields
       if (!data.name?.trim()) errors.name = "Họ tên không được để trống.";
       if (!data.username?.trim()) errors.username = "Tên đăng nhập không được để trống.";
-      if (!editingTeacher && !data.password?.trim()) errors.password = "Mật khẩu không được để trống.";
       if (!data.email?.trim()) errors.email = "Email không được để trống.";
       if (!data.phone?.trim()) errors.phone = "Số điện thoại không được để trống.";
       if (!data.dateOfBirth) errors.dateOfBirth = "Ngày sinh không được để trống.";
-      if (!data.citizenId?.trim()) errors.citizenId = "CCCD không được để trống.";
 
       // Age Check (> 18)
       if (data.dateOfBirth) {
@@ -671,14 +675,27 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
           }
       }
 
+      // Email Check
+      if (data.email) {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(data.email)) {
+              errors.email = "Email không hợp lệ.";
+          }
+      }
+
       // Phone Check
-      if (data.phone && !isValidPhone(data.phone)) {
-          errors.phone = "Số điện thoại phải bắt đầu bằng số 0 và có đủ 10 số.";
+      if (data.phone) {
+          const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/g;
+          if (!phoneRegex.test(data.phone) || !isValidPhone(data.phone)) {
+              errors.phone = "Số điện thoại phải bắt đầu bằng 84/0 và là dạng số hợp lệ của Việt Nam.";
+          }
       }
 
       // Citizen ID Check
-      if (data.citizenId && !isValidCitizenId(data.citizenId)) {
-          errors.citizenId = "Số CCCD phải có đủ 12 số.";
+      if (data.citizenId && data.citizenId.trim() !== '') {
+          if (!isValidCitizenId(data.citizenId)) {
+              errors.citizenId = "Số CCCD phải có đủ 12 số.";
+          }
       }
 
       return errors;
@@ -704,7 +721,7 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
     const teacherData: Teacher = {
       id: formattedData.id || `GV${Date.now().toString().slice(-4)}`,
       username: formattedData.username!,
-      password: formattedData.password,
+      password: formattedData.password || '123456',
       name: formattedData.name!,
       subjects: formattedData.subjects || [],
       email: formattedData.email!,
@@ -738,8 +755,10 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
             const response = await api.post('/teachers', teacherData);
              await fetchData();
         }
+        setIsFormOpen(false);
         setTimeout(() => {
-            setIsFormOpen(false);
+            setFormTeacher(defaultTeacherState);
+            setEditingTeacher(null);
         }, 300);
         showToast('success', 'Đã lưu giáo viên thành công.');
     } catch (error) {

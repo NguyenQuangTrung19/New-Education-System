@@ -85,8 +85,10 @@ export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
   };
 
   const handleOpenAdd = () => {
-    setEditingSubject(null);
-    setFormSubject({ ...defaultSubjectState });
+    if (editingSubject !== null) {
+      setEditingSubject(null);
+      setFormSubject({ ...defaultSubjectState });
+    }
     setFormErrors({});
     setIsFormOpen(true);
   };
@@ -134,6 +136,10 @@ export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
             setSubjects([...subjects, newSubject]);
         }
         setIsFormOpen(false);
+        setTimeout(() => {
+            setFormSubject(defaultSubjectState);
+            setEditingSubject(null);
+        }, 300);
         showToast('success', 'Đã lưu môn học thành công.');
     } catch (error) {
         console.error("Failed to save subject", error);
