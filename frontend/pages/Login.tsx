@@ -29,8 +29,22 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
   const handleRoleChange = (newRole: UserRole) => {
     setRole(newRole);
-    setUsername('');
-    setPassword('');
+    
+    // Auto-fill demo credentials based on role
+    if (newRole === UserRole.ADMIN) {
+        setUsername('admin');
+        setPassword('password123');
+    } else if (newRole === UserRole.TEACHER) {
+        setUsername('gv.nguyenvanan');
+        setPassword('password123');
+    } else if (newRole === UserRole.STUDENT) {
+        setUsername('hs.lethimai');
+        setPassword('password123');
+    } else {
+        setUsername('');
+        setPassword('');
+    }
+    
     setError(null);
   };
 
@@ -292,53 +306,6 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
         <div className="absolute inset-0 bg-black/10"></div>
       </div>
 
-      {/* Floating Demo Access (Top Right) */}
-      <div className="absolute top-4 right-4 z-20 hidden md:flex flex-col items-end gap-2 bg-black/40 backdrop-blur-md p-3 rounded-2xl border border-white/20 shadow-2xl animate-fade-in-up">
-        <div className="flex items-center gap-2 mb-1">
-            <span className="text-white/80 text-xs font-bold uppercase tracking-wider">{t('guest.demoLogin', 'Demo Access')}</span>
-        </div>
-        <div className="flex gap-2">
-            <button
-                 type="button"
-                 onClick={() => {
-                   setRole(UserRole.ADMIN);
-                   setUsername('admin');
-                   setPassword('password123');
-                   setError(null);
-                 }}
-                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/40 border border-indigo-400/30 text-indigo-100 transition-all hover:scale-105"
-            >
-                <ShieldCheck className="h-3.5 w-3.5" />
-                <span className="text-[10px] font-bold uppercase">Admin</span>
-            </button>
-            <button
-                 type="button"
-                 onClick={() => {
-                   setRole(UserRole.TEACHER);
-                   setUsername('gv.nguyenvanan');
-                   setPassword('password123');
-                   setError(null);
-                 }}
-                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-400/30 text-emerald-100 transition-all hover:scale-105"
-            >
-                <UserIcon className="h-3.5 w-3.5" />
-                <span className="text-[10px] font-bold uppercase">Teacher</span>
-            </button>
-            <button
-                 type="button"
-                 onClick={() => {
-                   setRole(UserRole.STUDENT);
-                   setUsername('hs.lethimai');
-                   setPassword('password123');
-                   setError(null);
-                 }}
-                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-500/20 hover:bg-sky-500/40 border border-sky-400/30 text-sky-100 transition-all hover:scale-105"
-            >
-                <GraduationCap className="h-3.5 w-3.5" />
-                <span className="text-[10px] font-bold uppercase">Student</span>
-            </button>
-        </div>
-      </div>
 
       <div className="relative z-10 w-full max-w-md">
         <div className="bg-white/10 backdrop-blur-xl p-8 rounded-[2rem] shadow-2xl border border-white/40 animate-fade-in-up relative overflow-hidden">
