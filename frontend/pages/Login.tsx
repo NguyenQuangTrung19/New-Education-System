@@ -399,6 +399,60 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </button>
           </form>
 
+          {/* Demo Access Links */}
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/20"></div>
+              </div>
+              <div className="relative flex justify-center text-xs font-medium">
+                <span className="bg-transparent px-2 text-white/60 uppercase tracking-wider backdrop-blur-md rounded-full">{t('guest.demoLogin', 'Demo Access')}</span>
+              </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              <button
+                 type="button"
+                 onClick={() => {
+                   setRole(UserRole.ADMIN);
+                   setUsername('admin');
+                   setPassword('password123');
+                   setError(null);
+                 }}
+                 className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all hover:-translate-y-1 group"
+              >
+                  <ShieldCheck className="h-4 w-4 text-indigo-400 mb-1 group-hover:scale-110 transition-transform" />
+                  <span className="text-[10px] font-bold text-white/80 uppercase">Admin</span>
+              </button>
+              <button
+                 type="button"
+                 onClick={() => {
+                   setRole(UserRole.TEACHER);
+                   setUsername('gv.nguyenvanan');
+                   setPassword('password123');
+                   setError(null);
+                 }}
+                 className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all hover:-translate-y-1 group"
+              >
+                  <UserIcon className="h-4 w-4 text-emerald-400 mb-1 group-hover:scale-110 transition-transform" />
+                  <span className="text-[10px] font-bold text-white/80 uppercase">Teacher</span>
+              </button>
+              <button
+                 type="button"
+                 onClick={() => {
+                   setRole(UserRole.STUDENT);
+                   setUsername('hs.lethimai');
+                   setPassword('password123');
+                   setError(null);
+                 }}
+                 className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all hover:-translate-y-1 group"
+              >
+                  <GraduationCap className="h-4 w-4 text-sky-400 mb-1 group-hover:scale-110 transition-transform" />
+                  <span className="text-[10px] font-bold text-white/80 uppercase">Student</span>
+              </button>
+            </div>
+          </div>
+
           {/* Guest / Info Links */}
           <div className="mt-6 pt-6 border-t border-white/10">
              <div className="flex flex-wrap justify-center gap-4 text-xs font-bold text-white/60">
