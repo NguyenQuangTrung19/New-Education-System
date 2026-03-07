@@ -292,6 +292,54 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
         <div className="absolute inset-0 bg-black/10"></div>
       </div>
 
+      {/* Floating Demo Access (Top Right) */}
+      <div className="absolute top-4 right-4 z-20 hidden md:flex flex-col items-end gap-2 bg-black/40 backdrop-blur-md p-3 rounded-2xl border border-white/20 shadow-2xl animate-fade-in-up">
+        <div className="flex items-center gap-2 mb-1">
+            <span className="text-white/80 text-xs font-bold uppercase tracking-wider">{t('guest.demoLogin', 'Demo Access')}</span>
+        </div>
+        <div className="flex gap-2">
+            <button
+                 type="button"
+                 onClick={() => {
+                   setRole(UserRole.ADMIN);
+                   setUsername('admin');
+                   setPassword('password123');
+                   setError(null);
+                 }}
+                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/40 border border-indigo-400/30 text-indigo-100 transition-all hover:scale-105"
+            >
+                <ShieldCheck className="h-3.5 w-3.5" />
+                <span className="text-[10px] font-bold uppercase">Admin</span>
+            </button>
+            <button
+                 type="button"
+                 onClick={() => {
+                   setRole(UserRole.TEACHER);
+                   setUsername('gv.nguyenvanan');
+                   setPassword('password123');
+                   setError(null);
+                 }}
+                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-400/30 text-emerald-100 transition-all hover:scale-105"
+            >
+                <UserIcon className="h-3.5 w-3.5" />
+                <span className="text-[10px] font-bold uppercase">Teacher</span>
+            </button>
+            <button
+                 type="button"
+                 onClick={() => {
+                   setRole(UserRole.STUDENT);
+                   setUsername('hs.lethimai');
+                   setPassword('password123');
+                   setError(null);
+                 }}
+                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-500/20 hover:bg-sky-500/40 border border-sky-400/30 text-sky-100 transition-all hover:scale-105"
+            >
+                <GraduationCap className="h-3.5 w-3.5" />
+                <span className="text-[10px] font-bold uppercase">Student</span>
+            </button>
+        </div>
+      </div>
+
       <div className="relative z-10 w-full max-w-md">
         <div className="bg-white/10 backdrop-blur-xl p-8 rounded-[2rem] shadow-2xl border border-white/40 animate-fade-in-up relative overflow-hidden">
           
@@ -399,59 +447,6 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </button>
           </form>
 
-          {/* Demo Access Links */}
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/20"></div>
-              </div>
-              <div className="relative flex justify-center text-xs font-medium">
-                <span className="bg-transparent px-2 text-white/60 uppercase tracking-wider backdrop-blur-md rounded-full">{t('guest.demoLogin', 'Demo Access')}</span>
-              </div>
-            </div>
-
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              <button
-                 type="button"
-                 onClick={() => {
-                   setRole(UserRole.ADMIN);
-                   setUsername('admin');
-                   setPassword('password123');
-                   setError(null);
-                 }}
-                 className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all hover:-translate-y-1 group"
-              >
-                  <ShieldCheck className="h-4 w-4 text-indigo-400 mb-1 group-hover:scale-110 transition-transform" />
-                  <span className="text-[10px] font-bold text-white/80 uppercase">Admin</span>
-              </button>
-              <button
-                 type="button"
-                 onClick={() => {
-                   setRole(UserRole.TEACHER);
-                   setUsername('gv.nguyenvanan');
-                   setPassword('password123');
-                   setError(null);
-                 }}
-                 className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all hover:-translate-y-1 group"
-              >
-                  <UserIcon className="h-4 w-4 text-emerald-400 mb-1 group-hover:scale-110 transition-transform" />
-                  <span className="text-[10px] font-bold text-white/80 uppercase">Teacher</span>
-              </button>
-              <button
-                 type="button"
-                 onClick={() => {
-                   setRole(UserRole.STUDENT);
-                   setUsername('hs.lethimai');
-                   setPassword('password123');
-                   setError(null);
-                 }}
-                 className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all hover:-translate-y-1 group"
-              >
-                  <GraduationCap className="h-4 w-4 text-sky-400 mb-1 group-hover:scale-110 transition-transform" />
-                  <span className="text-[10px] font-bold text-white/80 uppercase">Student</span>
-              </button>
-            </div>
-          </div>
 
           {/* Guest / Info Links */}
           <div className="mt-6 pt-6 border-t border-white/10">
