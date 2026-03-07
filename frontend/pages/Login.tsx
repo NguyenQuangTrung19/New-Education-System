@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Lock, User as UserIcon, ArrowRight, Eye, EyeOff, ShieldCheck, GraduationCap, Info, MapPin, Phone, Globe, X, Code, Heart, History, Award, Facebook, Linkedin, Github, Mail } from 'lucide-react';
+import { Lock, User as UserIcon, ArrowRight, Eye, EyeOff, ShieldCheck, GraduationCap, Info, MapPin, Phone, Globe, X, Code, Heart, History, Award, Facebook, Linkedin, Mail } from 'lucide-react';
 import { User as UserType, UserRole } from '../types';
 import { SCHOOL_INFO } from '../constants';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -88,9 +88,9 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         <div className="absolute inset-0 bg-white/30 blur-2xl rounded-full opacity-60"></div>
                         <SchoolLogo className="w-full h-full object-contain relative z-10" />
                     </div>
-                    <div className="ml-4 mb-3 text-white drop-shadow-md">
-                        <h2 className="text-3xl font-black tracking-tight">{SCHOOL_INFO.name}</h2>
-                        <p className="text-sm font-medium text-white/90 uppercase tracking-wider">{t('guest.title')}</p>
+                    <div className="ml-4 mb-3 drop-shadow-md">
+                        <h2 className="text-3xl font-black tracking-tight text-gray-800">{SCHOOL_INFO.name}</h2>
+                        <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">{t('guest.title')}</p>
                     </div>
                 </div>
             </div>
@@ -164,7 +164,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                                     <MapPin className="h-5 w-5 text-indigo-600" />
                                 </div>
                                 <h4 className="font-bold text-[#111827] text-sm uppercase mb-1">{t('guest.contact.address')}</h4>
-                                <p className="text-sm text-[#4b5563]">123 Đường Giáo Dục, Phường Phước Tân, TP. Biên Hòa, Đồng Nai</p>
+                                <p className="text-sm text-[#4b5563]">Xã Hồ Tràm, Thành phố Hồ Chí Minh</p>
                             </div>
                             
                             <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
@@ -172,7 +172,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                                     <Phone className="h-5 w-5 text-emerald-600" />
                                 </div>
                                 <h4 className="font-bold text-[#111827] text-sm uppercase mb-1">{t('guest.contact.hotline')}</h4>
-                                <p className="text-sm text-[#4b5563] font-medium">(0251) 3999 888</p>
+                                <p className="text-sm text-[#4b5563] font-medium">0914 652 363</p>
                                 <p className="text-xs text-[#9ca3af] mt-1">{t('guest.contact.support')}</p>
                             </div>
 
@@ -181,7 +181,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                                     <Mail className="h-5 w-5 text-blue-600" />
                                 </div>
                                 <h4 className="font-bold text-[#111827] text-sm uppercase mb-1">{t('guest.contact.email')}</h4>
-                                <p className="text-sm text-[#4b5563]">contact@thcsphuoctan.edu.vn</p>
+                                <p className="text-sm text-[#4b5563]">nqt123456123@gmail.com</p>
                             </div>
 
                             <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
@@ -189,21 +189,20 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                                     <Globe className="h-5 w-5 text-purple-600" />
                                 </div>
                                 <h4 className="font-bold text-[#111827] text-sm uppercase mb-1">{t('guest.contact.social')}</h4>
-                                <p className="text-sm text-indigo-600 hover:underline cursor-pointer">www.thcsphuoctan.edu.vn</p>
+                                <a href="https://www.facebook.com/?locale=vi_VN" target="_blank" rel="noopener noreferrer" className="text-sm text-indigo-600 hover:underline cursor-pointer block">Facebook</a>
                                 <div className="flex gap-3 mt-2">
-                                    <Facebook className="h-5 w-5 text-blue-700 cursor-pointer hover:scale-110 transition-transform" />
-                                    <div className="h-5 w-5 bg-red-600 rounded text-white flex items-center justify-center font-bold text-[10px] cursor-pointer hover:scale-110 transition-transform">YT</div>
+                                    <a href="https://www.facebook.com/?locale=vi_VN" target="_blank" rel="noopener noreferrer"><Facebook className="h-5 w-5 text-blue-700 cursor-pointer hover:scale-110 transition-transform" /></a>
                                 </div>
                             </div>
                         </div>
                         
                         {/* Map Placeholder */}
-                        <div className="bg-gray-200 h-48 rounded-2xl w-full flex items-center justify-center relative overflow-hidden group cursor-pointer border border-gray-300">
+                        <a href="https://www.google.com/maps/search/X%C3%A3+H%E1%BB%93+Tr%C3%A0m,+Th%C3%A0nh+ph%E1%BB%91+H%E1%BB%93+Ch%C3%AD+Minh" target="_blank" rel="noopener noreferrer" className="bg-gray-200 h-48 rounded-2xl w-full flex items-center justify-center relative overflow-hidden group cursor-pointer border border-gray-300 block">
                             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-50 group-hover:scale-105 transition-transform duration-700"></div>
-                            <button className="bg-white/90 text-gray-800 px-4 py-2 rounded-xl font-bold shadow-lg z-10 hover:bg-white flex items-center gap-2 text-sm backdrop-blur-sm">
+                            <span className="bg-white/90 text-gray-800 px-4 py-2 rounded-xl font-bold shadow-lg z-10 hover:bg-white flex items-center gap-2 text-sm backdrop-blur-sm">
                                 <MapPin className="h-4 w-4 text-red-500" /> {t('guest.contact.mapBtn')}
-                            </button>
-                        </div>
+                            </span>
+                        </a>
                     </div>
                 )}
 
@@ -228,6 +227,9 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                             <p className="text-slate-600 text-sm max-w-sm mx-auto leading-relaxed">
                                 {t('guest.credit.quote')}
                             </p>
+                            <p className="text-amber-600 text-xs max-w-sm mx-auto leading-relaxed mt-2 bg-amber-50 px-3 py-2 rounded-lg border border-amber-200">
+                                {t('guest.credit.demoNotice')}
+                            </p>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4 w-full max-w-sm mt-4">
@@ -242,14 +244,17 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         </div>
 
                         <div className="flex gap-4 pt-4">
-                            <a href="#" className="p-3 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-colors">
-                                <Github className="h-5 w-5" />
+                            <a href="https://www.facebook.com/?locale=vi_VN" target="_blank" rel="noopener noreferrer" className="p-3 bg-blue-50 rounded-full text-blue-600 hover:bg-blue-100 hover:text-blue-800 transition-colors" title="Facebook">
+                                <Facebook className="h-5 w-5" />
                             </a>
-                            <a href="#" className="p-3 bg-blue-50 rounded-full text-blue-600 hover:bg-blue-100 hover:text-blue-800 transition-colors">
+                            <a href="https://www.facebook.com/?locale=vi_VN" target="_blank" rel="noopener noreferrer" className="p-3 bg-blue-50 rounded-full text-blue-600 hover:bg-blue-100 hover:text-blue-800 transition-colors" title="Facebook">
+                                <Facebook className="h-5 w-5" />
+                            </a>
+                            <a href="https://www.linkedin.com/in/nguy%E1%BB%85n-quang-trung-178a2737a/" target="_blank" rel="noopener noreferrer" className="p-3 bg-sky-50 rounded-full text-sky-600 hover:bg-sky-100 hover:text-sky-800 transition-colors" title="LinkedIn">
                                 <Linkedin className="h-5 w-5" />
                             </a>
-                            <a href="#" className="p-3 bg-indigo-50 rounded-full text-indigo-600 hover:bg-indigo-100 transition-colors">
-                                <Mail className="h-5 w-5" />
+                            <a href="https://zalo.me/0914652363" target="_blank" rel="noopener noreferrer" className="p-3 bg-blue-50 rounded-full text-blue-700 hover:bg-blue-100 hover:text-blue-900 transition-colors" title="Zalo">
+                                <Phone className="h-5 w-5" />
                             </a>
                         </div>
                         
