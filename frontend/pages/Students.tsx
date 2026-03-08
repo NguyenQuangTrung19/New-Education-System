@@ -672,7 +672,8 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
             // Re-fetch to guarantee data consistency
             await fetchStudents();
         } else {
-            const response = await api.post('/students', studentPayload);
+            const { id, ...createPayload } = studentPayload;
+            const response = await api.post('/students', createPayload);
              // Re-fetch to guarantee data consistency
             await fetchStudents();
         }

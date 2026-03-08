@@ -739,20 +739,11 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
         setIsSubmitting(true);
         if (editingTeacher) {
             const response = await api.patch(`/teachers/${editingTeacher.id}`, teacherData);
-            // RELOAD DATA FROM SERVER TO ENSURE CONSISTENCY
-            // This prevents "partial update" bugs where the backend response lacks relations (like User).
             await fetchData();
-            
-            // Still update selectedTeacher if it's open, but fetchTeachers might reset list, so we must be careful.
-            // Actually, fetchTeachers updates 'teachers' state. 
-            // We need to re-find the selected teacher from the new list if we want to keep Detail Modal open with fresh data.
-            // But for now, let's just ensure the list is correct.
-            
-            // If we are editing, we can try to update selectedTeacher optimistically based on form data 
-            // OR find it in the new cache after a small delay? 
-            // simpler: Just refetch.
         } else {
-            const response = await api.post('/teachers', teacherData);
+            // Strip the generated ID since backend DTO forbids non-whitelisted properties and id is not in CreateTeacherDto
+            const { id, classesAssigned, ...createPayload } = teacherData;
+            const response = await api.post('/teachers', createPayload);
              await fetchData();
         }
         setIsFormOpen(false);

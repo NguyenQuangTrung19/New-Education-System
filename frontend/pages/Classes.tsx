@@ -223,7 +223,8 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
         const response = await api.patch(`/classes/${editingClass.id}`, classPayload);
         setClasses(classes.map(c => c.id === editingClass.id ? response.data : c));
       } else {
-        const response = await api.post('/classes', classPayload);
+        const { id, weeklyScoreHistory, ...createPayload } = classPayload;
+        const response = await api.post('/classes', createPayload);
         setClasses([...classes, response.data]);
       }
       setIsFormOpen(false);
