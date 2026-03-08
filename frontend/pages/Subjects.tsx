@@ -127,11 +127,18 @@ export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
     setFormErrors({});
 
     try {
+        const payload = {
+            name: formSubject.name,
+            code: formSubject.code,
+            department: formSubject.department,
+            description: formSubject.description,
+        };
+
         if (editingSubject) {
-            const { data } = await api.patch(`/subjects/${editingSubject.id}`, formSubject);
+            const { data } = await api.patch(`/subjects/${editingSubject.id}`, payload);
              setSubjects(subjects.map(s => s.id === editingSubject.id ? { ...s, ...data } : s));
         } else {
-            const { data } = await api.post('/subjects', formSubject);
+            const { data } = await api.post('/subjects', payload);
             const newSubject = { ...data, averageGpaHistory: [], notes: [] };
             setSubjects([...subjects, newSubject]);
         }
