@@ -1,0 +1,204 @@
+import { PrismaService } from '../prisma/prisma.service';
+import { IdGeneratorService } from '../common/id-generator.service';
+import { PasswordService } from '../common/password.service';
+export declare class TeachersService {
+    private prisma;
+    private idGenerator;
+    private passwordService;
+    constructor(prisma: PrismaService, idGenerator: IdGeneratorService, passwordService: PasswordService);
+    findAll(params?: {
+        page?: string;
+        limit?: string;
+        search?: string;
+        subject?: string;
+    }): Promise<{
+        name: string;
+        email: string;
+        username: string;
+        avatarUrl: string | null;
+        classes: {
+            id: string;
+            name: string;
+            description: string | null;
+            notes: string[];
+            academicYear: string;
+            gradeLevel: number;
+            room: string | null;
+            teacherId: string | null;
+            averageGpa: number;
+            currentWeeklyScore: number;
+            studentCount: number;
+            maleStudentCount: number;
+            femaleStudentCount: number;
+            weeklyScoreHistory: import("@prisma/client/runtime/library").JsonValue;
+        }[];
+        id: string;
+        department: string | null;
+        phone: string | null;
+        address: string | null;
+        citizenId: string | null;
+        gender: import(".prisma/client").$Enums.Gender | null;
+        dateOfBirth: Date | null;
+        joinYear: number | null;
+        subjects: string[];
+        classesAssigned: number;
+        notes: string[];
+        userId: string;
+    }[] | {
+        data: {
+            name: string;
+            email: string;
+            username: string;
+            avatarUrl: string | null;
+            classes: {
+                id: string;
+                name: string;
+                description: string | null;
+                notes: string[];
+                academicYear: string;
+                gradeLevel: number;
+                room: string | null;
+                teacherId: string | null;
+                averageGpa: number;
+                currentWeeklyScore: number;
+                studentCount: number;
+                maleStudentCount: number;
+                femaleStudentCount: number;
+                weeklyScoreHistory: import("@prisma/client/runtime/library").JsonValue;
+            }[];
+            id: string;
+            department: string | null;
+            phone: string | null;
+            address: string | null;
+            citizenId: string | null;
+            gender: import(".prisma/client").$Enums.Gender | null;
+            dateOfBirth: Date | null;
+            joinYear: number | null;
+            subjects: string[];
+            classesAssigned: number;
+            notes: string[];
+            userId: string;
+        }[];
+        meta: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+        };
+    }>;
+    findOne(id: string): Promise<{
+        name: string;
+        email: string;
+        username: string;
+        avatarUrl: string | null;
+        teachingAssignments: ({
+            subject: {
+                id: string;
+                name: string;
+                code: string;
+                department: string | null;
+                description: string | null;
+            };
+            class: {
+                id: string;
+                name: string;
+                description: string | null;
+                notes: string[];
+                academicYear: string;
+                gradeLevel: number;
+                room: string | null;
+                teacherId: string | null;
+                averageGpa: number;
+                currentWeeklyScore: number;
+                studentCount: number;
+                maleStudentCount: number;
+                femaleStudentCount: number;
+                weeklyScoreHistory: import("@prisma/client/runtime/library").JsonValue;
+            };
+        } & {
+            id: string;
+            classId: string;
+            teacherId: string;
+            subjectId: string;
+            sessionsPerWeek: number;
+        })[];
+        classes: {
+            id: string;
+            name: string;
+            description: string | null;
+            notes: string[];
+            academicYear: string;
+            gradeLevel: number;
+            room: string | null;
+            teacherId: string | null;
+            averageGpa: number;
+            currentWeeklyScore: number;
+            studentCount: number;
+            maleStudentCount: number;
+            femaleStudentCount: number;
+            weeklyScoreHistory: import("@prisma/client/runtime/library").JsonValue;
+        }[];
+        id: string;
+        department: string | null;
+        phone: string | null;
+        address: string | null;
+        citizenId: string | null;
+        gender: import(".prisma/client").$Enums.Gender | null;
+        dateOfBirth: Date | null;
+        joinYear: number | null;
+        subjects: string[];
+        classesAssigned: number;
+        notes: string[];
+        userId: string;
+    } | null>;
+    create(createTeacherDto: any): Promise<{
+        user: {
+            id: string;
+            username: string;
+            email: string;
+            password: string;
+            name: string;
+            role: import(".prisma/client").$Enums.UserRole;
+            avatarUrl: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+        id: string;
+        department: string | null;
+        phone: string | null;
+        address: string | null;
+        citizenId: string | null;
+        gender: import(".prisma/client").$Enums.Gender | null;
+        dateOfBirth: Date | null;
+        joinYear: number | null;
+        subjects: string[];
+        classesAssigned: number;
+        notes: string[];
+        userId: string;
+    }>;
+    update(id: string, updateTeacherDto: any): Promise<{
+        id: string;
+        department: string | null;
+        phone: string | null;
+        address: string | null;
+        citizenId: string | null;
+        gender: import(".prisma/client").$Enums.Gender | null;
+        dateOfBirth: Date | null;
+        joinYear: number | null;
+        subjects: string[];
+        classesAssigned: number;
+        notes: string[];
+        userId: string;
+    }>;
+    remove(id: string): Promise<{
+        id: string;
+        username: string;
+        email: string;
+        password: string;
+        name: string;
+        role: import(".prisma/client").$Enums.UserRole;
+        avatarUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    } | null>;
+}

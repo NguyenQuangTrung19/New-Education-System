@@ -185,6 +185,19 @@ export class ImportsService {
             error: `Username exists`,
           });
 
+        if (row.email) {
+          const existingEmail = await this.prisma.user.findUnique({
+            where: { email: row.email },
+          });
+          if (existingEmail) {
+            errors.push({
+              ...errorBase,
+              column: 'email',
+              error: `Email '${row.email}' already exists`,
+            });
+          }
+        }
+
         const subjects = (row.subjects as string)
           .split(',')
           .map((s: string) => s.trim());
@@ -386,9 +399,12 @@ export class ImportsService {
               },
             });
           } else if (type === 'teachers') {
+            const id = await this.idGenerator.generateTeacherId(
+              item.start_year || new Date().getFullYear()
+            );
             await tx.teacher.create({
               data: {
-                id: `GV${Math.floor(Math.random() * 10000)}`,
+                id,
                 userId: user.id,
                 subjects: item.subjectList,
                 citizenId: item.citizen_id,

@@ -1,0 +1,58 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.PrismaClientExceptionFilter = void 0;
+const common_1 = require("@nestjs/common");
+const core_1 = require("@nestjs/core");
+const client_1 = require("@prisma/client");
+let PrismaClientExceptionFilter = class PrismaClientExceptionFilter extends core_1.BaseExceptionFilter {
+    catch(exception, host) {
+        const ctx = host.switchToHttp();
+        const response = ctx.getResponse();
+        if (exception.code === 'P2002') {
+            const target = exception.meta?.target;
+            let field = 'Dữ liệu';
+            if (Array.isArray(target) && target.length > 0) {
+                field = target.join(', ');
+            }
+            else if (typeof target === 'string') {
+                field = target;
+            }
+            const fieldMap = {
+                'code': 'Mã',
+                'name': 'Tên',
+                'email': 'Email',
+                'username': 'Tên đăng nhập',
+                'userId': 'Tài khoản',
+                'citizenId': 'CCCD/CMND',
+            };
+            const translatedFields = field.split(',').map(f => {
+                const cleanField = f.trim();
+                const parts = cleanField.split('_');
+                for (const p of parts) {
+                    if (fieldMap[p])
+                        return fieldMap[p];
+                }
+                return fieldMap[cleanField] || cleanField;
+            }).join(', ');
+            const status = common_1.HttpStatus.CONFLICT;
+            response.status(status).json({
+                statusCode: status,
+                message: `${translatedFields} đã tồn tại trong hệ thống. Vui lòng kiểm tra lại!`,
+                error: 'Conflict'
+            });
+            return;
+        }
+        super.catch(exception, host);
+    }
+};
+exports.PrismaClientExceptionFilter = PrismaClientExceptionFilter;
+exports.PrismaClientExceptionFilter = PrismaClientExceptionFilter = __decorate([
+    (0, common_1.Catch)(client_1.Prisma.PrismaClientKnownRequestError)
+], PrismaClientExceptionFilter);
+//# sourceMappingURL=prisma-client-exception.filter.js.map
