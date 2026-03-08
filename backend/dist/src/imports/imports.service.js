@@ -471,6 +471,9 @@ let ImportsService = class ImportsService {
                     }
                     count++;
                 }
+            }, {
+                maxWait: 15000,
+                timeout: 60000,
             });
         }
         catch (error) {

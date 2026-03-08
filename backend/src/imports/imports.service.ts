@@ -468,6 +468,10 @@ export class ImportsService {
           }
           count++;
         }
+      },
+      {
+        maxWait: 15000, // 15 seconds max wait to connect to prisma
+        timeout: 60000, // 60 seconds max transaction duration 
       });
     } catch (error: any) {
       console.error('Import Error:', error);
