@@ -347,83 +347,90 @@ export class ImportsService {
       defaultPass = await this.passwordService.hashPassword('123456');
     }
 
-    await this.prisma.$transaction(async (tx) => {
-      for (const item of data) {
-        if (type === 'classes') {
-          const id = await this.idGenerator.generateClassId(item.academic_year, tx);
-          await tx.classGroup.create({
-            data: {
-              id,
-              name: item.class_name,
-              gradeLevel: item.gradeLevel,
-              room: item.classroom,
-              academicYear: item.academic_year,
-              description: item.description,
-              teacherId: item.teacherId,
-            },
-          });
-        } else {
-          // User creation for Students and Teachers
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        for (const item of data) {
+          if (type === 'classes') {
+            const id = await this.idGenerator.generateClassId(item.academic_year, tx);
+            await tx.classGroup.create({
+              data: {
+                id,
+                name: item.class_name,
+                gradeLevel: item.gradeLevel,
+                room: item.classroom,
+                academicYear: item.academic_year,
+                description: item.description,
+                teacherId: item.teacherId,
+              },
+            });
+          } else {
+            // User creation for Students and Teachers
 
-          const user = await tx.user.create({
-            data: {
-              username: item.username,
-              password: defaultPass,
-              name: item.full_name,
-              email: item.email || `${item.username}@school.edu`,
-              role: type === 'students' ? 'STUDENT' : 'TEACHER',
-            },
-          });
+            const user = await tx.user.create({
+              data: {
+                username: item.username,
+                password: defaultPass,
+                name: item.full_name,
+                email: item.email || `${item.username}@school.edu`,
+                role: type === 'students' ? 'STUDENT' : 'TEACHER',
+              },
+            });
 
-          if (type === 'students') {
-            const id =
-              item.student_code ||
-              (await this.idGenerator.generateStudentId(
-                new Date().getFullYear(),
+            if (type === 'students') {
+              const id =
+                item.student_code ||
+                (await this.idGenerator.generateStudentId(
+                  new Date().getFullYear(),
+                  tx
+                ));
+              // @ts-ignore: gender field might not be in generated type yet
+              await tx.student.create({
+                data: {
+                  id,
+                  userId: user.id,
+                  classId: item.classId,
+                  enrollmentYear: new Date().getFullYear(),
+                  dateOfBirth: new Date(item.dob),
+                  gender: item.gender as any,
+                  address: item.address,
+                  guardianName: item.guardian_name,
+                  guardianPhone: item.guardian_phone,
+                  guardianCitizenId: item.guardian_citizen_id,
+                  guardianJob: item.guardian_occupation,
+                  guardianYearOfBirth: item.guardian_birth_year,
+                },
+              });
+            } else if (type === 'teachers') {
+              const id = await this.idGenerator.generateTeacherId(
+                item.start_year || new Date().getFullYear(),
                 tx
-              ));
-            // @ts-ignore: gender field might not be in generated type yet
-            await tx.student.create({
-              data: {
-                id,
-                userId: user.id,
-                classId: item.classId,
-                enrollmentYear: new Date().getFullYear(),
-                dateOfBirth: new Date(item.dob),
-                gender: item.gender as any,
-                address: item.address,
-                guardianName: item.guardian_name,
-                guardianPhone: item.guardian_phone,
-                guardianCitizenId: item.guardian_citizen_id,
-                guardianJob: item.guardian_occupation,
-                guardianYearOfBirth: item.guardian_birth_year,
-              },
-            });
-          } else if (type === 'teachers') {
-            const id = await this.idGenerator.generateTeacherId(
-              item.start_year || new Date().getFullYear(),
-              tx
-            );
-            await tx.teacher.create({
-              data: {
-                id,
-                userId: user.id,
-                subjects: item.subjectList,
-                citizenId: item.citizen_id,
-                gender: item.gender as any,
-                phone: item.phone,
-                address: item.address,
-                joinYear: item.start_year,
-                dateOfBirth: new Date(item.dob),
-                // @ts-ignore: department field might not be in generated type yet
-                department: item.departmentId,
-              },
-            });
+              );
+              await tx.teacher.create({
+                data: {
+                  id,
+                  userId: user.id,
+                  subjects: item.subjectList,
+                  citizenId: item.citizen_id,
+                  gender: item.gender as any,
+                  phone: item.phone,
+                  address: item.address,
+                  joinYear: item.start_year,
+                  dateOfBirth: new Date(item.dob),
+                  // @ts-ignore: department field might not be in generated type yet
+                  department: item.departmentId,
+                },
+              });
+            }
           }
+          count++;
         }
-        count++;
-      }
-    });
+      });
+    } catch (error: any) {
+      console.error('Import Error:', error);
+      // Ensure we always return a 400 rather than a 500, preserving the actual data conflict or error message
+      throw new BadRequestException({ message: 'Lỗi khi lưu dữ liệu vào hệ thống: ' + (error.message || 'Unknown error'), details: error });
+    }
+    
     return { count };
   }
 }
