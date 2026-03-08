@@ -20,6 +20,7 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onClose, ty
   const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState<any[]>([]);
   const [successCount, setSuccessCount] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
@@ -29,6 +30,32 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onClose, ty
       setFile(e.target.files[0]);
       setErrors([]);
       setSuccessCount(null);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const droppedFile = e.dataTransfer.files[0];
+      if (droppedFile.name.endsWith('.xlsx') || droppedFile.name.endsWith('.xls')) {
+        setFile(droppedFile);
+        setErrors([]);
+        setSuccessCount(null);
+      } else {
+        showToast('error', t('import.invalidFile') || 'Vui lòng chọn file Excel tĩnh hợp lệ (.xlsx, .xls)');
+      }
     }
   };
 
@@ -129,7 +156,10 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onClose, ty
                 
                 <div 
                     onClick={() => fileInputRef.current?.click()}
-                    className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-colors ${file ? 'border-indigo-400 bg-indigo-50/50' : 'border-gray-300 hover:border-indigo-400 hover:bg-gray-50'}`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-colors ${file ? 'border-indigo-400 bg-indigo-50/50' : isDragging ? 'border-indigo-500 bg-indigo-100' : 'border-gray-300 hover:border-indigo-400 hover:bg-gray-50'}`}
                 >
                     <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".xlsx, .xls" className="hidden" />
                     
