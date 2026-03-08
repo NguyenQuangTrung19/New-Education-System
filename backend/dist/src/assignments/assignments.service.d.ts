@@ -22,16 +22,16 @@ export declare class AssignmentsService {
         } & {
             id: string;
             department: string | null;
-            phone: string | null;
-            address: string | null;
-            citizenId: string | null;
             gender: import(".prisma/client").$Enums.Gender | null;
             dateOfBirth: Date | null;
-            joinYear: number | null;
-            subjects: string[];
-            classesAssigned: number;
+            address: string | null;
+            phone: string | null;
             notes: string[];
+            subjects: string[];
             userId: string;
+            citizenId: string | null;
+            joinYear: number | null;
+            classesAssigned: number;
         };
         subject: {
             id: string;
@@ -45,9 +45,9 @@ export declare class AssignmentsService {
             name: string;
             description: string | null;
             notes: string[];
-            academicYear: string;
             gradeLevel: number;
             room: string | null;
+            academicYear: string;
             teacherId: string | null;
             averageGpa: number;
             currentWeeklyScore: number;
@@ -62,8 +62,8 @@ export declare class AssignmentsService {
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
-        status: import(".prisma/client").$Enums.HomeworkStatus;
         teacherId: string;
+        status: import(".prisma/client").$Enums.HomeworkStatus;
         subjectId: string;
         title: string;
         classIds: string[];
@@ -87,16 +87,16 @@ export declare class AssignmentsService {
         } & {
             id: string;
             department: string | null;
-            phone: string | null;
-            address: string | null;
-            citizenId: string | null;
             gender: import(".prisma/client").$Enums.Gender | null;
             dateOfBirth: Date | null;
-            joinYear: number | null;
-            subjects: string[];
-            classesAssigned: number;
+            address: string | null;
+            phone: string | null;
             notes: string[];
+            subjects: string[];
             userId: string;
+            citizenId: string | null;
+            joinYear: number | null;
+            classesAssigned: number;
         };
         subject: {
             id: string;
@@ -110,9 +110,9 @@ export declare class AssignmentsService {
             name: string;
             description: string | null;
             notes: string[];
-            academicYear: string;
             gradeLevel: number;
             room: string | null;
+            academicYear: string;
             teacherId: string | null;
             averageGpa: number;
             currentWeeklyScore: number;
@@ -137,8 +137,8 @@ export declare class AssignmentsService {
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
-        status: import(".prisma/client").$Enums.HomeworkStatus;
         teacherId: string;
+        status: import(".prisma/client").$Enums.HomeworkStatus;
         subjectId: string;
         title: string;
         classIds: string[];
@@ -162,16 +162,16 @@ export declare class AssignmentsService {
         } & {
             id: string;
             department: string | null;
-            phone: string | null;
-            address: string | null;
-            citizenId: string | null;
             gender: import(".prisma/client").$Enums.Gender | null;
             dateOfBirth: Date | null;
-            joinYear: number | null;
-            subjects: string[];
-            classesAssigned: number;
+            address: string | null;
+            phone: string | null;
             notes: string[];
+            subjects: string[];
             userId: string;
+            citizenId: string | null;
+            joinYear: number | null;
+            classesAssigned: number;
         };
         subject: {
             id: string;
@@ -185,9 +185,9 @@ export declare class AssignmentsService {
             name: string;
             description: string | null;
             notes: string[];
-            academicYear: string;
             gradeLevel: number;
             room: string | null;
+            academicYear: string;
             teacherId: string | null;
             averageGpa: number;
             currentWeeklyScore: number;
@@ -211,20 +211,20 @@ export declare class AssignmentsService {
                 };
             } & {
                 id: string;
-                address: string | null;
                 gender: import(".prisma/client").$Enums.Gender | null;
-                dateOfBirth: Date | null;
-                notes: string[];
-                userId: string;
+                classId: string | null;
                 enrollmentYear: number;
+                dateOfBirth: Date | null;
                 gpa: number;
+                address: string | null;
                 guardianName: string | null;
+                guardianPhone: string | null;
                 guardianCitizenId: string | null;
                 guardianYearOfBirth: number | null;
                 guardianJob: string | null;
-                guardianPhone: string | null;
                 semesterEvaluation: string | null;
-                classId: string | null;
+                notes: string[];
+                userId: string;
             };
         } & {
             id: string;
@@ -242,8 +242,8 @@ export declare class AssignmentsService {
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
-        status: import(".prisma/client").$Enums.HomeworkStatus;
         teacherId: string;
+        status: import(".prisma/client").$Enums.HomeworkStatus;
         subjectId: string;
         title: string;
         classIds: string[];
@@ -267,16 +267,16 @@ export declare class AssignmentsService {
         } & {
             id: string;
             department: string | null;
-            phone: string | null;
-            address: string | null;
-            citizenId: string | null;
             gender: import(".prisma/client").$Enums.Gender | null;
             dateOfBirth: Date | null;
-            joinYear: number | null;
-            subjects: string[];
-            classesAssigned: number;
+            address: string | null;
+            phone: string | null;
             notes: string[];
+            subjects: string[];
             userId: string;
+            citizenId: string | null;
+            joinYear: number | null;
+            classesAssigned: number;
         };
         subject: {
             id: string;
@@ -290,9 +290,9 @@ export declare class AssignmentsService {
             name: string;
             description: string | null;
             notes: string[];
-            academicYear: string;
             gradeLevel: number;
             room: string | null;
+            academicYear: string;
             teacherId: string | null;
             averageGpa: number;
             currentWeeklyScore: number;
@@ -307,8 +307,8 @@ export declare class AssignmentsService {
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
-        status: import(".prisma/client").$Enums.HomeworkStatus;
         teacherId: string;
+        status: import(".prisma/client").$Enums.HomeworkStatus;
         subjectId: string;
         title: string;
         classIds: string[];
@@ -322,8 +322,8 @@ export declare class AssignmentsService {
         createdAt: Date;
         updatedAt: Date;
         description: string | null;
-        status: import(".prisma/client").$Enums.HomeworkStatus;
         teacherId: string;
+        status: import(".prisma/client").$Enums.HomeworkStatus;
         subjectId: string;
         title: string;
         classIds: string[];

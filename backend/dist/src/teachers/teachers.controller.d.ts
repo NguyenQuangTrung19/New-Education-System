@@ -13,9 +13,9 @@ export declare class TeachersController {
             name: string;
             description: string | null;
             notes: string[];
-            academicYear: string;
             gradeLevel: number;
             room: string | null;
+            academicYear: string;
             teacherId: string | null;
             averageGpa: number;
             currentWeeklyScore: number;
@@ -26,16 +26,16 @@ export declare class TeachersController {
         }[];
         id: string;
         department: string | null;
-        phone: string | null;
-        address: string | null;
-        citizenId: string | null;
         gender: import(".prisma/client").$Enums.Gender | null;
         dateOfBirth: Date | null;
-        joinYear: number | null;
-        subjects: string[];
-        classesAssigned: number;
+        address: string | null;
+        phone: string | null;
         notes: string[];
+        subjects: string[];
         userId: string;
+        citizenId: string | null;
+        joinYear: number | null;
+        classesAssigned: number;
     }[] | {
         data: {
             name: string;
@@ -47,9 +47,9 @@ export declare class TeachersController {
                 name: string;
                 description: string | null;
                 notes: string[];
-                academicYear: string;
                 gradeLevel: number;
                 room: string | null;
+                academicYear: string;
                 teacherId: string | null;
                 averageGpa: number;
                 currentWeeklyScore: number;
@@ -60,16 +60,16 @@ export declare class TeachersController {
             }[];
             id: string;
             department: string | null;
-            phone: string | null;
-            address: string | null;
-            citizenId: string | null;
             gender: import(".prisma/client").$Enums.Gender | null;
             dateOfBirth: Date | null;
-            joinYear: number | null;
-            subjects: string[];
-            classesAssigned: number;
+            address: string | null;
+            phone: string | null;
             notes: string[];
+            subjects: string[];
             userId: string;
+            citizenId: string | null;
+            joinYear: number | null;
+            classesAssigned: number;
         }[];
         meta: {
             total: number;
@@ -96,9 +96,9 @@ export declare class TeachersController {
                 name: string;
                 description: string | null;
                 notes: string[];
-                academicYear: string;
                 gradeLevel: number;
                 room: string | null;
+                academicYear: string;
                 teacherId: string | null;
                 averageGpa: number;
                 currentWeeklyScore: number;
@@ -119,9 +119,9 @@ export declare class TeachersController {
             name: string;
             description: string | null;
             notes: string[];
-            academicYear: string;
             gradeLevel: number;
             room: string | null;
+            academicYear: string;
             teacherId: string | null;
             averageGpa: number;
             currentWeeklyScore: number;
@@ -132,16 +132,16 @@ export declare class TeachersController {
         }[];
         id: string;
         department: string | null;
-        phone: string | null;
-        address: string | null;
-        citizenId: string | null;
         gender: import(".prisma/client").$Enums.Gender | null;
         dateOfBirth: Date | null;
-        joinYear: number | null;
-        subjects: string[];
-        classesAssigned: number;
+        address: string | null;
+        phone: string | null;
         notes: string[];
+        subjects: string[];
         userId: string;
+        citizenId: string | null;
+        joinYear: number | null;
+        classesAssigned: number;
     } | null>;
     create(createTeacherDto: CreateTeacherDto): Promise<{
         user: {
@@ -157,30 +157,30 @@ export declare class TeachersController {
         };
         id: string;
         department: string | null;
-        phone: string | null;
-        address: string | null;
-        citizenId: string | null;
         gender: import(".prisma/client").$Enums.Gender | null;
         dateOfBirth: Date | null;
-        joinYear: number | null;
-        subjects: string[];
-        classesAssigned: number;
+        address: string | null;
+        phone: string | null;
         notes: string[];
+        subjects: string[];
         userId: string;
+        citizenId: string | null;
+        joinYear: number | null;
+        classesAssigned: number;
     }>;
     update(id: string, updateTeacherDto: UpdateTeacherDto): Promise<{
         id: string;
         department: string | null;
-        phone: string | null;
-        address: string | null;
-        citizenId: string | null;
         gender: import(".prisma/client").$Enums.Gender | null;
         dateOfBirth: Date | null;
-        joinYear: number | null;
-        subjects: string[];
-        classesAssigned: number;
+        address: string | null;
+        phone: string | null;
         notes: string[];
+        subjects: string[];
         userId: string;
+        citizenId: string | null;
+        joinYear: number | null;
+        classesAssigned: number;
     }>;
     remove(id: string): Promise<{
         id: string;

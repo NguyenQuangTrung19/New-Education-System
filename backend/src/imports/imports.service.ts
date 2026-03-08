@@ -78,12 +78,15 @@ export class ImportsService {
 
     const errors: any[] = [];
     const validData: any[] = [];
+    
+    // Tracking sets to catch duplicates within the file itself
+    const seenUsernames = new Set<string>();
+    const seenEmails = new Set<string>();
 
     // Parse and Validate Rows
     for (let i = 0; i < jsonData.length; i++) {
       const row = jsonData[i] as any;
       const rowNum = i + 2; // Row 1 is header
-
       const errorBase = { row: rowNum };
 
       if (type === 'students') {
@@ -126,27 +129,47 @@ export class ImportsService {
           });
         }
 
-        const existingUser = await this.prisma.user.findUnique({
-          where: { username: row.username },
-        });
-        if (existingUser) {
-          errors.push({
+        if (seenUsernames.has(row.username)) {
+           errors.push({
             ...errorBase,
             column: 'username',
-            error: `Username '${row.username}' already exists`,
+            error: `Username '${row.username}' is duplicated in the file`,
           });
+        } else {
+           const existingUser = await this.prisma.user.findUnique({
+             where: { username: row.username },
+           });
+           if (existingUser) {
+             errors.push({
+               ...errorBase,
+               column: 'username',
+               error: `Username '${row.username}' already exists in the system`,
+             });
+           } else {
+             seenUsernames.add(row.username);
+           }
         }
 
         if (row.email) {
-          const existingEmail = await this.prisma.user.findUnique({
-            where: { email: row.email },
-          });
-          if (existingEmail) {
-            errors.push({
-              ...errorBase,
-              column: 'email',
-              error: `Email '${row.email}' already exists`,
+          if (seenEmails.has(row.email)) {
+             errors.push({
+               ...errorBase,
+               column: 'email',
+               error: `Email '${row.email}' is duplicated in the file`,
+             });
+          } else {
+            const existingEmail = await this.prisma.user.findUnique({
+              where: { email: row.email },
             });
+            if (existingEmail) {
+              errors.push({
+                ...errorBase,
+                column: 'email',
+                error: `Email '${row.email}' already exists in the system`,
+              });
+            } else {
+              seenEmails.add(row.email);
+            }
           }
         }
 
@@ -175,26 +198,47 @@ export class ImportsService {
           continue;
         }
 
-        const existingUser = await this.prisma.user.findUnique({
-          where: { username: row.username },
-        });
-        if (existingUser)
-          errors.push({
+        if (seenUsernames.has(row.username)) {
+           errors.push({
             ...errorBase,
             column: 'username',
-            error: `Username exists`,
+            error: `Username '${row.username}' is duplicated in the file`,
           });
-
-        if (row.email) {
-          const existingEmail = await this.prisma.user.findUnique({
-            where: { email: row.email },
+        } else {
+          const existingUser = await this.prisma.user.findUnique({
+            where: { username: row.username },
           });
-          if (existingEmail) {
+          if (existingUser) {
             errors.push({
               ...errorBase,
-              column: 'email',
-              error: `Email '${row.email}' already exists`,
+              column: 'username',
+              error: `Username '${row.username}' already exists in the system`,
             });
+          } else {
+            seenUsernames.add(row.username);
+          }
+        }
+
+        if (row.email) {
+          if (seenEmails.has(row.email)) {
+             errors.push({
+               ...errorBase,
+               column: 'email',
+               error: `Email '${row.email}' is duplicated in the file`,
+             });
+          } else {
+            const existingEmail = await this.prisma.user.findUnique({
+              where: { email: row.email },
+            });
+            if (existingEmail) {
+              errors.push({
+                ...errorBase,
+                column: 'email',
+                error: `Email '${row.email}' already exists in the system`,
+              });
+            } else {
+              seenEmails.add(row.email);
+            }
           }
         }
 

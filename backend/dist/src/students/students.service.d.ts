@@ -18,9 +18,9 @@ export declare class StudentsService {
             name: string;
             description: string | null;
             notes: string[];
-            academicYear: string;
             gradeLevel: number;
             room: string | null;
+            academicYear: string;
             teacherId: string | null;
             averageGpa: number;
             currentWeeklyScore: number;
@@ -31,20 +31,20 @@ export declare class StudentsService {
         } | null;
     } & {
         id: string;
-        address: string | null;
         gender: import(".prisma/client").$Enums.Gender | null;
-        dateOfBirth: Date | null;
-        notes: string[];
-        userId: string;
+        classId: string | null;
         enrollmentYear: number;
+        dateOfBirth: Date | null;
         gpa: number;
+        address: string | null;
         guardianName: string | null;
+        guardianPhone: string | null;
         guardianCitizenId: string | null;
         guardianYearOfBirth: number | null;
         guardianJob: string | null;
-        guardianPhone: string | null;
         semesterEvaluation: string | null;
-        classId: string | null;
+        notes: string[];
+        userId: string;
     })[] | {
         data: ({
             user: {
@@ -58,9 +58,9 @@ export declare class StudentsService {
                 name: string;
                 description: string | null;
                 notes: string[];
-                academicYear: string;
                 gradeLevel: number;
                 room: string | null;
+                academicYear: string;
                 teacherId: string | null;
                 averageGpa: number;
                 currentWeeklyScore: number;
@@ -71,20 +71,20 @@ export declare class StudentsService {
             } | null;
         } & {
             id: string;
-            address: string | null;
             gender: import(".prisma/client").$Enums.Gender | null;
-            dateOfBirth: Date | null;
-            notes: string[];
-            userId: string;
+            classId: string | null;
             enrollmentYear: number;
+            dateOfBirth: Date | null;
             gpa: number;
+            address: string | null;
             guardianName: string | null;
+            guardianPhone: string | null;
             guardianCitizenId: string | null;
             guardianYearOfBirth: number | null;
             guardianJob: string | null;
-            guardianPhone: string | null;
             semesterEvaluation: string | null;
-            classId: string | null;
+            notes: string[];
+            userId: string;
         })[];
         meta: {
             total: number;
@@ -115,8 +115,8 @@ export declare class StudentsService {
             };
         } & {
             id: string;
-            studentId: string;
             academicYear: string;
+            studentId: string;
             semester: string;
             subjectId: string;
             oralScore: number | null;
@@ -131,9 +131,9 @@ export declare class StudentsService {
             name: string;
             description: string | null;
             notes: string[];
-            academicYear: string;
             gradeLevel: number;
             room: string | null;
+            academicYear: string;
             teacherId: string | null;
             averageGpa: number;
             currentWeeklyScore: number;
@@ -159,8 +159,8 @@ export declare class StudentsService {
         }[];
         tuitions: {
             id: string;
-            studentId: string;
             academicYear: string;
+            studentId: string;
             semester: string;
             totalAmount: number;
             totalPaid: number;
@@ -168,20 +168,20 @@ export declare class StudentsService {
         }[];
     } & {
         id: string;
-        address: string | null;
         gender: import(".prisma/client").$Enums.Gender | null;
-        dateOfBirth: Date | null;
-        notes: string[];
-        userId: string;
+        classId: string | null;
         enrollmentYear: number;
+        dateOfBirth: Date | null;
         gpa: number;
+        address: string | null;
         guardianName: string | null;
+        guardianPhone: string | null;
         guardianCitizenId: string | null;
         guardianYearOfBirth: number | null;
         guardianJob: string | null;
-        guardianPhone: string | null;
         semesterEvaluation: string | null;
-        classId: string | null;
+        notes: string[];
+        userId: string;
     }) | null>;
     create(createStudentDto: any): Promise<{
         user: {
@@ -196,37 +196,37 @@ export declare class StudentsService {
             updatedAt: Date;
         };
         id: string;
-        address: string | null;
         gender: import(".prisma/client").$Enums.Gender | null;
-        dateOfBirth: Date | null;
-        notes: string[];
-        userId: string;
+        classId: string | null;
         enrollmentYear: number;
+        dateOfBirth: Date | null;
         gpa: number;
+        address: string | null;
         guardianName: string | null;
+        guardianPhone: string | null;
         guardianCitizenId: string | null;
         guardianYearOfBirth: number | null;
         guardianJob: string | null;
-        guardianPhone: string | null;
         semesterEvaluation: string | null;
-        classId: string | null;
+        notes: string[];
+        userId: string;
     }>;
     update(id: string, updateStudentDto: any): Promise<{
         id: string;
-        address: string | null;
         gender: import(".prisma/client").$Enums.Gender | null;
-        dateOfBirth: Date | null;
-        notes: string[];
-        userId: string;
+        classId: string | null;
         enrollmentYear: number;
+        dateOfBirth: Date | null;
         gpa: number;
+        address: string | null;
         guardianName: string | null;
+        guardianPhone: string | null;
         guardianCitizenId: string | null;
         guardianYearOfBirth: number | null;
         guardianJob: string | null;
-        guardianPhone: string | null;
         semesterEvaluation: string | null;
-        classId: string | null;
+        notes: string[];
+        userId: string;
     }>;
     remove(id: string): Promise<{
         id: string;

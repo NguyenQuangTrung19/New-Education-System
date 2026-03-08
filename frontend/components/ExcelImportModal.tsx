@@ -97,8 +97,10 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onClose, ty
           onClose();
       }, 2000);
     } catch (error: any) {
-      if (error.response && error.response.data && error.response.data.errors) {
+      if (error.response?.data?.errors) {
         setErrors(error.response.data.errors);
+      } else if (error.response?.data?.message) {
+        setErrors([{ error: error.response.data.message }]);
       } else {
         setErrors([{ error: 'Unknown error occurred or server unavailable.' }]);
       }

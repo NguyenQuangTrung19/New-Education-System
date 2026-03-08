@@ -10,16 +10,16 @@ export declare class TeachingAssignmentsController {
         } & {
             id: string;
             department: string | null;
-            phone: string | null;
-            address: string | null;
-            citizenId: string | null;
             gender: import(".prisma/client").$Enums.Gender | null;
             dateOfBirth: Date | null;
-            joinYear: number | null;
-            subjects: string[];
-            classesAssigned: number;
+            address: string | null;
+            phone: string | null;
             notes: string[];
+            subjects: string[];
             userId: string;
+            citizenId: string | null;
+            joinYear: number | null;
+            classesAssigned: number;
         };
         subject: {
             name: string;

@@ -15,8 +15,8 @@ export declare class GradesController {
         };
     } & {
         id: string;
-        studentId: string;
         academicYear: string;
+        studentId: string;
         semester: string;
         subjectId: string;
         oralScore: number | null;

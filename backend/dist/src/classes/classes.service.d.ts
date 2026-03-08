@@ -20,16 +20,16 @@ export declare class ClassesService {
         } & {
             id: string;
             department: string | null;
-            phone: string | null;
-            address: string | null;
-            citizenId: string | null;
             gender: import(".prisma/client").$Enums.Gender | null;
             dateOfBirth: Date | null;
-            joinYear: number | null;
-            subjects: string[];
-            classesAssigned: number;
+            address: string | null;
+            phone: string | null;
             notes: string[];
+            subjects: string[];
             userId: string;
+            citizenId: string | null;
+            joinYear: number | null;
+            classesAssigned: number;
         }) | null;
         _count: {
             students: number;
@@ -39,9 +39,9 @@ export declare class ClassesService {
         name: string;
         description: string | null;
         notes: string[];
-        academicYear: string;
         gradeLevel: number;
         room: string | null;
+        academicYear: string;
         teacherId: string | null;
         averageGpa: number;
         currentWeeklyScore: number;
@@ -58,16 +58,16 @@ export declare class ClassesService {
             } & {
                 id: string;
                 department: string | null;
-                phone: string | null;
-                address: string | null;
-                citizenId: string | null;
                 gender: import(".prisma/client").$Enums.Gender | null;
                 dateOfBirth: Date | null;
-                joinYear: number | null;
-                subjects: string[];
-                classesAssigned: number;
+                address: string | null;
+                phone: string | null;
                 notes: string[];
+                subjects: string[];
                 userId: string;
+                citizenId: string | null;
+                joinYear: number | null;
+                classesAssigned: number;
             }) | null;
             _count: {
                 students: number;
@@ -77,9 +77,9 @@ export declare class ClassesService {
             name: string;
             description: string | null;
             notes: string[];
-            academicYear: string;
             gradeLevel: number;
             room: string | null;
+            academicYear: string;
             teacherId: string | null;
             averageGpa: number;
             currentWeeklyScore: number;
@@ -111,16 +111,16 @@ export declare class ClassesService {
         } & {
             id: string;
             department: string | null;
-            phone: string | null;
-            address: string | null;
-            citizenId: string | null;
             gender: import(".prisma/client").$Enums.Gender | null;
             dateOfBirth: Date | null;
-            joinYear: number | null;
-            subjects: string[];
-            classesAssigned: number;
+            address: string | null;
+            phone: string | null;
             notes: string[];
+            subjects: string[];
             userId: string;
+            citizenId: string | null;
+            joinYear: number | null;
+            classesAssigned: number;
         }) | null;
         scheduleItems: ({
             teacher: ({
@@ -138,16 +138,16 @@ export declare class ClassesService {
             } & {
                 id: string;
                 department: string | null;
-                phone: string | null;
-                address: string | null;
-                citizenId: string | null;
                 gender: import(".prisma/client").$Enums.Gender | null;
                 dateOfBirth: Date | null;
-                joinYear: number | null;
-                subjects: string[];
-                classesAssigned: number;
+                address: string | null;
+                phone: string | null;
                 notes: string[];
+                subjects: string[];
                 userId: string;
+                citizenId: string | null;
+                joinYear: number | null;
+                classesAssigned: number;
             }) | null;
             subject: {
                 id: string;
@@ -159,9 +159,9 @@ export declare class ClassesService {
         } & {
             id: string;
             classId: string;
-            day: string;
             room: string | null;
             teacherId: string | null;
+            day: string;
             subjectId: string;
             period: number;
             session: string;
@@ -182,16 +182,16 @@ export declare class ClassesService {
             } & {
                 id: string;
                 department: string | null;
-                phone: string | null;
-                address: string | null;
-                citizenId: string | null;
                 gender: import(".prisma/client").$Enums.Gender | null;
                 dateOfBirth: Date | null;
-                joinYear: number | null;
-                subjects: string[];
-                classesAssigned: number;
+                address: string | null;
+                phone: string | null;
                 notes: string[];
+                subjects: string[];
                 userId: string;
+                citizenId: string | null;
+                joinYear: number | null;
+                classesAssigned: number;
             };
             subject: {
                 id: string;
@@ -221,29 +221,29 @@ export declare class ClassesService {
             };
         } & {
             id: string;
-            address: string | null;
             gender: import(".prisma/client").$Enums.Gender | null;
-            dateOfBirth: Date | null;
-            notes: string[];
-            userId: string;
+            classId: string | null;
             enrollmentYear: number;
+            dateOfBirth: Date | null;
             gpa: number;
+            address: string | null;
             guardianName: string | null;
+            guardianPhone: string | null;
             guardianCitizenId: string | null;
             guardianYearOfBirth: number | null;
             guardianJob: string | null;
-            guardianPhone: string | null;
             semesterEvaluation: string | null;
-            classId: string | null;
+            notes: string[];
+            userId: string;
         })[];
     } & {
         id: string;
         name: string;
         description: string | null;
         notes: string[];
-        academicYear: string;
         gradeLevel: number;
         room: string | null;
+        academicYear: string;
         teacherId: string | null;
         averageGpa: number;
         currentWeeklyScore: number;
@@ -257,9 +257,9 @@ export declare class ClassesService {
         name: string;
         description: string | null;
         notes: string[];
-        academicYear: string;
         gradeLevel: number;
         room: string | null;
+        academicYear: string;
         teacherId: string | null;
         averageGpa: number;
         currentWeeklyScore: number;
@@ -273,9 +273,9 @@ export declare class ClassesService {
         name: string;
         description: string | null;
         notes: string[];
-        academicYear: string;
         gradeLevel: number;
         room: string | null;
+        academicYear: string;
         teacherId: string | null;
         averageGpa: number;
         currentWeeklyScore: number;
@@ -289,9 +289,9 @@ export declare class ClassesService {
         name: string;
         description: string | null;
         notes: string[];
-        academicYear: string;
         gradeLevel: number;
         room: string | null;
+        academicYear: string;
         teacherId: string | null;
         averageGpa: number;
         currentWeeklyScore: number;
