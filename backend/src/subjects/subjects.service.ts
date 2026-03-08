@@ -69,8 +69,20 @@ export class SubjectsService {
   }
 
   remove(id: string) {
-    return this.prisma.subject.delete({
-      where: { id },
+    return this.prisma.$transaction(async (prisma) => {
+      const assignments = await prisma.assignment.findMany({ where: { subjectId: id } });
+      const assignmentIds = assignments.map(a => a.id);
+      
+      if (assignmentIds.length > 0) {
+        await prisma.assignmentSubmission.deleteMany({ where: { assignmentId: { in: assignmentIds } } });
+      }
+
+      await prisma.assignment.deleteMany({ where: { subjectId: id } });
+      await prisma.studentGrade.deleteMany({ where: { subjectId: id } });
+      await prisma.teachingAssignment.deleteMany({ where: { subjectId: id } });
+      await prisma.scheduleItem.deleteMany({ where: { subjectId: id } });
+      
+      return prisma.subject.delete({ where: { id } });
     });
   }
 }

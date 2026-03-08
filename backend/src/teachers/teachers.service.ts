@@ -233,6 +233,13 @@ export class TeachersService {
         where: { teacherId: id },
       });
 
+      const assignments = await prisma.assignment.findMany({ where: { teacherId: id } });
+      const assignmentIds = assignments.map(a => a.id);
+      
+      if (assignmentIds.length > 0) {
+        await prisma.assignmentSubmission.deleteMany({ where: { assignmentId: { in: assignmentIds } } });
+      }
+
       await prisma.assignment.deleteMany({
         where: { teacherId: id },
       });

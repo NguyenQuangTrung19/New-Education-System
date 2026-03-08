@@ -185,11 +185,18 @@ export class StudentsService {
     if (!student) return null;
 
     return this.prisma.$transaction(async (prisma) => {
-      // Cleanup relations if needed (mostly cascades for student, but good to be safe)
-      // e.g. Attendance, Grades usually cascade delete on Student delete?
-      // Let's assume Prisma schema handles cascade for simple child tables,
-      // but let's be explicit if we are unsure.
-      // For now, simple delete of student usually works unless strict constraints exist.
+      const tuitions = await prisma.semesterTuition.findMany({ where: { studentId: id } });
+      const tuitionIds = tuitions.map(t => t.id);
+      
+      if (tuitionIds.length > 0) {
+        await prisma.tuitionItem.deleteMany({ where: { tuitionId: { in: tuitionIds } } });
+      }
+      
+      await prisma.semesterTuition.deleteMany({ where: { studentId: id } });
+      await prisma.attendanceRecord.deleteMany({ where: { studentId: id } });
+      await prisma.studentGrade.deleteMany({ where: { studentId: id } });
+      await prisma.academicRecord.deleteMany({ where: { studentId: id } });
+      await prisma.assignmentSubmission.deleteMany({ where: { studentId: id } });
 
       // Delete student profile first
       await prisma.student.delete({ where: { id } });
