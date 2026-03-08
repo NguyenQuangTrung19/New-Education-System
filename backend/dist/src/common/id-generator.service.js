@@ -17,19 +17,20 @@ let IdGeneratorService = class IdGeneratorService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async generateStudentId(enrollmentYear) {
-        return this.generateId('HS', enrollmentYear);
+    async generateStudentId(enrollmentYear, tx) {
+        return this.generateId('HS', enrollmentYear, tx);
     }
-    async generateTeacherId(joinYear) {
-        return this.generateId('GV', joinYear);
+    async generateTeacherId(joinYear, tx) {
+        return this.generateId('GV', joinYear, tx);
     }
-    async generateClassId(year) {
+    async generateClassId(year, tx) {
         const yearPrefix = year.split('-')[0] || new Date().getFullYear().toString();
-        return this.generateId('C', parseInt(yearPrefix));
+        return this.generateId('C', parseInt(yearPrefix), tx);
     }
-    async generateId(prefix, year) {
+    async generateId(prefix, year, tx) {
         const key = `${prefix}_${year}`;
-        const sequence = await this.prisma.idSequence.upsert({
+        const client = tx || this.prisma;
+        const sequence = await client.idSequence.upsert({
             where: { key },
             update: { value: { increment: 1 } },
             create: { key, value: 1 },

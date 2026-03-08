@@ -350,7 +350,7 @@ export class ImportsService {
     await this.prisma.$transaction(async (tx) => {
       for (const item of data) {
         if (type === 'classes') {
-          const id = await this.idGenerator.generateClassId(item.academic_year);
+          const id = await this.idGenerator.generateClassId(item.academic_year, tx);
           await tx.classGroup.create({
             data: {
               id,
@@ -380,6 +380,7 @@ export class ImportsService {
               item.student_code ||
               (await this.idGenerator.generateStudentId(
                 new Date().getFullYear(),
+                tx
               ));
             // @ts-ignore: gender field might not be in generated type yet
             await tx.student.create({
@@ -400,7 +401,8 @@ export class ImportsService {
             });
           } else if (type === 'teachers') {
             const id = await this.idGenerator.generateTeacherId(
-              item.start_year || new Date().getFullYear()
+              item.start_year || new Date().getFullYear(),
+              tx
             );
             await tx.teacher.create({
               data: {

@@ -356,7 +356,7 @@ let ImportsService = class ImportsService {
         await this.prisma.$transaction(async (tx) => {
             for (const item of data) {
                 if (type === 'classes') {
-                    const id = await this.idGenerator.generateClassId(item.academic_year);
+                    const id = await this.idGenerator.generateClassId(item.academic_year, tx);
                     await tx.classGroup.create({
                         data: {
                             id,
@@ -381,7 +381,7 @@ let ImportsService = class ImportsService {
                     });
                     if (type === 'students') {
                         const id = item.student_code ||
-                            (await this.idGenerator.generateStudentId(new Date().getFullYear()));
+                            (await this.idGenerator.generateStudentId(new Date().getFullYear(), tx));
                         await tx.student.create({
                             data: {
                                 id,
@@ -400,7 +400,7 @@ let ImportsService = class ImportsService {
                         });
                     }
                     else if (type === 'teachers') {
-                        const id = await this.idGenerator.generateTeacherId(item.start_year || new Date().getFullYear());
+                        const id = await this.idGenerator.generateTeacherId(item.start_year || new Date().getFullYear(), tx);
                         await tx.teacher.create({
                             data: {
                                 id,

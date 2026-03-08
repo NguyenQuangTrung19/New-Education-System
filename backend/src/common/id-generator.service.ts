@@ -5,27 +5,28 @@ import { PrismaService } from '../prisma/prisma.service';
 export class IdGeneratorService {
   constructor(private prisma: PrismaService) {}
 
-  async generateStudentId(enrollmentYear: number): Promise<string> {
-    return this.generateId('HS', enrollmentYear);
+  async generateStudentId(enrollmentYear: number, tx?: any): Promise<string> {
+    return this.generateId('HS', enrollmentYear, tx);
   }
 
-  async generateTeacherId(joinYear: number): Promise<string> {
-    return this.generateId('GV', joinYear);
+  async generateTeacherId(joinYear: number, tx?: any): Promise<string> {
+    return this.generateId('GV', joinYear, tx);
   }
 
-  async generateClassId(year: string): Promise<string> {
+  async generateClassId(year: string, tx?: any): Promise<string> {
     // year format usually "2023-2024", we can use just the first part or the whole thing
     // Let's use 'C' + first 4 digits of year
     const yearPrefix =
       year.split('-')[0] || new Date().getFullYear().toString();
-    return this.generateId('C', parseInt(yearPrefix));
+    return this.generateId('C', parseInt(yearPrefix), tx);
   }
 
-  private async generateId(prefix: string, year: number): Promise<string> {
+  private async generateId(prefix: string, year: number, tx?: any): Promise<string> {
     const key = `${prefix}_${year}`;
+    const client = tx || this.prisma;
 
     // Atomic increment using Prisma
-    const sequence = await (this.prisma as any).idSequence.upsert({
+    const sequence = await client.idSequence.upsert({
       where: { key },
       update: { value: { increment: 1 } },
       create: { key, value: 1 },
