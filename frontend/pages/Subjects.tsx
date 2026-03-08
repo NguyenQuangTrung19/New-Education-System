@@ -148,9 +148,10 @@ export const Subjects: React.FC<SubjectsProps> = ({ currentUser }) => {
             setEditingSubject(null);
         }, 300);
         showToast('success', 'Đã lưu môn học thành công.');
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to save subject", error);
-        showToast('error', t('common.error') || 'Có lỗi xảy ra.');
+        const errorMsg = error.response?.data?.message || t('common.error') || 'Có lỗi xảy ra.';
+        showToast('error', errorMsg);
     }
   };
 

@@ -1,7 +1,8 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, HttpAdapterHost } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { PrismaClientExceptionFilter } from './common/filters/prisma-client-exception.filter';
 
 export async function createApp() {
   const app = await NestFactory.create(AppModule, {
@@ -30,6 +31,9 @@ export async function createApp() {
       forbidNonWhitelisted: true,
     }),
   );
+
+  const { httpAdapter } = app.get(HttpAdapterHost);
+  app.useGlobalFilters(new PrismaClientExceptionFilter(httpAdapter));
 
   return app;
 }

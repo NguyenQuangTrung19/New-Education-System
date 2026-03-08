@@ -682,9 +682,10 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
             setEditingStudent(null);
         }, 300);
         showToast('success', 'Đã lưu học sinh thành công.');
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to save student", error);
-        showToast('error', t('common.error') || 'Có lỗi xảy ra.');
+        const errorMsg = error.response?.data?.message || t('common.error') || 'Có lỗi xảy ra.';
+        showToast('error', errorMsg);
     } finally {
         setIsSubmitting(false);
     }

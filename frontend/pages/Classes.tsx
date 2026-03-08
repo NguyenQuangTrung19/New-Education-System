@@ -232,9 +232,10 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
         setEditingClass(null);
       }, 300);
       showToast('success', 'Đã lưu lớp học thành công.');
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to save class", err);
-      showToast('error', "Failed to save class");
+      const errorMsg = err.response?.data?.message || t('common.error') || "Failed to save class";
+      showToast('error', errorMsg);
     } finally {
       setIsSubmitting(false);
     }

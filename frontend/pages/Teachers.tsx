@@ -761,9 +761,10 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
             setEditingTeacher(null);
         }, 300);
         showToast('success', 'Đã lưu giáo viên thành công.');
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to save teacher", error);
-        showToast('error', "Failed to save teacher. Please try again.");
+        const errorMsg = error.response?.data?.message || t('common.error') || "Failed to save teacher. Please try again.";
+        showToast('error', errorMsg);
     } finally {
         setIsSubmitting(false);
     }
