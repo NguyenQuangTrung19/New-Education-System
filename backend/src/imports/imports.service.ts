@@ -83,6 +83,37 @@ export class ImportsService {
     const seenUsernames = new Set<string>();
     const seenEmails = new Set<string>();
 
+    // PREFETCH DATA for faster validation to prevent Vercel 504 Timeouts
+    const allUsers = await this.prisma.user.findMany({
+      select: { username: true, email: true },
+    });
+    const dbUsernames = new Set(allUsers.map((u) => u.username.toLowerCase()));
+    const dbEmails = new Set(
+      allUsers.filter((u) => u.email).map((u) => u.email.toLowerCase())
+    );
+
+    let dbClasses: any[] = [];
+    if (type === 'students' || type === 'classes') {
+      dbClasses = await this.prisma.classGroup.findMany({
+        select: { id: true, name: true, academicYear: true },
+      });
+    }
+
+    let dbSubjects: any[] = [];
+    if (type === 'teachers') {
+      dbSubjects = await this.prisma.subject.findMany({
+        select: { id: true, name: true, code: true, department: true },
+      });
+    }
+
+    let dbTeacherUsers: any[] = [];
+    if (type === 'classes') {
+      dbTeacherUsers = await this.prisma.user.findMany({
+        where: { role: 'TEACHER' },
+        include: { teacher: true },
+      });
+    }
+
     // Parse and Validate Rows
     for (let i = 0; i < jsonData.length; i++) {
       const row = jsonData[i] as any;
@@ -118,9 +149,8 @@ export class ImportsService {
           continue;
         }
 
-        const classGroup = await this.prisma.classGroup.findFirst({
-          where: { name: { equals: row.class_name, mode: 'insensitive' } },
-        });
+        const classNameLower = row.class_name?.toString().toLowerCase();
+        const classGroup = dbClasses.find(c => c.name.toLowerCase() === classNameLower);
         if (!classGroup) {
           errors.push({
             ...errorBase,
@@ -129,47 +159,41 @@ export class ImportsService {
           });
         }
 
-        if (seenUsernames.has(row.username)) {
-           errors.push({
-            ...errorBase,
-            column: 'username',
-            error: `Username '${row.username}' is duplicated in the file`,
-          });
-        } else {
-           const existingUser = await this.prisma.user.findUnique({
-             where: { username: row.username },
-           });
-           if (existingUser) {
+        const usernameLower = row.username?.toString().toLowerCase();
+        if (usernameLower) {
+          if (seenUsernames.has(usernameLower)) {
+             errors.push({
+              ...errorBase,
+              column: 'username',
+              error: `Username '${row.username}' is duplicated in the file`,
+            });
+          } else if (dbUsernames.has(usernameLower)) {
              errors.push({
                ...errorBase,
                column: 'username',
                error: `Username '${row.username}' already exists in the system`,
              });
-           } else {
-             seenUsernames.add(row.username);
-           }
+          } else {
+             seenUsernames.add(usernameLower);
+          }
         }
 
-        if (row.email) {
-          if (seenEmails.has(row.email)) {
+        const emailLower = row.email?.toString().toLowerCase();
+        if (emailLower) {
+          if (seenEmails.has(emailLower)) {
              errors.push({
                ...errorBase,
                column: 'email',
                error: `Email '${row.email}' is duplicated in the file`,
              });
-          } else {
-            const existingEmail = await this.prisma.user.findUnique({
-              where: { email: row.email },
+          } else if (dbEmails.has(emailLower)) {
+            errors.push({
+              ...errorBase,
+              column: 'email',
+              error: `Email '${row.email}' already exists in the system`,
             });
-            if (existingEmail) {
-              errors.push({
-                ...errorBase,
-                column: 'email',
-                error: `Email '${row.email}' already exists in the system`,
-              });
-            } else {
-              seenEmails.add(row.email);
-            }
+          } else {
+            seenEmails.add(emailLower);
           }
         }
 
@@ -198,47 +222,41 @@ export class ImportsService {
           continue;
         }
 
-        if (seenUsernames.has(row.username)) {
-           errors.push({
-            ...errorBase,
-            column: 'username',
-            error: `Username '${row.username}' is duplicated in the file`,
-          });
-        } else {
-          const existingUser = await this.prisma.user.findUnique({
-            where: { username: row.username },
-          });
-          if (existingUser) {
-            errors.push({
+        const usernameLower = row.username?.toString().toLowerCase();
+        if (usernameLower) {
+          if (seenUsernames.has(usernameLower)) {
+             errors.push({
               ...errorBase,
               column: 'username',
-              error: `Username '${row.username}' already exists in the system`,
+              error: `Username '${row.username}' is duplicated in the file`,
             });
+          } else if (dbUsernames.has(usernameLower)) {
+             errors.push({
+               ...errorBase,
+               column: 'username',
+               error: `Username '${row.username}' already exists in the system`,
+             });
           } else {
-            seenUsernames.add(row.username);
+             seenUsernames.add(usernameLower);
           }
         }
 
-        if (row.email) {
-          if (seenEmails.has(row.email)) {
+        const emailLower = row.email?.toString().toLowerCase();
+        if (emailLower) {
+          if (seenEmails.has(emailLower)) {
              errors.push({
                ...errorBase,
                column: 'email',
                error: `Email '${row.email}' is duplicated in the file`,
              });
-          } else {
-            const existingEmail = await this.prisma.user.findUnique({
-              where: { email: row.email },
+          } else if (dbEmails.has(emailLower)) {
+            errors.push({
+              ...errorBase,
+              column: 'email',
+              error: `Email '${row.email}' already exists in the system`,
             });
-            if (existingEmail) {
-              errors.push({
-                ...errorBase,
-                column: 'email',
-                error: `Email '${row.email}' already exists in the system`,
-              });
-            } else {
-              seenEmails.add(row.email);
-            }
+          } else {
+            seenEmails.add(emailLower);
           }
         }
 
@@ -249,14 +267,8 @@ export class ImportsService {
         let normalizedSubjects: string[] = [];
 
         for (const subjName of subjects) {
-          const subj = await this.prisma.subject.findFirst({
-            where: { 
-              OR: [
-                { code: { equals: subjName, mode: 'insensitive' } }, 
-                { name: { equals: subjName, mode: 'insensitive' } }
-              ] 
-            },
-          });
+          const subjNameLower = subjName.toLowerCase();
+          const subj = dbSubjects.find(s => s.code.toLowerCase() === subjNameLower || s.name.toLowerCase() === subjNameLower);
           if (!subj) {
             errors.push({
               ...errorBase,
@@ -289,10 +301,8 @@ export class ImportsService {
 
         let teacherId = null;
         if (row.homeroom_teacher) {
-          const teacher = await this.prisma.user.findFirst({
-            where: { username: { equals: row.homeroom_teacher, mode: 'insensitive' } },
-            include: { teacher: true },
-          });
+          const teacherUsernameLower = row.homeroom_teacher.toString().toLowerCase();
+          const teacher = dbTeacherUsers.find(t => t.username.toLowerCase() === teacherUsernameLower);
           if (!teacher || teacher.role !== 'TEACHER' || !teacher.teacher) {
             errors.push({
               ...errorBase,
@@ -304,12 +314,8 @@ export class ImportsService {
           }
         }
 
-        const existingClass = await this.prisma.classGroup.findFirst({
-          where: { 
-            name: { equals: row.class_name, mode: 'insensitive' }, 
-            academicYear: row.academic_year 
-          },
-        });
+        const classNameLower = row.class_name?.toString().toLowerCase();
+        const existingClass = dbClasses.find(c => c.name.toLowerCase() === classNameLower && c.academicYear === row.academic_year);
 
         if (existingClass) {
           errors.push({
