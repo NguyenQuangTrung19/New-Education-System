@@ -26,10 +26,13 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Clear all session data including tokens and user info
-      sessionStorage.clear();
-      // Force redirect to login page
-      window.location.href = '/';
+      // Avoid redirecting if the 401 came from the login endpoint itself
+      if (error.config && !error.config.url?.includes('/auth/login')) {
+        // Clear all session data including tokens and user info
+        sessionStorage.clear();
+        // Force redirect to login page
+        window.location.href = '/';
+      }
     }
     return Promise.reject(error);
   }
