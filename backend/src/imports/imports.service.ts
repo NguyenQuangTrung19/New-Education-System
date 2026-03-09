@@ -413,25 +413,33 @@ export class ImportsService {
       defaultPass = await this.passwordService.hashPassword('123456');
     }
 
-    try {
-      await this.prisma.$transaction(async (tx) => {
-        for (const item of data) {
-          if (type === 'classes') {
-            const id = await this.idGenerator.generateClassId(item.academic_year, tx);
-            await tx.classGroup.create({
-              data: {
-                id,
-                name: item.class_name,
-                gradeLevel: item.gradeLevel,
-                room: item.classroom,
-                academicYear: item.academic_year,
-                description: item.description,
-                teacherId: item.teacherId,
-              },
-            });
-          } else {
-            // User creation for Students and Teachers
-
+    const responseErrors: {row: string, detail: string}[] = [];
+    
+    // We will process each row individually so that one duplicate or failure
+    // doesn't poison a global transaction and crash the rest.
+    for (const item of data) {
+      if (type === 'classes') {
+        try {
+          const id = await this.idGenerator.generateClassId(item.academic_year);
+          await this.prisma.classGroup.create({
+            data: {
+              id,
+              name: item.class_name,
+              gradeLevel: item.gradeLevel,
+              room: item.classroom,
+              academicYear: item.academic_year,
+              description: item.description,
+              teacherId: item.teacherId,
+            },
+          });
+          count++;
+        } catch (err: any) {
+          responseErrors.push({ row: item.class_name, detail: err.message });
+        }
+      } else {
+        // User creation for Students and Teachers
+        try {
+          await this.prisma.$transaction(async (tx) => {
             const user = await tx.user.create({
               data: {
                 username: item.username,
@@ -485,21 +493,20 @@ export class ImportsService {
                 },
               });
             }
-          }
+          }, {
+            timeout: 15000 // Timeout per individual user transaction
+          });
           count++;
+        } catch (err: any) {
+          responseErrors.push({ row: item.username || item.full_name, detail: err?.meta || err.message || String(err) });
         }
-      },
-      {
-        maxWait: 15000, // 15 seconds max wait to connect to prisma
-        timeout: 60000, // 60 seconds max transaction duration 
-      });
-    } catch (error: any) {
-      console.error('Import Error:', error);
-      if (error.code === 'P2002') console.error('Prisma Error Target:', error.meta?.target);
-      // Ensure we always return a 400 rather than a 500, preserving the actual data conflict or error message
-      throw new BadRequestException({ message: 'Lỗi khi lưu dữ liệu vào hệ thống: ' + (error.message || 'Unknown error'), details: error?.meta || error?.name || String(error) });
+      }
     }
-    
-    return { count };
+
+    if (responseErrors.length > 0 && count === 0) {
+      throw new BadRequestException({ message: 'Lỗi khi lưu dữ liệu vào hệ thống. Không có dòng nào được import.', details: responseErrors });
+    }
+
+    return { count, errors: responseErrors };
   }
 }
