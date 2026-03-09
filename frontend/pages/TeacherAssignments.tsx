@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { isDateInFutureOrToday } from '../utils';
 import { useToast } from '../contexts/ToastContext';
+import DateInput from '../components/DateInput';
 
 interface TeacherAssignmentsProps {
   currentUser: User;
@@ -823,11 +824,10 @@ export const TeacherAssignments: React.FC<TeacherAssignmentsProps> = ({ currentU
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Hạn nộp bài <span className="text-red-500">*</span></label>
                     <div className="relative">
                       <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <input 
-                        type="date" 
+                      <DateInput 
                         className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                         value={newAssignment.dueDate}
-                        onChange={e => setNewAssignment({...newAssignment, dueDate: e.target.value})}
+                        onChange={val => setNewAssignment({...newAssignment, dueDate: val})}
                       />
                     </div>
                   </div>

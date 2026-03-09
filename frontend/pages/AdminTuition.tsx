@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { getCurrentAcademicYear, isDateInFutureOrToday } from '../utils';
 import { useToast } from '../contexts/ToastContext';
+import DateInput from '../components/DateInput';
 
 interface AdminTuitionProps {
   currentUser: User;
@@ -329,12 +330,10 @@ export const AdminTuition: React.FC<AdminTuitionProps> = ({ currentUser }) => {
 
                       <div>
                           <label className="block text-xs font-bold text-gray-700 uppercase mb-1.5">{t('adminTuition.dueDate')} <span className="text-red-500">*</span></label>
-                          <input 
-                              type="date" 
-                              required
+                          <DateInput 
                               className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm text-gray-700"
                               value={feeForm.dueDate}
-                              onChange={e => setFeeForm({...feeForm, dueDate: e.target.value})}
+                              onChange={val => setFeeForm({...feeForm, dueDate: val})}
                           />
                       </div>
 

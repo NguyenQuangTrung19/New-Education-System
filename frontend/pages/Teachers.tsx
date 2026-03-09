@@ -15,6 +15,7 @@ import ReAuthModal from '../components/ReAuthModal';
 import PasswordManagementModal from '../components/PasswordManagementModal';
 import CredentialRevealModal from '../components/CredentialRevealModal';
 import ExcelImportModal from '../components/ExcelImportModal';
+import DateInput from '../components/DateInput';
 
 interface TeachersProps {
   currentUser: User | null;
@@ -368,7 +369,7 @@ const SlideOverForm: React.FC<SlideOverFormProps & { isLoading?: boolean }> = ({
                         <div className="grid grid-cols-2 gap-4">
                              <div>
                                 <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">{t('teacher.dob')} <span className="text-red-500">*</span></label>
-                                <input type="date" className={inputClass('dateOfBirth')} value={formTeacher.dateOfBirth ? new Date(formTeacher.dateOfBirth).toISOString().split('T')[0] : ''} onChange={e => setFormTeacher({...formTeacher, dateOfBirth: e.target.value})} disabled={isLoading} />
+                                <DateInput className={inputClass('dateOfBirth')} value={formTeacher.dateOfBirth ? new Date(formTeacher.dateOfBirth).toISOString().split('T')[0] : ''} onChange={val => setFormTeacher({...formTeacher, dateOfBirth: val})} disabled={isLoading} />
                                 {renderError('dateOfBirth')}
                              </div>
                              <div>
