@@ -26,6 +26,7 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onClose, ty
   const [successCount, setSuccessCount] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [progress, setProgress] = useState<{ current: number; total: number; count: number } | null>(null);
+  const [parsedRowCount, setParsedRowCount] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef(false);
 
@@ -222,9 +223,7 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onClose, ty
       }
   };
 
-  // Detect row count from parsed file for showing warning
-  const [parsedRowCount, setParsedRowCount] = useState<number | null>(null);
-  
+  // File selected handler with row count detection
   const handleFileSelected = async (selectedFile: File) => {
     setFile(selectedFile);
     setErrors([]);
