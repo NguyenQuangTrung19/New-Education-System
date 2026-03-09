@@ -72,7 +72,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
       onLogin(frontendUser);
     } catch (err: any) {
       console.error('Login failed');
-      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      const msg = err.response?.data?.message;
+      setError(Array.isArray(msg) ? msg[0] : (msg || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.'));
     } finally {
       setLoading(false);
     }

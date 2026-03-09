@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 
@@ -15,15 +15,18 @@ export class AuthService {
     role: string,
   ): Promise<any> {
     const user = await this.usersService.findOne(username);
-    if (
-      user &&
-      (await this.usersService.verifyPassword(user.id, pass)) &&
-      user.role === role
-    ) {
-      const { password, ...result } = user;
-      return result;
+    if (!user) {
+      throw new UnauthorizedException('Username không tồn tại');
     }
-    return null;
+    const isPasswordValid = await this.usersService.verifyPassword(user.id, pass);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Sai password');
+    }
+    if (user.role !== role) {
+      throw new UnauthorizedException('Sai quyền truy cập');
+    }
+    const { password, ...result } = user;
+    return result;
   }
 
   async verifyPassword(userId: string, pass: string): Promise<boolean> {
