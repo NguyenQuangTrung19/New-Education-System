@@ -491,7 +491,7 @@ export class ImportsService {
       console.error('Import Error:', error);
       if (error.code === 'P2002') console.error('Prisma Error Target:', error.meta?.target);
       // Ensure we always return a 400 rather than a 500, preserving the actual data conflict or error message
-      throw new BadRequestException({ message: 'Lỗi khi lưu dữ liệu vào hệ thống: ' + (error.message || 'Unknown error'), details: error });
+      throw new BadRequestException({ message: 'Lỗi khi lưu dữ liệu vào hệ thống: ' + (error.message || 'Unknown error'), details: error?.meta || error?.name || String(error) });
     }
     
     return { count };
