@@ -1,0 +1,97 @@
+﻿BadRequestException: Lß╗ùi khi l╞░u dß╗» liß╗çu v├áo hß╗ç thß╗æng: 
+Invalid `tx.student.create()` invocation in
+C:\Users\ACER\Documents\Workspace\Web\NewEdu\NewEduSystem\backend\src\imports\imports.service.ts:446:32
+
+  443     tx
+  444   ));
+  445 // @ts-ignore: gender field might not be in generated type yet
+ΓåÆ 446 await tx.student.create({
+        data: {
+          id: "HS0001",
+          userId: "33828112-b8a6-479d-956f-a54bc866a3eb",
+          classId: "C2025001",
+          enrollmentYear: 2026,
+          dateOfBirth: new Date("Invalid Date"),
+                       ~~~~~~~~~~~~~~~~~~~~~~~~
+          gender: "Male",
+          address: "Address",
+          guardianName: "Guardian",
+          guardianPhone: "0909090909",
+          guardianCitizenId: "001234567890",
+          guardianJob: "Job",
+          guardianYearOfBirth: 1980
+        }
+      })
+
+Invalid value for argument `dateOfBirth`: Provided Date object is invalid. Expected Date.
+    at ImportsService.saveData (C:\Users\ACER\Documents\Workspace\Web\NewEdu\NewEduSystem\backend\src\imports\imports.service.ts:494:13)
+    at async bootstrap (C:\Users\ACER\Documents\Workspace\Web\NewEdu\NewEduSystem\backend\test-import.ts:59:17) {
+  response: {
+    message: 'Lß╗ùi khi l╞░u dß╗» liß╗çu v├áo hß╗ç thß╗æng: \n' +
+      'Invalid `tx.student.create()` invocation in\n' +
+      'C:\\Users\\ACER\\Documents\\Workspace\\Web\\NewEdu\\NewEduSystem\\backend\\src\\imports\\imports.service.ts:446:32\n' +
+      '\n' +
+      '  443     tx\n' +
+      '  444   ));\n' +
+      '  445 // @ts-ignore: gender field might not be in generated type yet\n' +
+      'ΓåÆ 446 await tx.student.create({\n' +
+      '        data: {\n' +
+      '          id: "HS0001",\n' +
+      '          userId: "33828112-b8a6-479d-956f-a54bc866a3eb",\n' +
+      '          classId: "C2025001",\n' +
+      '          enrollmentYear: 2026,\n' +
+      '          dateOfBirth: new Date("Invalid Date"),\n' +
+      '                       ~~~~~~~~~~~~~~~~~~~~~~~~\n' +
+      '          gender: "Male",\n' +
+      '          address: "Address",\n' +
+      '          guardianName: "Guardian",\n' +
+      '          guardianPhone: "0909090909",\n' +
+      '          guardianCitizenId: "001234567890",\n' +
+      '          guardianJob: "Job",\n' +
+      '          guardianYearOfBirth: 1980\n' +
+      '        }\n' +
+      '      })\n' +
+      '\n' +
+      'Invalid value for argument `dateOfBirth`: Provided Date object is invalid. Expected Date.',
+    details: PrismaClientValidationError: 
+    Invalid `tx.student.create()` invocation in
+    C:\Users\ACER\Documents\Workspace\Web\NewEdu\NewEduSystem\backend\src\imports\imports.service.ts:446:32
+    
+      443     tx
+      444   ));
+      445 // @ts-ignore: gender field might not be in generated type yet
+    ΓåÆ 446 await tx.student.create({
+            data: {
+              id: "HS0001",
+              userId: "33828112-b8a6-479d-956f-a54bc866a3eb",
+              classId: "C2025001",
+              enrollmentYear: 2026,
+              dateOfBirth: new Date("Invalid Date"),
+                           ~~~~~~~~~~~~~~~~~~~~~~~~
+              gender: "Male",
+              address: "Address",
+              guardianName: "Guardian",
+              guardianPhone: "0909090909",
+              guardianCitizenId: "001234567890",
+              guardianJob: "Job",
+              guardianYearOfBirth: 1980
+            }
+          })
+    
+    Invalid value for argument `dateOfBirth`: Provided Date object is invalid. Expected Date.
+        at wn (C:\Users\ACER\Documents\Workspace\Web\NewEdu\NewEduSystem\backend\node_modules\@prisma\client\runtime\library.js:29:1363)
+        at e.throwValidationError (C:\Users\ACER\Documents\Workspace\Web\NewEdu\NewEduSystem\backend\node_modules\@prisma\client\runtime\library.js:29:10206)
+        at sa (C:\Users\ACER\Documents\Workspace\Web\NewEdu\NewEduSystem\backend\node_modules\@prisma\client\runtime\library.js:29:7746)
+        at aa (C:\Users\ACER\Documents\Workspace\Web\NewEdu\NewEduSystem\backend\node_modules\@prisma\client\runtime\library.js:29:8908)
+        at sa (C:\Users\ACER\Documents\Workspace\Web\NewEdu\NewEduSystem\backend\node_modules\@prisma\client\runtime\library.js:29:8439)
+        at aa (C:\Users\ACER\Documents\Workspace\Web\NewEdu\NewEduSystem\backend\node_modules\@prisma\client\runtime\library.js:29:8908)
+        at mr (C:\Users\ACER\Documents\Workspace\Web\NewEdu\NewEduSystem\backend\node_modules\@prisma\client\runtime\library.js:29:6037)
+        at vn (C:\Users\ACER\Documents\Workspace\Web\NewEdu\NewEduSystem\backend\node_modules\@prisma\client\runtime\library.js:29:5902)
+        at C:\Users\ACER\Documents\Workspace\Web\NewEdu\NewEduSystem\backend\node_modules\@prisma\client\runtime\library.js:130:10186
+        at Object.runInChildSpan (C:\Users\ACER\Documents\Workspace\Web\NewEdu\NewEduSystem\backend\node_modules\@prisma\client\runtime\library.js:121:1509) {
+      clientVersion: '5.22.0'
+    }
+  },
+  status: 400,
+  options: {}
+}

@@ -349,7 +349,7 @@ export class ImportsService {
       const parts = strVal.split('/');
       if (parts.length === 3) {
         const [d, m, y] = parts;
-        return `${y}-${d.padStart(2, '0')}-${m.padStart(2, '0')}`; // Convert back to YYYY-MM-DD for Prisma/Date
+        return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`; // Convert back to YYYY-MM-DD for Prisma/Date
       }
     } else if (strVal.includes('-')) {
         const parts = strVal.split('-');
@@ -456,7 +456,7 @@ export class ImportsService {
                   guardianPhone: item.guardian_phone,
                   guardianCitizenId: item.guardian_citizen_id,
                   guardianJob: item.guardian_occupation,
-                  guardianYearOfBirth: item.guardian_birth_year,
+                  guardianYearOfBirth: item.guardian_birth_year ? parseInt(item.guardian_birth_year, 10) : null,
                 },
               });
             } else if (type === 'teachers') {
