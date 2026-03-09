@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Param,
+  Body,
   UploadedFile,
   UseInterceptors,
   BadRequestException,
@@ -11,6 +12,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { ImportsService } from './imports.service';
+import { ImportBatchDto } from './dto/import-batch.dto';
 import * as XLSX from 'xlsx';
 
 @Controller('imports')
@@ -25,6 +27,17 @@ export class ImportsController {
   ) {
     if (!file) throw new BadRequestException('File is required');
     return this.importsService.importData(file, type);
+  }
+
+  @Post('upload-batch/:type')
+  async uploadBatch(
+    @Body() body: ImportBatchDto,
+    @Param('type') type: string,
+  ) {
+    if (!body.data || !Array.isArray(body.data) || body.data.length === 0) {
+      throw new BadRequestException('Data array is required and must not be empty');
+    }
+    return this.importsService.importBatch(body.data, type, body.batchIndex, body.totalBatches);
   }
 
   @Get('template/:type')

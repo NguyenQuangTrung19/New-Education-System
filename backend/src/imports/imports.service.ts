@@ -342,6 +342,223 @@ export class ImportsService {
     return this.saveData(validData, type);
   }
 
+  async importBatch(jsonData: any[], type: string, batchIndex: number, totalBatches: number) {
+    if (type !== 'students' && type !== 'teachers' && type !== 'classes')
+      throw new BadRequestException('Invalid import type');
+
+    if (jsonData.length === 0) throw new BadRequestException('Batch data is empty');
+
+    const errors: any[] = [];
+    const validData: any[] = [];
+    
+    const seenUsernames = new Set<string>();
+    const seenEmails = new Set<string>();
+
+    // PREFETCH DATA for validation
+    const allUsers = await this.prisma.user.findMany({
+      select: { username: true, email: true },
+    });
+    const dbUsernames = new Set(allUsers.map((u) => u.username.toLowerCase()));
+    const dbEmails = new Set(
+      allUsers.filter((u) => u.email).map((u) => u.email.toLowerCase())
+    );
+
+    let dbClasses: any[] = [];
+    if (type === 'students' || type === 'classes') {
+      dbClasses = await this.prisma.classGroup.findMany({
+        select: { id: true, name: true, academicYear: true },
+      });
+    }
+
+    let dbSubjects: any[] = [];
+    if (type === 'teachers') {
+      dbSubjects = await this.prisma.subject.findMany({
+        select: { id: true, name: true, code: true, department: true },
+      });
+    }
+
+    let dbTeacherUsers: any[] = [];
+    if (type === 'classes') {
+      dbTeacherUsers = await this.prisma.user.findMany({
+        where: { role: 'TEACHER' },
+        include: { teacher: true },
+      });
+    }
+
+    // Validate rows
+    for (let i = 0; i < jsonData.length; i++) {
+      const row = jsonData[i] as any;
+      const rowNum = (batchIndex * jsonData.length) + i + 2; // approximate original row
+      const errorBase = { row: rowNum };
+
+      if (type === 'students') {
+        if (row.guardian_citizen_id !== undefined)
+          row.guardian_citizen_id = this.sanitizeStringNumber(row.guardian_citizen_id, 12);
+        if (row.guardian_phone !== undefined)
+          row.guardian_phone = this.sanitizeStringNumber(row.guardian_phone, 10);
+
+        const dto = plainToInstance(ImportStudentDto, row);
+        if (row.dob) dto.dob = this.parseDate(row.dob);
+        if (row.gender) dto.gender = this.parseGender(row.gender);
+
+        const validationErrors = await validate(dto);
+        if (validationErrors.length > 0) {
+          validationErrors.forEach((err) => {
+            errors.push({
+              ...errorBase,
+              column: err.property,
+              error: Object.values(err.constraints || {})[0],
+            });
+          });
+          continue;
+        }
+
+        const classNameLower = row.class_name?.toString().toLowerCase();
+        const classGroup = dbClasses.find(c => c.name.toLowerCase() === classNameLower);
+        if (!classGroup) {
+          errors.push({ ...errorBase, column: 'class_name', error: `Class '${row.class_name}' not found` });
+        }
+
+        const usernameLower = row.username?.toString().toLowerCase();
+        if (usernameLower) {
+          if (seenUsernames.has(usernameLower)) {
+            errors.push({ ...errorBase, column: 'username', error: `Username '${row.username}' is duplicated in this batch` });
+          } else if (dbUsernames.has(usernameLower)) {
+            errors.push({ ...errorBase, column: 'username', error: `Username '${row.username}' already exists in the system` });
+          } else {
+            seenUsernames.add(usernameLower);
+          }
+        }
+
+        const emailLower = row.email?.toString().toLowerCase();
+        if (emailLower) {
+          if (seenEmails.has(emailLower)) {
+            errors.push({ ...errorBase, column: 'email', error: `Email '${row.email}' is duplicated in this batch` });
+          } else if (dbEmails.has(emailLower)) {
+            errors.push({ ...errorBase, column: 'email', error: `Email '${row.email}' already exists in the system` });
+          } else {
+            seenEmails.add(emailLower);
+          }
+        }
+
+        if (errors.filter((e) => e.row === rowNum).length === 0) {
+          validData.push({ ...dto, classId: classGroup?.id });
+        }
+      } else if (type === 'teachers') {
+        if (row.citizen_id !== undefined)
+          row.citizen_id = this.sanitizeStringNumber(row.citizen_id, 12);
+        if (row.phone !== undefined)
+          row.phone = this.sanitizeStringNumber(row.phone, 10);
+
+        const dto = plainToInstance(ImportTeacherDto, row);
+        if (row.dob) dto.dob = this.parseDate(row.dob);
+        if (row.gender) dto.gender = this.parseGender(row.gender);
+
+        const validationErrors = await validate(dto);
+        if (validationErrors.length > 0) {
+          validationErrors.forEach((err) => {
+            errors.push({
+              ...errorBase,
+              column: err.property,
+              error: Object.values(err.constraints || {})[0],
+            });
+          });
+          continue;
+        }
+
+        const usernameLower = row.username?.toString().toLowerCase();
+        if (usernameLower) {
+          if (seenUsernames.has(usernameLower)) {
+            errors.push({ ...errorBase, column: 'username', error: `Username '${row.username}' is duplicated in this batch` });
+          } else if (dbUsernames.has(usernameLower)) {
+            errors.push({ ...errorBase, column: 'username', error: `Username '${row.username}' already exists in the system` });
+          } else {
+            seenUsernames.add(usernameLower);
+          }
+        }
+
+        const emailLower = row.email?.toString().toLowerCase();
+        if (emailLower) {
+          if (seenEmails.has(emailLower)) {
+            errors.push({ ...errorBase, column: 'email', error: `Email '${row.email}' is duplicated in this batch` });
+          } else if (dbEmails.has(emailLower)) {
+            errors.push({ ...errorBase, column: 'email', error: `Email '${row.email}' already exists in the system` });
+          } else {
+            seenEmails.add(emailLower);
+          }
+        }
+
+        const subjects = (row.subjects as string).split(',').map((s: string) => s.trim());
+        let departmentId = null;
+        let normalizedSubjects: string[] = [];
+
+        for (const subjName of subjects) {
+          const subjNameLower = subjName.toLowerCase();
+          const subj = dbSubjects.find(s => s.code.toLowerCase() === subjNameLower || s.name.toLowerCase() === subjNameLower);
+          if (!subj) {
+            errors.push({ ...errorBase, column: 'subjects', error: `Subject '${subjName}' not found` });
+          } else {
+            normalizedSubjects.push(subj.name);
+            if (!departmentId) departmentId = subj.department;
+          }
+        }
+
+        if (errors.filter((e) => e.row === rowNum).length === 0) {
+          validData.push({ ...dto, departmentId, subjectList: normalizedSubjects });
+        }
+      } else if (type === 'classes') {
+        const dto = plainToInstance(ImportClassDto, row);
+
+        const validationErrors = await validate(dto);
+        if (validationErrors.length > 0) {
+          validationErrors.forEach((err) => {
+            errors.push({
+              ...errorBase,
+              column: err.property,
+              error: Object.values(err.constraints || {})[0],
+            });
+          });
+          continue;
+        }
+
+        let teacherId = null;
+        if (row.homeroom_teacher) {
+          const teacherUsernameLower = row.homeroom_teacher.toString().toLowerCase();
+          const teacher = dbTeacherUsers.find(t => t.username.toLowerCase() === teacherUsernameLower);
+          if (!teacher || teacher.role !== 'TEACHER' || !teacher.teacher) {
+            errors.push({ ...errorBase, column: 'homeroom_teacher', error: `Teacher username '${row.homeroom_teacher}' not found or invalid` });
+          } else {
+            teacherId = teacher.teacher.id;
+          }
+        }
+
+        const classNameLower = row.class_name?.toString().toLowerCase();
+        const existingClass = dbClasses.find(c => c.name.toLowerCase() === classNameLower && c.academicYear === row.academic_year);
+        if (existingClass) {
+          errors.push({ ...errorBase, column: 'class_name', error: `Class '${row.class_name}' already exists in year ${row.academic_year}` });
+        }
+
+        const match = row.class_name.match(/^(\d+)/);
+        const gradeLevel = match ? parseInt(match[1], 10) : 10;
+
+        if (errors.filter((e) => e.row === rowNum).length === 0) {
+          validData.push({ ...dto, teacherId, gradeLevel });
+        }
+      }
+    }
+
+    if (errors.length > 0) {
+      throw new BadRequestException({ message: 'Validation Failed', errors });
+    }
+
+    const result = await this.saveData(validData, type);
+    return {
+      ...result,
+      batchIndex,
+      totalBatches,
+    };
+  }
+
   private parseDate(val: any): string | null {
     if (!val) return null;
     if (typeof val === 'number') {
