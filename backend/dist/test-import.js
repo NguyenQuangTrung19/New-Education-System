@@ -82,9 +82,8 @@ async function bootstrap() {
         console.log("Success:", res);
     }
     catch (error) {
-        console.error("Import Failed:", error);
-        if (error.response)
-            console.error("Response:", error.response);
+        console.error("Import Failed:");
+        console.dir(error, { depth: null });
     }
     process.exit(0);
 }

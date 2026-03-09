@@ -52,9 +52,9 @@ async function bootstrap() {
   try {
     const res = await service.importData(file, 'teachers');
     console.log("Success:", res);
-  } catch (error) {
-    console.error("Import Failed:", error);
-    if (error.response) console.error("Response:", error.response);
+  } catch (error: any) {
+    console.error("Import Failed:");
+    console.dir(error, { depth: null });
   }
   
   process.exit(0);

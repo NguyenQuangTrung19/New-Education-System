@@ -146,7 +146,7 @@ export class TeachersService {
 
     return this.prisma.$transaction(async (prisma) => {
       const joinYear = teacherData.joinYear || new Date().getFullYear();
-      const teacherId = await this.idGenerator.generateTeacherId(joinYear);
+      const teacherId = await this.idGenerator.generateTeacherId();
 
       const user = await prisma.user.create({
         data: {

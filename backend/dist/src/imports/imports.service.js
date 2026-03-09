@@ -366,7 +366,22 @@ let ImportsService = class ImportsService {
             const date = XLSX.SSF.parse_date_code(val);
             return `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')}`;
         }
-        return val;
+        const strVal = String(val).trim();
+        if (strVal.includes('/')) {
+            const parts = strVal.split('/');
+            if (parts.length === 3) {
+                const [d, m, y] = parts;
+                return `${y}-${d.padStart(2, '0')}-${m.padStart(2, '0')}`;
+            }
+        }
+        else if (strVal.includes('-')) {
+            const parts = strVal.split('-');
+            if (parts.length === 3 && parts[0].length === 2) {
+                const [d, m, y] = parts;
+                return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+            }
+        }
+        return strVal;
     }
     parseGender(val) {
         if (!val)
@@ -433,7 +448,7 @@ let ImportsService = class ImportsService {
                         });
                         if (type === 'students') {
                             const id = item.student_code ||
-                                (await this.idGenerator.generateStudentId(new Date().getFullYear(), tx));
+                                (await this.idGenerator.generateStudentId(tx));
                             await tx.student.create({
                                 data: {
                                     id,
@@ -452,7 +467,7 @@ let ImportsService = class ImportsService {
                             });
                         }
                         else if (type === 'teachers') {
-                            const id = await this.idGenerator.generateTeacherId(item.start_year || new Date().getFullYear(), tx);
+                            const id = await this.idGenerator.generateTeacherId(tx);
                             await tx.teacher.create({
                                 data: {
                                     id,
@@ -478,6 +493,8 @@ let ImportsService = class ImportsService {
         }
         catch (error) {
             console.error('Import Error:', error);
+            if (error.code === 'P2002')
+                console.error('Prisma Error Target:', error.meta?.target);
             throw new common_1.BadRequestException({ message: 'Lỗi khi lưu dữ liệu vào hệ thống: ' + (error.message || 'Unknown error'), details: error });
         }
         return { count };

@@ -103,7 +103,7 @@ export class StudentsService {
       const enrollmentYear =
         studentData.enrollmentYear || new Date().getFullYear();
       const studentId =
-        await this.idGenerator.generateStudentId(enrollmentYear);
+        await this.idGenerator.generateStudentId();
 
       const user = await prisma.user.create({
         data: {

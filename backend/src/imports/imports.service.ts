@@ -342,7 +342,23 @@ export class ImportsService {
       const date = XLSX.SSF.parse_date_code(val);
       return `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')}`;
     }
-    return val;
+    
+    // Handle dd/mm/yyyy string format
+    const strVal = String(val).trim();
+    if (strVal.includes('/')) {
+      const parts = strVal.split('/');
+      if (parts.length === 3) {
+        const [d, m, y] = parts;
+        return `${y}-${d.padStart(2, '0')}-${m.padStart(2, '0')}`; // Convert back to YYYY-MM-DD for Prisma/Date
+      }
+    } else if (strVal.includes('-')) {
+        const parts = strVal.split('-');
+        if (parts.length === 3 && parts[0].length === 2) { // dd-mm-yyyy
+            const [d, m, y] = parts;
+            return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+        }
+    }
+    return strVal;
   }
 
   private parseGender(val: any): Gender {
@@ -424,7 +440,6 @@ export class ImportsService {
               const id =
                 item.student_code ||
                 (await this.idGenerator.generateStudentId(
-                  new Date().getFullYear(),
                   tx
                 ));
               // @ts-ignore: gender field might not be in generated type yet
@@ -446,7 +461,6 @@ export class ImportsService {
               });
             } else if (type === 'teachers') {
               const id = await this.idGenerator.generateTeacherId(
-                item.start_year || new Date().getFullYear(),
                 tx
               );
               await tx.teacher.create({
@@ -475,6 +489,7 @@ export class ImportsService {
       });
     } catch (error: any) {
       console.error('Import Error:', error);
+      if (error.code === 'P2002') console.error('Prisma Error Target:', error.meta?.target);
       // Ensure we always return a 400 rather than a 500, preserving the actual data conflict or error message
       throw new BadRequestException({ message: 'Lỗi khi lưu dữ liệu vào hệ thống: ' + (error.message || 'Unknown error'), details: error });
     }

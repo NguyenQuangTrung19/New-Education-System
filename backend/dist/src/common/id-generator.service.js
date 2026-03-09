@@ -17,26 +17,53 @@ let IdGeneratorService = class IdGeneratorService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async generateStudentId(enrollmentYear, tx) {
-        return this.generateId('HS', enrollmentYear, tx);
+    async generateStudentId(tx) {
+        return this.generateId('HS', tx);
     }
-    async generateTeacherId(joinYear, tx) {
-        return this.generateId('GV', joinYear, tx);
+    async generateTeacherId(tx) {
+        return this.generateId('GV', tx);
     }
     async generateClassId(year, tx) {
         const yearPrefix = year.split('-')[0] || new Date().getFullYear().toString();
-        return this.generateId('C', parseInt(yearPrefix), tx);
+        return this.generateId(`C${yearPrefix}`, tx, 3);
     }
-    async generateId(prefix, year, tx) {
-        const key = `${prefix}_${year}`;
+    async generateId(prefix, tx, padding = 4) {
+        const key = prefix;
         const client = tx || this.prisma;
-        const sequence = await client.idSequence.upsert({
+        let sequence = await client.idSequence.upsert({
             where: { key },
             update: { value: { increment: 1 } },
             create: { key, value: 1 },
         });
-        const sequenceStr = sequence.value.toString().padStart(3, '0');
-        return `${prefix}${year}-${sequenceStr}`;
+        if (sequence.value === 1) {
+            let maxVal = 0;
+            if (prefix === 'GV') {
+                const existing = await client.teacher.findMany({
+                    where: { id: { startsWith: 'GV' } },
+                    select: { id: true }
+                });
+                const numbers = existing.map((e) => parseInt(e.id.replace('GV', '')) || 0);
+                if (numbers.length > 0)
+                    maxVal = Math.max(...numbers);
+            }
+            else if (prefix === 'HS') {
+                const existing = await client.student.findMany({
+                    where: { id: { startsWith: 'HS' } },
+                    select: { id: true }
+                });
+                const numbers = existing.map((e) => parseInt(e.id.replace('HS', '')) || 0);
+                if (numbers.length > 0)
+                    maxVal = Math.max(...numbers);
+            }
+            if (maxVal >= 1) {
+                sequence = await client.idSequence.update({
+                    where: { key },
+                    data: { value: maxVal + 1 },
+                });
+            }
+        }
+        const sequenceStr = sequence.value.toString().padStart(padding, '0');
+        return `${prefix}${sequenceStr}`;
     }
 };
 exports.IdGeneratorService = IdGeneratorService;
