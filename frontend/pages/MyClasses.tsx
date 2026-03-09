@@ -130,7 +130,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
   }
 
   function formatDate(date: Date) {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return date.toLocaleDateString('vi-VN', { month: '2-digit', day: '2-digit' });
   }
 
   function getISODate(date: Date) {

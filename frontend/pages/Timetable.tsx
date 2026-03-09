@@ -101,7 +101,7 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
   }
 
   function formatDate(date: Date) {
-    return date.toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' }); // e.g. 23/10
+    return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }); // e.g. 23/10
   }
 
   function getSubjectName(code: string) {

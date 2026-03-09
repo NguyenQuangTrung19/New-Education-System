@@ -289,7 +289,7 @@ export const StudentClass: React.FC<StudentClassProps> = ({ currentUser }) => {
                    </div>
                    <h3 className="text-lg font-bold text-gray-900">{task.title}</h3>
                    <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                      <span className="flex items-center"><Clock className="h-3.5 w-3.5 mr-1.5" /> Hạn nộp: {new Date(task.dueDate).toLocaleDateString()}</span>
+                      <span className="flex items-center"><Clock className="h-3.5 w-3.5 mr-1.5" /> Hạn nộp: {new Date(task.dueDate).toLocaleDateString('vi-VN')}</span>
                       <span className="flex items-center"><Timer className="h-3.5 w-3.5 mr-1.5" /> {task.duration || 45} phút</span>
                       {task.status === 'graded' && <span className="font-bold text-emerald-600 flex items-center"><CheckCircle className="h-3.5 w-3.5 mr-1.5"/> Điểm: {task.grade}</span>}
                    </div>

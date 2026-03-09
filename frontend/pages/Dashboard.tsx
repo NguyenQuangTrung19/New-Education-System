@@ -388,7 +388,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, notifications,
               <div className="bg-white/10 backdrop-blur-md border border-white/10 px-5 py-3 rounded-2xl flex items-center gap-3">
                   <Calendar className="h-5 w-5 text-white" />
                   <span className="font-bold text-sm tracking-wide">
-                      {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                      {new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                   </span>
               </div>
           </div>
