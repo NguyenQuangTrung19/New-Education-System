@@ -22,6 +22,7 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onClose, ty
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState<any[]>([]);
+  const [skipped, setSkipped] = useState<any[]>([]);
   const [successCount, setSuccessCount] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [progress, setProgress] = useState<{ current: number; total: number; count: number } | null>(null);
@@ -107,6 +108,7 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onClose, ty
 
     setUploading(true);
     setErrors([]);
+    setSkipped([]);
     setSuccessCount(null);
     setProgress(null);
     abortRef.current = false;
@@ -130,6 +132,7 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onClose, ty
       const totalBatches = batches.length;
       let totalImported = 0;
       const allErrors: any[] = [];
+      const allSkipped: any[] = [];
 
       setProgress({ current: 0, total: totalBatches, count: 0 });
 
@@ -147,6 +150,9 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onClose, ty
           totalImported += response.data.count || 0;
           if (response.data.errors && response.data.errors.length > 0) {
             allErrors.push(...response.data.errors);
+          }
+          if (response.data.skipped && response.data.skipped.length > 0) {
+            allSkipped.push(...response.data.skipped);
           }
         } catch (error: any) {
           if (error.response?.data?.errors) {
@@ -174,6 +180,9 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onClose, ty
       // Step 4: Show results
       if (allErrors.length > 0) {
         setErrors(allErrors);
+      }
+      if (allSkipped.length > 0) {
+        setSkipped(allSkipped);
       }
       
       if (totalImported > 0) {
@@ -361,6 +370,34 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onClose, ty
                     <div>
                         <h4 className="font-bold text-green-800 text-sm">Import thành công!</h4>
                         <p className="text-sm text-green-700">{successCount} bản ghi đã được import vào hệ thống.</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Skipped Rows */}
+            {skipped.length > 0 && (
+                <div className="mt-4">
+                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-t-xl flex items-center gap-3">
+                        <Info className="h-5 w-5 text-amber-600" />
+                        <h4 className="font-bold text-amber-800 text-sm">Đã bỏ qua {skipped.length} dòng trùng lặp</h4>
+                    </div>
+                    <div className="border-x border-b border-amber-200 rounded-b-xl max-h-36 overflow-y-auto bg-white">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-amber-50/50 text-amber-900 font-semibold sticky top-0">
+                                <tr>
+                                    <th className="px-4 py-2">Dòng</th>
+                                    <th className="px-4 py-2">Lý do</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-amber-100">
+                                {skipped.map((s, idx) => (
+                                    <tr key={idx} className="hover:bg-amber-50/30">
+                                        <td className="px-4 py-2 font-mono text-amber-700">{s.row || '-'}</td>
+                                        <td className="px-4 py-2 text-amber-600">{s.reason}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             )}

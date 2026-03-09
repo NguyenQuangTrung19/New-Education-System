@@ -77,6 +77,7 @@ export class ImportsService {
     else expectedHeaders = Object.keys(CLASS_HEADERS);
 
     const errors: any[] = [];
+    const skipped: any[] = [];
     const validData: any[] = [];
     
     // Tracking sets to catch duplicates within the file itself
@@ -162,17 +163,19 @@ export class ImportsService {
         const usernameLower = row.username?.toString().toLowerCase();
         if (usernameLower) {
           if (seenUsernames.has(usernameLower)) {
-             errors.push({
+             skipped.push({
               ...errorBase,
               column: 'username',
-              error: `Username '${row.username}' is duplicated in the file`,
+              reason: `Username '${row.username}' trùng trong file, đã bỏ qua`,
             });
+            continue;
           } else if (dbUsernames.has(usernameLower)) {
-             errors.push({
+             skipped.push({
                ...errorBase,
                column: 'username',
-               error: `Username '${row.username}' already exists in the system`,
+               reason: `Username '${row.username}' đã tồn tại trong hệ thống, đã bỏ qua`,
              });
+            continue;
           } else {
              seenUsernames.add(usernameLower);
           }
@@ -181,17 +184,19 @@ export class ImportsService {
         const emailLower = row.email?.toString().toLowerCase();
         if (emailLower) {
           if (seenEmails.has(emailLower)) {
-             errors.push({
+             skipped.push({
                ...errorBase,
                column: 'email',
-               error: `Email '${row.email}' is duplicated in the file`,
+               reason: `Email '${row.email}' trùng trong file, đã bỏ qua`,
              });
+            continue;
           } else if (dbEmails.has(emailLower)) {
-            errors.push({
-              ...errorBase,
-              column: 'email',
-              error: `Email '${row.email}' already exists in the system`,
-            });
+             skipped.push({
+               ...errorBase,
+               column: 'email',
+               reason: `Email '${row.email}' đã tồn tại trong hệ thống, đã bỏ qua`,
+             });
+            continue;
           } else {
             seenEmails.add(emailLower);
           }
@@ -225,17 +230,19 @@ export class ImportsService {
         const usernameLower = row.username?.toString().toLowerCase();
         if (usernameLower) {
           if (seenUsernames.has(usernameLower)) {
-             errors.push({
+             skipped.push({
               ...errorBase,
               column: 'username',
-              error: `Username '${row.username}' is duplicated in the file`,
+              reason: `Username '${row.username}' trùng trong file, đã bỏ qua`,
             });
+            continue;
           } else if (dbUsernames.has(usernameLower)) {
-             errors.push({
+             skipped.push({
                ...errorBase,
                column: 'username',
-               error: `Username '${row.username}' already exists in the system`,
+               reason: `Username '${row.username}' đã tồn tại trong hệ thống, đã bỏ qua`,
              });
+            continue;
           } else {
              seenUsernames.add(usernameLower);
           }
@@ -244,17 +251,19 @@ export class ImportsService {
         const emailLower = row.email?.toString().toLowerCase();
         if (emailLower) {
           if (seenEmails.has(emailLower)) {
-             errors.push({
+             skipped.push({
                ...errorBase,
                column: 'email',
-               error: `Email '${row.email}' is duplicated in the file`,
+               reason: `Email '${row.email}' trùng trong file, đã bỏ qua`,
              });
+            continue;
           } else if (dbEmails.has(emailLower)) {
-            errors.push({
-              ...errorBase,
-              column: 'email',
-              error: `Email '${row.email}' already exists in the system`,
-            });
+             skipped.push({
+               ...errorBase,
+               column: 'email',
+               reason: `Email '${row.email}' đã tồn tại trong hệ thống, đã bỏ qua`,
+             });
+            continue;
           } else {
             seenEmails.add(emailLower);
           }
@@ -335,11 +344,12 @@ export class ImportsService {
       }
     }
 
-    if (errors.length > 0) {
+    if (errors.length > 0 && validData.length === 0) {
       throw new BadRequestException({ message: 'Validation Failed', errors });
     }
 
-    return this.saveData(validData, type);
+    const result = await this.saveData(validData, type);
+    return { ...result, skipped };
   }
 
   async importBatch(jsonData: any[], type: string, batchIndex: number, totalBatches: number) {
@@ -349,6 +359,7 @@ export class ImportsService {
     if (jsonData.length === 0) throw new BadRequestException('Batch data is empty');
 
     const errors: any[] = [];
+    const skipped: any[] = [];
     const validData: any[] = [];
     
     const seenUsernames = new Set<string>();
@@ -422,9 +433,11 @@ export class ImportsService {
         const usernameLower = row.username?.toString().toLowerCase();
         if (usernameLower) {
           if (seenUsernames.has(usernameLower)) {
-            errors.push({ ...errorBase, column: 'username', error: `Username '${row.username}' is duplicated in this batch` });
+            skipped.push({ ...errorBase, column: 'username', reason: `Username '${row.username}' trùng trong batch, đã bỏ qua` });
+            continue;
           } else if (dbUsernames.has(usernameLower)) {
-            errors.push({ ...errorBase, column: 'username', error: `Username '${row.username}' already exists in the system` });
+            skipped.push({ ...errorBase, column: 'username', reason: `Username '${row.username}' đã tồn tại trong hệ thống, đã bỏ qua` });
+            continue;
           } else {
             seenUsernames.add(usernameLower);
           }
@@ -433,9 +446,11 @@ export class ImportsService {
         const emailLower = row.email?.toString().toLowerCase();
         if (emailLower) {
           if (seenEmails.has(emailLower)) {
-            errors.push({ ...errorBase, column: 'email', error: `Email '${row.email}' is duplicated in this batch` });
+            skipped.push({ ...errorBase, column: 'email', reason: `Email '${row.email}' trùng trong batch, đã bỏ qua` });
+            continue;
           } else if (dbEmails.has(emailLower)) {
-            errors.push({ ...errorBase, column: 'email', error: `Email '${row.email}' already exists in the system` });
+            skipped.push({ ...errorBase, column: 'email', reason: `Email '${row.email}' đã tồn tại trong hệ thống, đã bỏ qua` });
+            continue;
           } else {
             seenEmails.add(emailLower);
           }
@@ -469,9 +484,11 @@ export class ImportsService {
         const usernameLower = row.username?.toString().toLowerCase();
         if (usernameLower) {
           if (seenUsernames.has(usernameLower)) {
-            errors.push({ ...errorBase, column: 'username', error: `Username '${row.username}' is duplicated in this batch` });
+            skipped.push({ ...errorBase, column: 'username', reason: `Username '${row.username}' trùng trong batch, đã bỏ qua` });
+            continue;
           } else if (dbUsernames.has(usernameLower)) {
-            errors.push({ ...errorBase, column: 'username', error: `Username '${row.username}' already exists in the system` });
+            skipped.push({ ...errorBase, column: 'username', reason: `Username '${row.username}' đã tồn tại trong hệ thống, đã bỏ qua` });
+            continue;
           } else {
             seenUsernames.add(usernameLower);
           }
@@ -480,9 +497,11 @@ export class ImportsService {
         const emailLower = row.email?.toString().toLowerCase();
         if (emailLower) {
           if (seenEmails.has(emailLower)) {
-            errors.push({ ...errorBase, column: 'email', error: `Email '${row.email}' is duplicated in this batch` });
+            skipped.push({ ...errorBase, column: 'email', reason: `Email '${row.email}' trùng trong batch, đã bỏ qua` });
+            continue;
           } else if (dbEmails.has(emailLower)) {
-            errors.push({ ...errorBase, column: 'email', error: `Email '${row.email}' already exists in the system` });
+            skipped.push({ ...errorBase, column: 'email', reason: `Email '${row.email}' đã tồn tại trong hệ thống, đã bỏ qua` });
+            continue;
           } else {
             seenEmails.add(emailLower);
           }
@@ -547,13 +566,14 @@ export class ImportsService {
       }
     }
 
-    if (errors.length > 0) {
+    if (errors.length > 0 && validData.length === 0) {
       throw new BadRequestException({ message: 'Validation Failed', errors });
     }
 
     const result = await this.saveData(validData, type);
     return {
       ...result,
+      skipped,
       batchIndex,
       totalBatches,
     };
