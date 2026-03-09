@@ -283,6 +283,19 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onClose, ty
         {/* content */}
         <div className="p-8 overflow-y-auto">
             
+            {/* Warning for Students Import */}
+            {type === 'students' && (
+                <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl flex items-start gap-3">
+                    <Info className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
+                    <div>
+                        <h4 className="font-bold text-yellow-800 text-sm">Lưu ý quan trọng</h4>
+                        <p className="text-sm text-yellow-700 mt-1">
+                          Vui lòng chia nhỏ dữ liệu và thực hiện import cho từng lớp riêng biệt. Tránh import tất cả học sinh của nhiều lớp vào chung trong cùng 1 file!
+                        </p>
+                    </div>
+                </div>
+            )}
+
             {/* Template Download Step */}
             <div className="mb-8 p-4 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-between">
                 <div>
