@@ -484,6 +484,7 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
             onSave={handleSave}
             teachers={teachers}
             formErrors={formErrors}
+            classes={classes}
         />
       )}
       {isAdmin && (
@@ -509,10 +510,21 @@ interface SlideOverFormProps {
     onSave: (e: React.FormEvent) => void;
     teachers: Teacher[];
     formErrors: Record<string, string>;
+    classes: ClassGroup[];
 }
 
-const SlideOverForm: React.FC<SlideOverFormProps> = ({ editingClass, formClass, setFormClass, onClose, onSave, teachers, formErrors = {} }) => {
+const SlideOverForm: React.FC<SlideOverFormProps> = ({ editingClass, formClass, setFormClass, onClose, onSave, teachers, formErrors = {}, classes }) => {
     const { t } = useLanguage();
+
+    // Filter out teachers already assigned as homeroom for another class
+    const assignedTeacherIds = new Set(
+      classes
+        .filter(c => c.teacherId && c.id !== editingClass?.id)
+        .map(c => c.teacherId)
+    );
+    const availableTeachers = teachers.filter(
+      t => !assignedTeacherIds.has(t.id)
+    );
 
     const inputClass = (field: string) =>
       `w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-colors ${
@@ -567,7 +579,7 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({ editingClass, formClass, 
                          <label className="block text-xs font-semibold text-gray-500 mb-1">{t('class.homeroomTeacher')}</label>
                           <select className={`${inputClass('teacherId')} bg-white`} value={formClass.teacherId} onChange={e => setFormClass({...formClass, teacherId: e.target.value})}>
                              <option value="">{t('timetable.selectTeacher')}</option>
-                             {teachers.map(t => <option key={t.id} value={t.id}>{t.name} ({t.subjects?.join(', ') || 'N/A'})</option>)}
+                             {availableTeachers.map(t => <option key={t.id} value={t.id}>{t.name} ({t.subjects?.join(', ') || 'N/A'})</option>)}
                           </select>
                       </div>
                        <div>
