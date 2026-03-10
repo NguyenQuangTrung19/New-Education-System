@@ -25,9 +25,6 @@ let AuthController = class AuthController {
     }
     async login(loginDto) {
         const user = await this.authService.validateUser(loginDto.username, loginDto.password, loginDto.role);
-        if (!user) {
-            throw new common_1.UnauthorizedException('Invalid credentials');
-        }
         return this.authService.login(user);
     }
     async verifyPassword(req, password) {

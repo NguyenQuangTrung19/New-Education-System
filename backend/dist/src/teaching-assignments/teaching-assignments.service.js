@@ -29,24 +29,9 @@ let TeachingAssignmentsService = class TeachingAssignmentsService {
         });
     }
     async bulkSave(assignments) {
-        const teacherLoads = {};
-        const classLoads = {};
         for (const a of assignments) {
             if (!a.teacherId || !a.classId || !a.subjectId) {
                 throw new common_1.BadRequestException('Missing required fields in assignment payload.');
-            }
-            const sessions = Number(a.sessionsPerWeek) || 1;
-            teacherLoads[a.teacherId] = (teacherLoads[a.teacherId] || 0) + sessions;
-            classLoads[a.classId] = (classLoads[a.classId] || 0) + sessions;
-        }
-        for (const [tId, load] of Object.entries(teacherLoads)) {
-            if (load > 40) {
-                throw new common_1.BadRequestException(`Teacher ${tId} is overloaded with ${load} periods (Max: 40).`);
-            }
-        }
-        for (const [cId, load] of Object.entries(classLoads)) {
-            if (load > 40) {
-                throw new common_1.BadRequestException(`Class ${cId} is overloaded with ${load} periods (Max: 40).`);
             }
         }
         return this.prisma.$transaction(async (tx) => {

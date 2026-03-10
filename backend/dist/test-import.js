@@ -45,28 +45,34 @@ async function bootstrap() {
     }).compile();
     const service = moduleFixture.get(imports_service_1.ImportsService);
     const headers = [
+        'student_code',
         'full_name',
         'username',
-        'start_year',
         'dob',
         'gender',
-        'citizen_id',
         'email',
-        'phone',
         'address',
-        'subjects',
+        'class_name',
+        'guardian_name',
+        'guardian_phone',
+        'guardian_birth_year',
+        'guardian_occupation',
+        'guardian_citizen_id',
     ];
     const example = [
-        'Tran Thi C',
-        'tranthictest1',
-        '2020',
-        '1990-05-05',
-        'Female',
-        '009876543210',
-        'ctest1@school.edu',
-        '0987654321',
-        'Hanoi',
-        'Toán',
+        '',
+        'Student Test',
+        'student.test',
+        '15/05/2010',
+        'Nam',
+        'studenttest@school.edu',
+        'Address',
+        '10A1',
+        'Guardian',
+        '0909090909',
+        '1980',
+        'Job',
+        '001234567890',
     ];
     const ws = XLSX.utils.aoa_to_sheet([headers, example]);
     const wb = XLSX.utils.book_new();
@@ -78,7 +84,7 @@ async function bootstrap() {
         mimetype: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     };
     try {
-        const res = await service.importData(file, 'teachers');
+        const res = await service.importData(file, 'students');
         console.log("Success:", res);
     }
     catch (error) {

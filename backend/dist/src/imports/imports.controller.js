@@ -49,6 +49,7 @@ exports.ImportsController = void 0;
 const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
 const imports_service_1 = require("./imports.service");
+const import_batch_dto_1 = require("./dto/import-batch.dto");
 const XLSX = __importStar(require("xlsx"));
 let ImportsController = class ImportsController {
     importsService;
@@ -59,6 +60,12 @@ let ImportsController = class ImportsController {
         if (!file)
             throw new common_1.BadRequestException('File is required');
         return this.importsService.importData(file, type);
+    }
+    async uploadBatch(body, type) {
+        if (!body.data || !Array.isArray(body.data) || body.data.length === 0) {
+            throw new common_1.BadRequestException('Data array is required and must not be empty');
+        }
+        return this.importsService.importBatch(body.data, type, body.batchIndex, body.totalBatches);
     }
     async downloadTemplate(type, res) {
         if (type !== 'students' && type !== 'teachers' && type !== 'classes') {
@@ -162,6 +169,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], ImportsController.prototype, "uploadFile", null);
+__decorate([
+    (0, common_1.Post)('upload-batch/:type'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Param)('type')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [import_batch_dto_1.ImportBatchDto, String]),
+    __metadata("design:returntype", Promise)
+], ImportsController.prototype, "uploadBatch", null);
 __decorate([
     (0, common_1.Get)('template/:type'),
     __param(0, (0, common_1.Param)('type')),

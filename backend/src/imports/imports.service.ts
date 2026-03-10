@@ -703,6 +703,7 @@ export class ImportsService {
 
               if (type === 'students') {
                 const id = item.student_code || generatedId;
+                console.log('DEBUG_IMPORT_ITEM:', JSON.stringify(item));
                 // @ts-ignore
                 await tx.student.create({
                   data: {

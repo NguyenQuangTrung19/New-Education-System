@@ -22,13 +22,18 @@ let AuthService = class AuthService {
     }
     async validateUser(username, pass, role) {
         const user = await this.usersService.findOne(username);
-        if (user &&
-            (await this.usersService.verifyPassword(user.id, pass)) &&
-            user.role === role) {
-            const { password, ...result } = user;
-            return result;
+        if (!user) {
+            throw new common_1.UnauthorizedException('Username không tồn tại');
         }
-        return null;
+        const isPasswordValid = await this.usersService.verifyPassword(user.id, pass);
+        if (!isPasswordValid) {
+            throw new common_1.UnauthorizedException('Sai password');
+        }
+        if (user.role !== role) {
+            throw new common_1.UnauthorizedException('Sai quyền truy cập');
+        }
+        const { password, ...result } = user;
+        return result;
     }
     async verifyPassword(userId, pass) {
         return this.usersService.verifyPassword(userId, pass);

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "HS1120",
+    "userId": "a42f3069-a673-4654-996d-7af347f9feb8",
+    "dateOfBirth": "2008-11-25T00:00:00.000Z",
+    "gender": "Male",
+    "enrollmentYear": 2026,
+    "classId": null,
+    "gpa": 0,
+    "address": "Đồng Nai",
+    "guardianName": "Phạm Anh Kiên",
+    "guardianCitizenId": "844266985755",
+    "guardianYearOfBirth": 1983,
+    "guardianJob": "Kinh doanh tự do",
+    "guardianPhone": "0282823694",
+    "semesterEvaluation": null,
+    "notes": [],
+    "class": null
+  },
+  {
+    "id": "S002",
+    "userId": "5b98960b-e866-4fd1-b869-53db89dc09aa",
+    "dateOfBirth": "2008-08-20T00:00:00.000Z",
+    "gender": null,
+    "enrollmentYear": 2023,
+    "classId": null,
+    "gpa": 8.2,
+    "address": null,
+    "guardianName": "Phạm Văn Đức",
+    "guardianCitizenId": null,
+    "guardianYearOfBirth": null,
+    "guardianJob": null,
+    "guardianPhone": null,
+    "semesterEvaluation": "Cần cố gắng hơn môn Ngữ Văn.",
+    "notes": [],
+    "class": null
+  }
+]

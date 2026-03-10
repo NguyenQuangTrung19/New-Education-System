@@ -118,9 +118,34 @@ let ImportsService = class ImportsService {
         else
             expectedHeaders = Object.keys(CLASS_HEADERS);
         const errors = [];
+        const skipped = [];
         const validData = [];
         const seenUsernames = new Set();
         const seenEmails = new Set();
+        const allUsers = await this.prisma.user.findMany({
+            select: { username: true, email: true },
+        });
+        const dbUsernames = new Set(allUsers.map((u) => u.username.toLowerCase()));
+        const dbEmails = new Set(allUsers.filter((u) => u.email).map((u) => u.email.toLowerCase()));
+        let dbClasses = [];
+        if (type === 'students' || type === 'classes') {
+            dbClasses = await this.prisma.classGroup.findMany({
+                select: { id: true, name: true, academicYear: true },
+            });
+        }
+        let dbSubjects = [];
+        if (type === 'teachers') {
+            dbSubjects = await this.prisma.subject.findMany({
+                select: { id: true, name: true, code: true, department: true },
+            });
+        }
+        let dbTeacherUsers = [];
+        if (type === 'classes') {
+            dbTeacherUsers = await this.prisma.user.findMany({
+                where: { role: 'TEACHER' },
+                include: { teacher: true },
+            });
+        }
         for (let i = 0; i < jsonData.length; i++) {
             const row = jsonData[i];
             const rowNum = i + 2;
@@ -146,9 +171,8 @@ let ImportsService = class ImportsService {
                     });
                     continue;
                 }
-                const classGroup = await this.prisma.classGroup.findFirst({
-                    where: { name: { equals: row.class_name, mode: 'insensitive' } },
-                });
+                const classNameLower = row.class_name?.toString().toLowerCase();
+                const classGroup = dbClasses.find(c => c.name.toLowerCase() === classNameLower);
                 if (!classGroup) {
                     errors.push({
                         ...errorBase,
@@ -156,50 +180,48 @@ let ImportsService = class ImportsService {
                         error: `Class '${row.class_name}' not found`,
                     });
                 }
-                if (seenUsernames.has(row.username)) {
-                    errors.push({
-                        ...errorBase,
-                        column: 'username',
-                        error: `Username '${row.username}' is duplicated in the file`,
-                    });
-                }
-                else {
-                    const existingUser = await this.prisma.user.findUnique({
-                        where: { username: row.username },
-                    });
-                    if (existingUser) {
-                        errors.push({
+                const usernameLower = row.username?.toString().toLowerCase();
+                if (usernameLower) {
+                    if (seenUsernames.has(usernameLower)) {
+                        skipped.push({
                             ...errorBase,
                             column: 'username',
-                            error: `Username '${row.username}' already exists in the system`,
+                            reason: `Username '${row.username}' trùng trong file, đã bỏ qua`,
                         });
+                        continue;
+                    }
+                    else if (dbUsernames.has(usernameLower)) {
+                        skipped.push({
+                            ...errorBase,
+                            column: 'username',
+                            reason: `Username '${row.username}' đã tồn tại trong hệ thống, đã bỏ qua`,
+                        });
+                        continue;
                     }
                     else {
-                        seenUsernames.add(row.username);
+                        seenUsernames.add(usernameLower);
                     }
                 }
-                if (row.email) {
-                    if (seenEmails.has(row.email)) {
-                        errors.push({
+                const emailLower = row.email?.toString().toLowerCase();
+                if (emailLower) {
+                    if (seenEmails.has(emailLower)) {
+                        skipped.push({
                             ...errorBase,
                             column: 'email',
-                            error: `Email '${row.email}' is duplicated in the file`,
+                            reason: `Email '${row.email}' trùng trong file, đã bỏ qua`,
                         });
+                        continue;
+                    }
+                    else if (dbEmails.has(emailLower)) {
+                        skipped.push({
+                            ...errorBase,
+                            column: 'email',
+                            reason: `Email '${row.email}' đã tồn tại trong hệ thống, đã bỏ qua`,
+                        });
+                        continue;
                     }
                     else {
-                        const existingEmail = await this.prisma.user.findUnique({
-                            where: { email: row.email },
-                        });
-                        if (existingEmail) {
-                            errors.push({
-                                ...errorBase,
-                                column: 'email',
-                                error: `Email '${row.email}' already exists in the system`,
-                            });
-                        }
-                        else {
-                            seenEmails.add(row.email);
-                        }
+                        seenEmails.add(emailLower);
                     }
                 }
                 if (errors.filter((e) => e.row === rowNum).length === 0) {
@@ -227,50 +249,48 @@ let ImportsService = class ImportsService {
                     });
                     continue;
                 }
-                if (seenUsernames.has(row.username)) {
-                    errors.push({
-                        ...errorBase,
-                        column: 'username',
-                        error: `Username '${row.username}' is duplicated in the file`,
-                    });
-                }
-                else {
-                    const existingUser = await this.prisma.user.findUnique({
-                        where: { username: row.username },
-                    });
-                    if (existingUser) {
-                        errors.push({
+                const usernameLower = row.username?.toString().toLowerCase();
+                if (usernameLower) {
+                    if (seenUsernames.has(usernameLower)) {
+                        skipped.push({
                             ...errorBase,
                             column: 'username',
-                            error: `Username '${row.username}' already exists in the system`,
+                            reason: `Username '${row.username}' trùng trong file, đã bỏ qua`,
                         });
+                        continue;
+                    }
+                    else if (dbUsernames.has(usernameLower)) {
+                        skipped.push({
+                            ...errorBase,
+                            column: 'username',
+                            reason: `Username '${row.username}' đã tồn tại trong hệ thống, đã bỏ qua`,
+                        });
+                        continue;
                     }
                     else {
-                        seenUsernames.add(row.username);
+                        seenUsernames.add(usernameLower);
                     }
                 }
-                if (row.email) {
-                    if (seenEmails.has(row.email)) {
-                        errors.push({
+                const emailLower = row.email?.toString().toLowerCase();
+                if (emailLower) {
+                    if (seenEmails.has(emailLower)) {
+                        skipped.push({
                             ...errorBase,
                             column: 'email',
-                            error: `Email '${row.email}' is duplicated in the file`,
+                            reason: `Email '${row.email}' trùng trong file, đã bỏ qua`,
                         });
+                        continue;
+                    }
+                    else if (dbEmails.has(emailLower)) {
+                        skipped.push({
+                            ...errorBase,
+                            column: 'email',
+                            reason: `Email '${row.email}' đã tồn tại trong hệ thống, đã bỏ qua`,
+                        });
+                        continue;
                     }
                     else {
-                        const existingEmail = await this.prisma.user.findUnique({
-                            where: { email: row.email },
-                        });
-                        if (existingEmail) {
-                            errors.push({
-                                ...errorBase,
-                                column: 'email',
-                                error: `Email '${row.email}' already exists in the system`,
-                            });
-                        }
-                        else {
-                            seenEmails.add(row.email);
-                        }
+                        seenEmails.add(emailLower);
                     }
                 }
                 const subjects = row.subjects
@@ -279,14 +299,8 @@ let ImportsService = class ImportsService {
                 let departmentId = null;
                 let normalizedSubjects = [];
                 for (const subjName of subjects) {
-                    const subj = await this.prisma.subject.findFirst({
-                        where: {
-                            OR: [
-                                { code: { equals: subjName, mode: 'insensitive' } },
-                                { name: { equals: subjName, mode: 'insensitive' } }
-                            ]
-                        },
-                    });
+                    const subjNameLower = subjName.toLowerCase();
+                    const subj = dbSubjects.find(s => s.code.toLowerCase() === subjNameLower || s.name.toLowerCase() === subjNameLower);
                     if (!subj) {
                         errors.push({
                             ...errorBase,
@@ -319,10 +333,8 @@ let ImportsService = class ImportsService {
                 }
                 let teacherId = null;
                 if (row.homeroom_teacher) {
-                    const teacher = await this.prisma.user.findFirst({
-                        where: { username: { equals: row.homeroom_teacher, mode: 'insensitive' } },
-                        include: { teacher: true },
-                    });
+                    const teacherUsernameLower = row.homeroom_teacher.toString().toLowerCase();
+                    const teacher = dbTeacherUsers.find(t => t.username.toLowerCase() === teacherUsernameLower);
                     if (!teacher || teacher.role !== 'TEACHER' || !teacher.teacher) {
                         errors.push({
                             ...errorBase,
@@ -334,12 +346,8 @@ let ImportsService = class ImportsService {
                         teacherId = teacher.teacher.id;
                     }
                 }
-                const existingClass = await this.prisma.classGroup.findFirst({
-                    where: {
-                        name: { equals: row.class_name, mode: 'insensitive' },
-                        academicYear: row.academic_year
-                    },
-                });
+                const classNameLower = row.class_name?.toString().toLowerCase();
+                const existingClass = dbClasses.find(c => c.name.toLowerCase() === classNameLower && c.academicYear === row.academic_year);
                 if (existingClass) {
                     errors.push({
                         ...errorBase,
@@ -354,10 +362,222 @@ let ImportsService = class ImportsService {
                 }
             }
         }
-        if (errors.length > 0) {
+        if (errors.length > 0 && validData.length === 0) {
             throw new common_1.BadRequestException({ message: 'Validation Failed', errors });
         }
-        return this.saveData(validData, type);
+        const result = await this.saveData(validData, type);
+        return { ...result, skipped };
+    }
+    async importBatch(jsonData, type, batchIndex, totalBatches) {
+        if (type !== 'students' && type !== 'teachers' && type !== 'classes')
+            throw new common_1.BadRequestException('Invalid import type');
+        if (jsonData.length === 0)
+            throw new common_1.BadRequestException('Batch data is empty');
+        const errors = [];
+        const skipped = [];
+        const validData = [];
+        const seenUsernames = new Set();
+        const seenEmails = new Set();
+        const allUsers = await this.prisma.user.findMany({
+            select: { username: true, email: true },
+        });
+        const dbUsernames = new Set(allUsers.map((u) => u.username.toLowerCase()));
+        const dbEmails = new Set(allUsers.filter((u) => u.email).map((u) => u.email.toLowerCase()));
+        let dbClasses = [];
+        if (type === 'students' || type === 'classes') {
+            dbClasses = await this.prisma.classGroup.findMany({
+                select: { id: true, name: true, academicYear: true },
+            });
+        }
+        let dbSubjects = [];
+        if (type === 'teachers') {
+            dbSubjects = await this.prisma.subject.findMany({
+                select: { id: true, name: true, code: true, department: true },
+            });
+        }
+        let dbTeacherUsers = [];
+        if (type === 'classes') {
+            dbTeacherUsers = await this.prisma.user.findMany({
+                where: { role: 'TEACHER' },
+                include: { teacher: true },
+            });
+        }
+        for (let i = 0; i < jsonData.length; i++) {
+            const row = jsonData[i];
+            const rowNum = (batchIndex * jsonData.length) + i + 2;
+            const errorBase = { row: rowNum };
+            if (type === 'students') {
+                if (row.guardian_citizen_id !== undefined)
+                    row.guardian_citizen_id = this.sanitizeStringNumber(row.guardian_citizen_id, 12);
+                if (row.guardian_phone !== undefined)
+                    row.guardian_phone = this.sanitizeStringNumber(row.guardian_phone, 10);
+                const dto = (0, class_transformer_1.plainToInstance)(import_student_dto_1.ImportStudentDto, row);
+                if (row.dob)
+                    dto.dob = this.parseDate(row.dob);
+                if (row.gender)
+                    dto.gender = this.parseGender(row.gender);
+                const validationErrors = await (0, class_validator_1.validate)(dto);
+                if (validationErrors.length > 0) {
+                    validationErrors.forEach((err) => {
+                        errors.push({
+                            ...errorBase,
+                            column: err.property,
+                            error: Object.values(err.constraints || {})[0],
+                        });
+                    });
+                    continue;
+                }
+                const classNameLower = row.class_name?.toString().toLowerCase();
+                const classGroup = dbClasses.find(c => c.name.toLowerCase() === classNameLower);
+                if (!classGroup) {
+                    errors.push({ ...errorBase, column: 'class_name', error: `Class '${row.class_name}' not found` });
+                }
+                const usernameLower = row.username?.toString().toLowerCase();
+                if (usernameLower) {
+                    if (seenUsernames.has(usernameLower)) {
+                        skipped.push({ ...errorBase, column: 'username', reason: `Username '${row.username}' trùng trong batch, đã bỏ qua` });
+                        continue;
+                    }
+                    else if (dbUsernames.has(usernameLower)) {
+                        skipped.push({ ...errorBase, column: 'username', reason: `Username '${row.username}' đã tồn tại trong hệ thống, đã bỏ qua` });
+                        continue;
+                    }
+                    else {
+                        seenUsernames.add(usernameLower);
+                    }
+                }
+                const emailLower = row.email?.toString().toLowerCase();
+                if (emailLower) {
+                    if (seenEmails.has(emailLower)) {
+                        skipped.push({ ...errorBase, column: 'email', reason: `Email '${row.email}' trùng trong batch, đã bỏ qua` });
+                        continue;
+                    }
+                    else if (dbEmails.has(emailLower)) {
+                        skipped.push({ ...errorBase, column: 'email', reason: `Email '${row.email}' đã tồn tại trong hệ thống, đã bỏ qua` });
+                        continue;
+                    }
+                    else {
+                        seenEmails.add(emailLower);
+                    }
+                }
+                if (errors.filter((e) => e.row === rowNum).length === 0) {
+                    validData.push({ ...dto, classId: classGroup?.id });
+                }
+            }
+            else if (type === 'teachers') {
+                if (row.citizen_id !== undefined)
+                    row.citizen_id = this.sanitizeStringNumber(row.citizen_id, 12);
+                if (row.phone !== undefined)
+                    row.phone = this.sanitizeStringNumber(row.phone, 10);
+                const dto = (0, class_transformer_1.plainToInstance)(import_teacher_dto_1.ImportTeacherDto, row);
+                if (row.dob)
+                    dto.dob = this.parseDate(row.dob);
+                if (row.gender)
+                    dto.gender = this.parseGender(row.gender);
+                const validationErrors = await (0, class_validator_1.validate)(dto);
+                if (validationErrors.length > 0) {
+                    validationErrors.forEach((err) => {
+                        errors.push({
+                            ...errorBase,
+                            column: err.property,
+                            error: Object.values(err.constraints || {})[0],
+                        });
+                    });
+                    continue;
+                }
+                const usernameLower = row.username?.toString().toLowerCase();
+                if (usernameLower) {
+                    if (seenUsernames.has(usernameLower)) {
+                        skipped.push({ ...errorBase, column: 'username', reason: `Username '${row.username}' trùng trong batch, đã bỏ qua` });
+                        continue;
+                    }
+                    else if (dbUsernames.has(usernameLower)) {
+                        skipped.push({ ...errorBase, column: 'username', reason: `Username '${row.username}' đã tồn tại trong hệ thống, đã bỏ qua` });
+                        continue;
+                    }
+                    else {
+                        seenUsernames.add(usernameLower);
+                    }
+                }
+                const emailLower = row.email?.toString().toLowerCase();
+                if (emailLower) {
+                    if (seenEmails.has(emailLower)) {
+                        skipped.push({ ...errorBase, column: 'email', reason: `Email '${row.email}' trùng trong batch, đã bỏ qua` });
+                        continue;
+                    }
+                    else if (dbEmails.has(emailLower)) {
+                        skipped.push({ ...errorBase, column: 'email', reason: `Email '${row.email}' đã tồn tại trong hệ thống, đã bỏ qua` });
+                        continue;
+                    }
+                    else {
+                        seenEmails.add(emailLower);
+                    }
+                }
+                const subjects = row.subjects.split(',').map((s) => s.trim());
+                let departmentId = null;
+                let normalizedSubjects = [];
+                for (const subjName of subjects) {
+                    const subjNameLower = subjName.toLowerCase();
+                    const subj = dbSubjects.find(s => s.code.toLowerCase() === subjNameLower || s.name.toLowerCase() === subjNameLower);
+                    if (!subj) {
+                        errors.push({ ...errorBase, column: 'subjects', error: `Subject '${subjName}' not found` });
+                    }
+                    else {
+                        normalizedSubjects.push(subj.name);
+                        if (!departmentId)
+                            departmentId = subj.department;
+                    }
+                }
+                if (errors.filter((e) => e.row === rowNum).length === 0) {
+                    validData.push({ ...dto, departmentId, subjectList: normalizedSubjects });
+                }
+            }
+            else if (type === 'classes') {
+                const dto = (0, class_transformer_1.plainToInstance)(import_class_dto_1.ImportClassDto, row);
+                const validationErrors = await (0, class_validator_1.validate)(dto);
+                if (validationErrors.length > 0) {
+                    validationErrors.forEach((err) => {
+                        errors.push({
+                            ...errorBase,
+                            column: err.property,
+                            error: Object.values(err.constraints || {})[0],
+                        });
+                    });
+                    continue;
+                }
+                let teacherId = null;
+                if (row.homeroom_teacher) {
+                    const teacherUsernameLower = row.homeroom_teacher.toString().toLowerCase();
+                    const teacher = dbTeacherUsers.find(t => t.username.toLowerCase() === teacherUsernameLower);
+                    if (!teacher || teacher.role !== 'TEACHER' || !teacher.teacher) {
+                        errors.push({ ...errorBase, column: 'homeroom_teacher', error: `Teacher username '${row.homeroom_teacher}' not found or invalid` });
+                    }
+                    else {
+                        teacherId = teacher.teacher.id;
+                    }
+                }
+                const classNameLower = row.class_name?.toString().toLowerCase();
+                const existingClass = dbClasses.find(c => c.name.toLowerCase() === classNameLower && c.academicYear === row.academic_year);
+                if (existingClass) {
+                    errors.push({ ...errorBase, column: 'class_name', error: `Class '${row.class_name}' already exists in year ${row.academic_year}` });
+                }
+                const match = row.class_name.match(/^(\d+)/);
+                const gradeLevel = match ? parseInt(match[1], 10) : 10;
+                if (errors.filter((e) => e.row === rowNum).length === 0) {
+                    validData.push({ ...dto, teacherId, gradeLevel });
+                }
+            }
+        }
+        if (errors.length > 0 && validData.length === 0) {
+            throw new common_1.BadRequestException({ message: 'Validation Failed', errors });
+        }
+        const result = await this.saveData(validData, type);
+        return {
+            ...result,
+            skipped,
+            batchIndex,
+            totalBatches,
+        };
     }
     parseDate(val) {
         if (!val)
@@ -371,7 +591,7 @@ let ImportsService = class ImportsService {
             const parts = strVal.split('/');
             if (parts.length === 3) {
                 const [d, m, y] = parts;
-                return `${y}-${d.padStart(2, '0')}-${m.padStart(2, '0')}`;
+                return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
             }
         }
         else if (strVal.includes('-')) {
@@ -419,12 +639,15 @@ let ImportsService = class ImportsService {
         if (type !== 'classes') {
             defaultPass = await this.passwordService.hashPassword('123456');
         }
-        try {
-            await this.prisma.$transaction(async (tx) => {
-                for (const item of data) {
-                    if (type === 'classes') {
-                        const id = await this.idGenerator.generateClassId(item.academic_year, tx);
-                        await tx.classGroup.create({
+        const responseErrors = [];
+        const CHUNK_SIZE = 10;
+        for (let i = 0; i < data.length; i += CHUNK_SIZE) {
+            const chunk = data.slice(i, i + CHUNK_SIZE);
+            await Promise.all(chunk.map(async (item) => {
+                if (type === 'classes') {
+                    try {
+                        const id = await this.idGenerator.generateClassId(item.academic_year);
+                        await this.prisma.classGroup.create({
                             data: {
                                 id,
                                 name: item.class_name,
@@ -435,69 +658,83 @@ let ImportsService = class ImportsService {
                                 teacherId: item.teacherId,
                             },
                         });
+                        count++;
                     }
-                    else {
-                        const user = await tx.user.create({
-                            data: {
-                                username: item.username,
-                                password: defaultPass,
-                                name: item.full_name,
-                                email: item.email || `${item.username}@school.edu`,
-                                role: type === 'students' ? 'STUDENT' : 'TEACHER',
-                            },
-                        });
-                        if (type === 'students') {
-                            const id = item.student_code ||
-                                (await this.idGenerator.generateStudentId(tx));
-                            await tx.student.create({
-                                data: {
-                                    id,
-                                    userId: user.id,
-                                    classId: item.classId,
-                                    enrollmentYear: new Date().getFullYear(),
-                                    dateOfBirth: new Date(item.dob),
-                                    gender: item.gender,
-                                    address: item.address,
-                                    guardianName: item.guardian_name,
-                                    guardianPhone: item.guardian_phone,
-                                    guardianCitizenId: item.guardian_citizen_id,
-                                    guardianJob: item.guardian_occupation,
-                                    guardianYearOfBirth: item.guardian_birth_year,
-                                },
-                            });
+                    catch (err) {
+                        responseErrors.push({ row: item.class_name, detail: err.message });
+                    }
+                }
+                else {
+                    try {
+                        let generatedId = '';
+                        if (type === 'students' && !item.student_code) {
+                            generatedId = await this.idGenerator.generateStudentId();
                         }
                         else if (type === 'teachers') {
-                            const id = await this.idGenerator.generateTeacherId(tx);
-                            await tx.teacher.create({
+                            generatedId = await this.idGenerator.generateTeacherId();
+                        }
+                        await this.prisma.$transaction(async (tx) => {
+                            const user = await tx.user.create({
                                 data: {
-                                    id,
-                                    userId: user.id,
-                                    subjects: item.subjectList,
-                                    citizenId: item.citizen_id,
-                                    gender: item.gender,
-                                    phone: item.phone,
-                                    address: item.address,
-                                    joinYear: item.start_year,
-                                    dateOfBirth: new Date(item.dob),
-                                    department: item.departmentId,
+                                    username: item.username,
+                                    password: defaultPass,
+                                    name: item.full_name,
+                                    email: item.email || `${item.username}@school.edu`,
+                                    role: type === 'students' ? 'STUDENT' : 'TEACHER',
                                 },
                             });
-                        }
+                            if (type === 'students') {
+                                const id = item.student_code || generatedId;
+                                console.log('DEBUG_IMPORT_ITEM:', JSON.stringify(item));
+                                await tx.student.create({
+                                    data: {
+                                        id,
+                                        userId: user.id,
+                                        classId: item.classId,
+                                        enrollmentYear: new Date().getFullYear(),
+                                        dateOfBirth: new Date(item.dob),
+                                        gender: item.gender,
+                                        address: item.address,
+                                        guardianName: item.guardian_name,
+                                        guardianPhone: item.guardian_phone,
+                                        guardianCitizenId: item.guardian_citizen_id,
+                                        guardianJob: item.guardian_occupation,
+                                        guardianYearOfBirth: item.guardian_birth_year ? parseInt(item.guardian_birth_year, 10) : null,
+                                    },
+                                });
+                            }
+                            else if (type === 'teachers') {
+                                const id = generatedId;
+                                await tx.teacher.create({
+                                    data: {
+                                        id,
+                                        userId: user.id,
+                                        subjects: item.subjectList,
+                                        citizenId: item.citizen_id,
+                                        gender: item.gender,
+                                        phone: item.phone,
+                                        address: item.address,
+                                        joinYear: item.start_year,
+                                        dateOfBirth: new Date(item.dob),
+                                        department: item.departmentId,
+                                    },
+                                });
+                            }
+                        }, {
+                            timeout: 10000
+                        });
+                        count++;
                     }
-                    count++;
+                    catch (err) {
+                        responseErrors.push({ row: item.username || item.full_name, detail: err?.meta || err.message || String(err) });
+                    }
                 }
-            }, {
-                maxWait: 15000,
-                timeout: 60000,
-            });
+            }));
         }
-        catch (error) {
-            console.error('Import Error:', error);
-            if (error.code === 'P2002')
-                console.error('Prisma Error Target:', error.meta?.target);
-            throw new common_1.BadRequestException({ message: 'Lỗi khi lưu dữ liệu vào hệ thống: ' + (error.message || 'Unknown error'), details: error });
+        if (responseErrors.length > 0 && count === 0) {
+            throw new common_1.BadRequestException({ message: 'Lỗi khi lưu dữ liệu vào hệ thống. Không có dòng nào được import.', details: responseErrors });
         }
-        return { count };
+        return { count, errors: responseErrors };
     }
 };
 exports.ImportsService = ImportsService;
