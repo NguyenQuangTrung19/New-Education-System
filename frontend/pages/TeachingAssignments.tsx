@@ -106,8 +106,23 @@ export const TeachingAssignments: React.FC<TeachingAssignmentsProps> = ({ curren
             const matchedSubjects = subjects.filter(s => teacher.subjects!.includes(s.name) || teacher.subjects!.includes(s.code));
             if (matchedSubjects.length === 1) {
                 newAllocations[index].subjectId = matchedSubjects[0].id;
-            } else if (matchedSubjects.length > 1 && !matchedSubjects.some(s => s.id === newAllocations[index].subjectId)) {
+            } else if (!matchedSubjects.some(s => s.id === newAllocations[index].subjectId)) {
+                // Current subject not in teacher's subjects → reset
                 newAllocations[index].subjectId = '';
+            }
+        }
+    }
+
+    // When subject changes, check if current teacher teaches it
+    if (field === 'subjectId' && value && newAllocations[index].teacherId) {
+        const currentTeacher = teachers.find(t => t.id === newAllocations[index].teacherId);
+        const selectedSubject = subjects.find(s => s.id === value);
+        if (currentTeacher && selectedSubject && currentTeacher.subjects && currentTeacher.subjects.length > 0) {
+            const teachesSubject = currentTeacher.subjects.some(
+                ts => ts === selectedSubject.name || ts === selectedSubject.code
+            );
+            if (!teachesSubject) {
+                newAllocations[index].teacherId = '';
             }
         }
     }
@@ -233,9 +248,17 @@ export const TeachingAssignments: React.FC<TeachingAssignmentsProps> = ({ curren
                                onChange={(e) => updateAllocation(idx, 'teacherId', e.target.value)}
                             >
                                 <option value="">-- Chọn Giáo Viên --</option>
-                                {teachers.map(t => (
-                                    <option key={t.id} value={t.id}>{t.user?.name || t.name}</option>
-                                ))}
+                                {(() => {
+                                    const selectedSubject = subjects.find(s => s.id === alloc.subjectId);
+                                    const filteredTeachers = selectedSubject
+                                        ? teachers.filter(t => t.subjects && t.subjects.some(
+                                            ts => ts === selectedSubject.name || ts === selectedSubject.code
+                                          ))
+                                        : teachers;
+                                    return filteredTeachers.map(t => (
+                                        <option key={t.id} value={t.id}>{t.user?.name || t.name}</option>
+                                    ));
+                                })()}
                             </select>
                         </div>
 
@@ -327,30 +350,15 @@ export const TeachingAssignments: React.FC<TeachingAssignmentsProps> = ({ curren
                                 <option value="">-- Chọn Môn Học --</option>
                                 {(() => {
                                     const teacher = teachers.find(t => t.id === alloc.teacherId);
-                                    let allowedSubjects = subjects;
-                                    let otherSubjects: Subject[] = [];
-                                    
                                     if (teacher && teacher.subjects && teacher.subjects.length > 0) {
-                                        allowedSubjects = subjects.filter(s => teacher.subjects!.includes(s.name) || teacher.subjects!.includes(s.code));
-                                        otherSubjects = subjects.filter(s => !allowedSubjects.includes(s));
-                                    }
-                                    
-                                    if (teacher && allowedSubjects.length > 0) {
-                                        return (
-                                            <>
-                                                <optgroup label="Môn chuyên môn">
-                                                    {allowedSubjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                                                </optgroup>
-                                                {otherSubjects.length > 0 && (
-                                                    <optgroup label="Môn khác (Phân công chéo môn)">
-                                                        {otherSubjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                                                    </optgroup>
-                                                )}
-                                            </>
+                                        const teacherSubjects = subjects.filter(s => 
+                                            teacher.subjects!.includes(s.name) || teacher.subjects!.includes(s.code)
                                         );
-                                    } else {
-                                        return subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>);
+                                        return teacherSubjects.map(s => (
+                                            <option key={s.id} value={s.id}>{s.name}</option>
+                                        ));
                                     }
+                                    return subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>);
                                 })()}
                             </select>
                         </div>
