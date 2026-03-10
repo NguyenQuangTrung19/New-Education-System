@@ -6,7 +6,8 @@ import { useConfirm } from '../contexts/ConfirmContext';
 import { 
   CalendarDays, Clock, MapPin, ChevronDown, Sun, Moon, Search, X, 
   User as UserIcon, Plus, Edit2, Trash2, Check, FileDown, 
-  ExternalLink, ChevronLeft, ChevronRight, Filter, Users, GraduationCap
+  ExternalLink, ChevronLeft, ChevronRight, Filter, Users, GraduationCap,
+  GripVertical, Copy, ArrowLeftRight, Replace
 } from 'lucide-react';
 import { ScheduleItem, User, UserRole, Subject, Teacher, ClassGroup } from '../types';
 import ExcelJS from 'exceljs';
@@ -81,6 +82,26 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
   // Modals
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlotInfo | null>(null);
   const [editingSlot, setEditingSlot] = useState<EditingSlotInfo | null>(null);
+
+  // Drag-and-drop state
+  const [draggedItem, setDraggedItem] = useState<{
+    entry: ScheduleItem;
+    sourceDay: string;
+    sourcePeriod: number;
+    sourceSession: 'Morning' | 'Afternoon';
+  } | null>(null);
+  const [dragOverTarget, setDragOverTarget] = useState<{
+    day: string;
+    period: number;
+    session: 'Morning' | 'Afternoon';
+  } | null>(null);
+  const [dragActionModal, setDragActionModal] = useState<{
+    source: ScheduleItem;
+    targetEntry?: ScheduleItem;
+    targetDay: string;
+    targetPeriod: number;
+    targetSession: 'Morning' | 'Afternoon';
+  } | null>(null);
   
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
@@ -434,7 +455,233 @@ const handleExportExcel = async () => {
       }
     }
   };
-  
+
+  // --- Drag-and-Drop Handlers ---
+  const handleDragStart = (e: React.DragEvent, entry: ScheduleItem, day: string, period: number, session: 'Morning' | 'Afternoon') => {
+    if (!isEditing) return;
+    setDraggedItem({ entry, sourceDay: day, sourcePeriod: period, sourceSession: session });
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', entry.id);
+    // Make the drag image slightly transparent
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '0.4';
+    }
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '1';
+    }
+    setDraggedItem(null);
+    setDragOverTarget(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent, day: string, period: number, session: 'Morning' | 'Afternoon') => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    // Only update if target changed
+    if (!dragOverTarget || dragOverTarget.day !== day || dragOverTarget.period !== period || dragOverTarget.session !== session) {
+      setDragOverTarget({ day, period, session });
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only clear if actually leaving the cell (not entering a child)
+    const relatedTarget = e.relatedTarget as HTMLElement | null;
+    if (relatedTarget && e.currentTarget.contains(relatedTarget)) return;
+    setDragOverTarget(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetDay: string, targetPeriod: number, targetSession: 'Morning' | 'Afternoon') => {
+    e.preventDefault();
+    setDragOverTarget(null);
+    if (!draggedItem) return;
+
+    // Don't drop on same cell
+    if (draggedItem.sourceDay === targetDay && draggedItem.sourcePeriod === targetPeriod && draggedItem.sourceSession === targetSession) {
+      setDraggedItem(null);
+      return;
+    }
+
+    // Find target entry
+    const targetEntry = schedule.find(s =>
+      s.day === targetDay &&
+      s.session === targetSession &&
+      s.period === targetPeriod &&
+      (viewMode === 'class' ? s.classId === selectedClassId : s.teacherId === selectedTeacherId)
+    );
+
+    setDragActionModal({
+      source: draggedItem.entry,
+      targetEntry: targetEntry || undefined,
+      targetDay,
+      targetPeriod,
+      targetSession,
+    });
+    setDraggedItem(null);
+  };
+
+  const handleDragAction = async (action: 'copy' | 'swap' | 'replace' | 'cancel') => {
+    if (!dragActionModal || action === 'cancel') {
+      setDragActionModal(null);
+      return;
+    }
+
+    const { source, targetEntry, targetDay, targetPeriod, targetSession } = dragActionModal;
+
+    try {
+      if (action === 'copy') {
+        // Create a new slot at the target position with same data
+        const newItemPayload = {
+          day: targetDay,
+          period: targetPeriod,
+          session: targetSession,
+          classId: source.classId,
+          subjectId: source.subjectId,
+          teacherId: source.teacherId || '',
+          room: source.room || '',
+        };
+        const { data } = await api.post('/schedule', newItemPayload);
+        setSchedule(prev => [...prev, data]);
+        showToast('success', 'Đã sao chép tiết học thành công.');
+
+      } else if (action === 'swap' && targetEntry) {
+        // Swap: update both source and target positions
+        const sourceUpdate = { day: targetDay, period: targetPeriod, session: targetSession };
+        const targetUpdate = { day: source.day, period: source.period, session: source.session };
+
+        const [sourceRes, targetRes] = await Promise.all([
+          api.patch(`/schedule/${source.id}`, sourceUpdate),
+          api.patch(`/schedule/${targetEntry.id}`, targetUpdate),
+        ]);
+
+        setSchedule(prev => prev.map(s => {
+          if (s.id === source.id) return { ...s, ...sourceRes.data };
+          if (s.id === targetEntry.id) return { ...s, ...targetRes.data };
+          return s;
+        }));
+        showToast('success', 'Đã hoán đổi 2 tiết học thành công.');
+
+      } else if (action === 'replace' && targetEntry) {
+        // Replace: move source to target position, delete old target
+        const sourceUpdate = { day: targetDay, period: targetPeriod, session: targetSession };
+
+        const [sourceRes] = await Promise.all([
+          api.patch(`/schedule/${source.id}`, sourceUpdate),
+          api.delete(`/schedule/${targetEntry.id}`),
+        ]);
+
+        setSchedule(prev => prev
+          .filter(s => s.id !== targetEntry.id)
+          .map(s => s.id === source.id ? { ...s, ...sourceRes.data } : s)
+        );
+        showToast('success', 'Đã thay thế tiết học thành công.');
+      }
+    } catch (err) {
+      console.error('Drag action failed', err);
+      showToast('error', 'Có lỗi xảy ra khi thực hiện thao tác kéo thả.');
+    }
+
+    setDragActionModal(null);
+  };
+
+  // --- Drag Action Modal ---
+  const DragActionModal = () => {
+    if (!dragActionModal) return null;
+    const { source, targetEntry } = dragActionModal;
+    const isTargetEmpty = !targetEntry;
+
+    return (
+      <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => handleDragAction('cancel')} />
+        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-in">
+          <div className="bg-gradient-to-r from-indigo-600 to-violet-600 p-5 text-white">
+            <h3 className="font-bold text-lg tracking-tight flex items-center gap-2">
+              <GripVertical className="h-5 w-5" /> Chọn hành động
+            </h3>
+            <p className="text-indigo-100 text-sm mt-1">
+              {isTargetEmpty ? 'Ô đích đang trống' : 'Ô đích đã có tiết học'}
+            </p>
+          </div>
+
+          {/* Source & Target Preview */}
+          <div className="p-5 space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 bg-indigo-50 rounded-xl p-3 border border-indigo-100">
+                <div className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-1">Nguồn</div>
+                <div className="font-bold text-sm text-indigo-900">{getSubjectName(source.subjectId)}</div>
+                <div className="text-xs text-indigo-600 mt-0.5">{source.day} - T{source.period} ({source.session === 'Morning' ? 'Sáng' : 'Chiều'})</div>
+              </div>
+              <ArrowLeftRight className="h-5 w-5 text-gray-400 shrink-0" />
+              <div className={`flex-1 rounded-xl p-3 border ${targetEntry ? 'bg-amber-50 border-amber-100' : 'bg-gray-50 border-gray-100'}`}>
+                <div className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${targetEntry ? 'text-amber-400' : 'text-gray-400'}`}>Đích</div>
+                {targetEntry ? (
+                  <>
+                    <div className="font-bold text-sm text-amber-900">{getSubjectName(targetEntry.subjectId)}</div>
+                    <div className="text-xs text-amber-600 mt-0.5">{dragActionModal.targetDay} - T{dragActionModal.targetPeriod} ({dragActionModal.targetSession === 'Morning' ? 'Sáng' : 'Chiều'})</div>
+                  </>
+                ) : (
+                  <div className="text-sm text-gray-400 italic">Trống</div>
+                )}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-2 pt-2">
+              {isTargetEmpty ? (
+                <button
+                  onClick={() => handleDragAction('copy')}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 hover:border-indigo-200 text-indigo-700 font-semibold text-sm transition-all group"
+                >
+                  <div className="p-2 bg-white rounded-lg shadow-sm border border-indigo-100 group-hover:shadow-md transition-shadow">
+                    <Copy className="h-4 w-4" />
+                  </div>
+                  <div className="text-left">
+                    <div>Sao chép</div>
+                    <div className="text-xs font-normal text-indigo-500">Nhân bản tiết học sang ô đích</div>
+                  </div>
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => handleDragAction('swap')}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 hover:border-indigo-200 text-indigo-700 font-semibold text-sm transition-all group"
+                  >
+                    <div className="p-2 bg-white rounded-lg shadow-sm border border-indigo-100 group-hover:shadow-md transition-shadow">
+                      <ArrowLeftRight className="h-4 w-4" />
+                    </div>
+                    <div className="text-left">
+                      <div>Hoán đổi</div>
+                      <div className="text-xs font-normal text-indigo-500">Đổi vị trí 2 tiết cho nhau</div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => handleDragAction('replace')}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-100 hover:border-amber-200 text-amber-700 font-semibold text-sm transition-all group"
+                  >
+                    <div className="p-2 bg-white rounded-lg shadow-sm border border-amber-100 group-hover:shadow-md transition-shadow">
+                      <Replace className="h-4 w-4" />
+                    </div>
+                    <div className="text-left">
+                      <div>Thay thế</div>
+                      <div className="text-xs font-normal text-amber-500">Di chuyển tiết nguồn, xóa tiết đích</div>
+                    </div>
+                  </button>
+                </>
+              )}
+
+              <button
+                onClick={() => handleDragAction('cancel')}
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 font-semibold text-sm transition-all text-center"
+              >
+                Hủy
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
 
   const EditSlotModal = ({ info, onClose }: { info: EditingSlotInfo, onClose: () => void }) => {
@@ -719,10 +966,24 @@ const handleExportExcel = async () => {
                   
                   const editable = canEditSlot(entry);
 
+                  const isDragOver = dragOverTarget?.day === day && dragOverTarget?.period === slot.period && dragOverTarget?.session === session;
+                  const isDragging = draggedItem?.entry.id === entry?.id && draggedItem?.sourceDay === day && draggedItem?.sourcePeriod === slot.period && draggedItem?.sourceSession === session;
+
                   return (
-                    <div key={`${day}-${slot.period}`} className={`p-1 sm:p-2.5 border-r border-gray-100 last:border-r-0 relative transition-colors ${isEditing && editable ? 'hover:bg-indigo-50/30 cursor-pointer' : isEditing ? 'bg-gray-50/80' : isToday ? 'bg-indigo-50/10' : 'hover:bg-gray-50/50'}`}>
+                    <div 
+                      key={`${day}-${slot.period}`} 
+                      className={`p-1 sm:p-2.5 border-r border-gray-100 last:border-r-0 relative transition-all duration-200 ${
+                        isEditing && editable ? 'hover:bg-indigo-50/30 cursor-pointer' : isEditing ? 'bg-gray-50/80' : isToday ? 'bg-indigo-50/10' : 'hover:bg-gray-50/50'
+                      } ${isDragOver && isEditing ? 'bg-indigo-50/60 ring-2 ring-inset ring-indigo-400/50' : ''}`}
+                      onDragOver={(e) => { if (isEditing && editable) handleDragOver(e, day, slot.period, session); }}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => { if (isEditing && editable) handleDrop(e, day, slot.period, session); }}
+                    >
                       {entry ? (
                         <div 
+                          draggable={isEditing && editable}
+                          onDragStart={(e) => { if (editable) handleDragStart(e, entry, day, slot.period, session); }}
+                          onDragEnd={handleDragEnd}
                           onClick={() => {
                              if(isEditing) {
                                if (editable) setEditingSlot({ item: entry, day, period: slot.period, session });
@@ -731,15 +992,25 @@ const handleExportExcel = async () => {
                              }
                           }}
                           className={`h-full w-full rounded-[8px] sm:rounded-[16px] p-1.5 sm:p-3.5 border transition-all duration-300 flex flex-col relative overflow-hidden group/card ${
+                             isDragging ? 'opacity-40 scale-95 border-indigo-300 ring-2 ring-indigo-200 bg-indigo-50' :
                              isEditing 
-                               ? (editable ? 'border-indigo-200 ring-2 ring-indigo-100 bg-white hover:scale-[1.02] shadow-sm hover:shadow-md cursor-pointer' : 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed')
+                               ? (editable ? 'border-indigo-200 ring-2 ring-indigo-100 bg-white hover:scale-[1.02] shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing' : 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed')
                                : session === 'Morning' 
                                   ? 'bg-gradient-to-br from-amber-50 to-white border-amber-100/60 hover:-translate-y-1 hover:shadow-[0_8px_20px_rgba(251,191,36,0.15)] hover:border-amber-200 cursor-pointer' 
                                   : 'bg-gradient-to-br from-indigo-50 to-white border-indigo-100/60 hover:-translate-y-1 hover:shadow-[0_8px_20px_rgba(99,102,241,0.15)] hover:border-indigo-200 cursor-pointer'
                           }`}
                         >
                            <div className="absolute top-0 right-0 w-8 h-8 sm:w-16 sm:h-16 bg-gradient-to-bl from-white/40 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity rounded-bl-full pointer-events-none"></div>
-                           {isEditing && editable && <div className="absolute top-1 right-1 sm:top-2 sm:right-2 text-indigo-500 bg-white shadow-sm p-1 sm:p-1.5 rounded-full"><Edit2 className="h-2 w-2 sm:h-3 sm:w-3" /></div>}
+                           {isEditing && editable && (
+                             <div className="absolute top-1 right-1 sm:top-2 sm:right-2 flex gap-0.5">
+                               <div className="text-indigo-400 bg-white shadow-sm p-0.5 sm:p-1 rounded-full cursor-grab active:cursor-grabbing">
+                                 <GripVertical className="h-2 w-2 sm:h-3 sm:w-3" />
+                               </div>
+                               <div className="text-indigo-500 bg-white shadow-sm p-0.5 sm:p-1 rounded-full">
+                                 <Edit2 className="h-2 w-2 sm:h-3 sm:w-3" />
+                               </div>
+                             </div>
+                           )}
                            
                           <div className={`font-heading font-bold text-[10px] sm:text-[14px] leading-tight mb-1 sm:mb-2 line-clamp-3 sm:line-clamp-2 break-words ${session === 'Morning' && !isEditing ? 'text-amber-900' : isEditing ? 'text-slate-800' : 'text-indigo-900'}`}>
                              {getSubjectName(entry.subjectId)}
@@ -767,14 +1038,24 @@ const handleExportExcel = async () => {
                         </div>
                       ) : (
                         <div 
-                           className={`h-full w-full flex items-center justify-center rounded-lg transition-all ${isEditing && editable ? 'border-2 border-dashed border-gray-200 hover:border-indigo-400 hover:bg-indigo-50 cursor-pointer group-hover:visible' : ''}`}
+                           className={`h-full w-full flex items-center justify-center rounded-lg transition-all ${
+                             isDragOver && isEditing && editable
+                               ? 'border-2 border-dashed border-indigo-400 bg-indigo-50 ring-2 ring-indigo-200/50'
+                               : isEditing && editable 
+                                 ? 'border-2 border-dashed border-gray-200 hover:border-indigo-400 hover:bg-indigo-50 cursor-pointer group-hover:visible' 
+                                 : ''
+                           }`}
                            onClick={() => {
                               if(isEditing && editable) {
                                 setEditingSlot({ day, period: slot.period, session });
                               }
                            }}
                         >
-                          {isEditing && editable && <Plus className="h-6 w-6 text-gray-300 group-hover:text-indigo-500" />}
+                          {isEditing && editable && (
+                            isDragOver 
+                              ? <ArrowLeftRight className="h-6 w-6 text-indigo-500 animate-pulse" />
+                              : <Plus className="h-6 w-6 text-gray-300 group-hover:text-indigo-500" />
+                          )}
                         </div>
                       )}
                     </div>
@@ -902,6 +1183,7 @@ const handleExportExcel = async () => {
       
       {selectedSlot && <ScheduleDetailModal info={selectedSlot} onClose={() => setSelectedSlot(null)} />}
       {editingSlot && <EditSlotModal info={editingSlot} onClose={() => setEditingSlot(null)} />}
+      <DragActionModal />
     </div>
   );
 };
