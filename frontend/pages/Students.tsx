@@ -670,11 +670,24 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
     try {
         setIsSubmitting(true);
         if (editingStudent) {
-            // Only send fields that UpdateStudentDto accepts
-            const { id, username, password, user, avatarUrl, class: _cls, academicHistory, grades, attendance, tuitions, ...updatePayload } = studentPayload as any;
+            // Whitelist: only send fields that UpdateStudentDto accepts
+            const updatePayload: Record<string, any> = {};
+            const allowedFields = [
+              'name', 'email', 'gender', 'classId', 'gpa', 'enrollmentYear',
+              'dateOfBirth', 'address', 'phone', 'guardianName', 'guardianPhone',
+              'guardianCitizenId', 'guardianYearOfBirth', 'guardianJob',
+              'semesterEvaluation', 'notes'
+            ];
+            for (const key of allowedFields) {
+              if ((studentPayload as any)[key] !== undefined) {
+                updatePayload[key] = (studentPayload as any)[key];
+              }
+            }
             // Only include password if user explicitly typed one
-            const patchData = password ? { ...updatePayload, password } : updatePayload;
-            const response = await api.patch(`/students/${editingStudent.id}`, patchData);
+            if ((studentPayload as any).password) {
+              updatePayload.password = (studentPayload as any).password;
+            }
+            const response = await api.patch(`/students/${editingStudent.id}`, updatePayload);
             // Re-fetch to guarantee data consistency
             await fetchStudents();
         } else {

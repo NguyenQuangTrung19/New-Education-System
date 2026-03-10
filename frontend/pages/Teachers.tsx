@@ -739,8 +739,17 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
     try {
         setIsSubmitting(true);
         if (editingTeacher) {
-            // Only send fields that UpdateTeacherDto accepts
-            const { id, username, password, user, avatarUrl, classes, ...updatePayload } = teacherData as any;
+            // Whitelist: only send fields that UpdateTeacherDto accepts
+            const updatePayload: Record<string, any> = {};
+            const allowedFields = [
+              'name', 'email', 'subjects', 'classesAssigned', 'joinYear',
+              'address', 'phone', 'citizenId', 'gender', 'dateOfBirth', 'notes'
+            ];
+            for (const key of allowedFields) {
+              if ((teacherData as any)[key] !== undefined) {
+                updatePayload[key] = (teacherData as any)[key];
+              }
+            }
             const response = await api.patch(`/teachers/${editingTeacher.id}`, updatePayload);
             await fetchData();
         } else {
