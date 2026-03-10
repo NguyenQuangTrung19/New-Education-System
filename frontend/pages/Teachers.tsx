@@ -686,9 +686,9 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
 
       // Phone Check
       if (data.phone) {
-          const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/g;
-          if (!phoneRegex.test(data.phone) || !isValidPhone(data.phone)) {
-              errors.phone = "Số điện thoại phải bắt đầu bằng 84/0 và là dạng số hợp lệ của Việt Nam.";
+          const phoneRegex = /^(0|84)\d+$/;
+          if (!phoneRegex.test(data.phone)) {
+              errors.phone = "Số điện thoại phải bắt đầu bằng 0 hoặc 84 và chỉ chứa số.";
           }
       }
 
@@ -739,7 +739,9 @@ export const Teachers: React.FC<TeachersProps> = ({ currentUser }) => {
     try {
         setIsSubmitting(true);
         if (editingTeacher) {
-            const response = await api.patch(`/teachers/${editingTeacher.id}`, teacherData);
+            // Only send fields that UpdateTeacherDto accepts
+            const { id, username, password, user, avatarUrl, classes, ...updatePayload } = teacherData as any;
+            const response = await api.patch(`/teachers/${editingTeacher.id}`, updatePayload);
             await fetchData();
         } else {
             // Strip the generated ID since backend DTO forbids non-whitelisted properties and id is not in CreateTeacherDto

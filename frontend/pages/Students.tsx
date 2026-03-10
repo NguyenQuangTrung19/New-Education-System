@@ -620,8 +620,8 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
 
        // Phone Validation
        if (data.guardianPhone) {
-           const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/g;
-           if (!phoneRegex.test(data.guardianPhone) || !isValidPhone(data.guardianPhone)) {
+           const phoneRegex = /^(0|84)\d+$/;
+           if (!phoneRegex.test(data.guardianPhone)) {
                errors.guardianPhone = t('student.validation.phone');
            }
        }

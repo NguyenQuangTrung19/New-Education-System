@@ -19,8 +19,8 @@ export const calculateAge = (dateString: string): number => {
 };
 
 export const isValidPhone = (phone: string): boolean => {
-  // Starts with 0, exactly 10 digits
-  const phoneRegex = /^0\d{9}$/;
+  // Starts with 0 or 84, followed by digits
+  const phoneRegex = /^(0|84)\d+$/;
   return phoneRegex.test(phone);
 };
 
