@@ -250,12 +250,30 @@ export const TeachingAssignments: React.FC<TeachingAssignmentsProps> = ({ curren
                                 <option value="">-- Chọn Giáo Viên --</option>
                                 {(() => {
                                     const selectedSubject = subjects.find(s => s.id === alloc.subjectId);
-                                    const filteredTeachers = selectedSubject
+                                    // Filter by selected subject
+                                    const subjectFiltered = selectedSubject
                                         ? teachers.filter(t => t.subjects && t.subjects.some(
                                             ts => ts === selectedSubject.name || ts === selectedSubject.code
                                           ))
                                         : teachers;
-                                    return filteredTeachers.map(t => (
+                                    
+                                    // Count how many times each teacher is used in OTHER rows
+                                    const teacherUsageCount: Record<string, number> = {};
+                                    allocations.forEach((a, i) => {
+                                        if (i !== idx && a.teacherId) {
+                                            teacherUsageCount[a.teacherId] = (teacherUsageCount[a.teacherId] || 0) + 1;
+                                        }
+                                    });
+                                    
+                                    // Filter: teacher can appear at most subjects.length times
+                                    const availableTeachers = subjectFiltered.filter(t => {
+                                        if (t.id === alloc.teacherId) return true; // Always show current selection
+                                        const maxSlots = t.subjects?.length || 1;
+                                        const usedSlots = teacherUsageCount[t.id] || 0;
+                                        return usedSlots < maxSlots;
+                                    });
+                                    
+                                    return availableTeachers.map(t => (
                                         <option key={t.id} value={t.id}>{t.user?.name || t.name}</option>
                                     ));
                                 })()}

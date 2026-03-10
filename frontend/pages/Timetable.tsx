@@ -443,12 +443,33 @@ const handleExportExcel = async () => {
     const defaultClassId = viewMode === 'class' ? selectedClassId : (info.item?.classId || '');
     const defaultTeacherId = viewMode === 'teacher' ? selectedTeacherId : (info.item?.teacherId || '');
 
+    // Auto-fill room from class data
+    const getClassRoom = (classId: string) => {
+      return classesList.find(c => c.id === classId)?.room || '';
+    };
+
     const [formData, setFormData] = useState<Partial<ScheduleItem>>({
        subjectId: info.item?.subjectId || '',
        teacherId: defaultTeacherId,
        classId: defaultClassId,
-       room: info.item?.room || ''
+       room: info.item?.room || getClassRoom(defaultClassId)
     });
+
+    // Auto-fill room when class changes
+    const handleClassChange = (classId: string) => {
+      const classRoom = getClassRoom(classId);
+      setFormData(prev => ({ ...prev, classId, room: classRoom }));
+    };
+
+    // Get teacher's subjects for filtering
+    const getTeacherSubjects = () => {
+      const teacherId = viewMode === 'teacher' ? selectedTeacherId : formData.teacherId;
+      const teacher = teachersList.find(t => t.id === teacherId);
+      if (!teacher?.subjects?.length) return subjectsList;
+      return subjectsList.filter(s => 
+        teacher.subjects!.some(ts => ts === s.name || ts === s.code)
+      );
+    };
 
     return (
       <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -467,19 +488,17 @@ const handleExportExcel = async () => {
                  <span>Period {info.period}</span>
               </div>
 
-              {/* Subject */}
+              {/* Subject - filtered by teacher in teacher view */}
               <div>
                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">{t('timetable.selectSubject')}</label>
                  <select required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" value={formData.subjectId} onChange={(e) => setFormData({...formData, subjectId: e.target.value})}>
                    <option value="">-- Select Subject --</option>
-                   {subjectsList.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
+                   {viewMode === 'teacher' ? (
+                     getTeacherSubjects().map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)
+                   ) : (
+                     subjectsList.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)
+                   )}
                  </select>
-              </div>
-
-              {/* Room */}
-              <div>
-                 <label className="block text-xs font-bold text-gray-700 uppercase mb-1">{t('timetable.enterRoom')}</label>
-                 <input type="text" required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" value={formData.room} onChange={(e) => setFormData({...formData, room: e.target.value})} placeholder="e.g. 101, Lab A" />
               </div>
 
               {/* Conditional Fields based on View Mode */}
@@ -518,12 +537,18 @@ const handleExportExcel = async () => {
               ) : (
                   <div>
                      <label className="block text-xs font-bold text-gray-700 uppercase mb-1">{t('class.name')}</label>
-                     <select disabled={!isAdmin} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" value={formData.classId} onChange={(e) => setFormData({...formData, classId: e.target.value})}>
+                     <select disabled={!isAdmin} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" value={formData.classId} onChange={(e) => handleClassChange(e.target.value)}>
                        <option value="">-- Select Class --</option>
                        {classesList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                      </select>
                   </div>
               )}
+
+              {/* Room - auto-filled from class but editable */}
+              <div>
+                 <label className="block text-xs font-bold text-gray-700 uppercase mb-1">{t('timetable.enterRoom')}</label>
+                 <input type="text" required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" value={formData.room} onChange={(e) => setFormData({...formData, room: e.target.value})} placeholder="e.g. 101, Lab A" />
+              </div>
 
               <div className="pt-4 flex gap-2">
                  {!isNew && (
