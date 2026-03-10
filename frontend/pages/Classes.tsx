@@ -114,12 +114,18 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
         const gradeParam = selectedGrade ? `&grade=${selectedGrade}` : '';
         const res = await api.get(`/classes?page=${currentPage}&limit=10&search=${encodeURIComponent(debouncedSearch)}&academicYear=${encodeURIComponent(selectedYear)}${gradeParam}`);
         
+        const mapClasses = (data: any[]) => data.map((c: any) => ({
+          ...c,
+          // Use actual student count from relation if available
+          studentCount: c._count?.students ?? c.studentCount ?? 0,
+        }));
+
         if (res.data.data) {
-           setClasses(res.data.data);
+           setClasses(mapClasses(res.data.data));
            setTotalPages(res.data.meta.totalPages);
            setTotalItems(res.data.meta.total);
         } else {
-           setClasses(res.data);
+           setClasses(mapClasses(res.data));
            setTotalPages(1);
            setTotalItems(res.data.length);
         }
@@ -220,12 +226,26 @@ export const Classes: React.FC<ClassesProps> = ({ currentUser }) => {
     try {
       setIsSubmitting(true);
       if (editingClass) {
-        const response = await api.patch(`/classes/${editingClass.id}`, classPayload);
-        setClasses(classes.map(c => c.id === editingClass.id ? response.data : c));
+        // Whitelist: only send fields that UpdateClassDto accepts
+        const updatePayload: Record<string, any> = {};
+        const allowedFields = [
+          'name', 'gradeLevel', 'room', 'academicYear', 'teacherId',
+          'studentCount', 'maleStudentCount', 'femaleStudentCount',
+          'averageGpa', 'currentWeeklyScore', 'weeklyScoreHistory',
+          'description', 'notes'
+        ];
+        for (const key of allowedFields) {
+          if ((classPayload as any)[key] !== undefined) {
+            updatePayload[key] = (classPayload as any)[key];
+          }
+        }
+        const response = await api.patch(`/classes/${editingClass.id}`, updatePayload);
+        // Re-fetch for consistency
+        await fetchClasses();
       } else {
-        const { id, weeklyScoreHistory, ...createPayload } = classPayload;
+        const { id, weeklyScoreHistory, _count, teacher, students, scheduleItems, teachingAssignments, homeworks, ...createPayload } = classPayload as any;
         const response = await api.post('/classes', createPayload);
-        setClasses([...classes, response.data]);
+        await fetchClasses();
       }
       setIsFormOpen(false);
       setTimeout(() => {
