@@ -249,7 +249,7 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({
                 <button onClick={onClose} className="text-indigo-100 hover:text-white transition-colors"><X className="h-6 w-6" /></button>
             </div>
             
-            <form onSubmit={onSave} className="flex-1 overflow-y-auto bg-gray-50">
+            <form onSubmit={onSave} autoComplete="off" className="flex-1 overflow-y-auto bg-gray-50">
                <div className="p-6 space-y-6">
 
                   {/* Section 1: Academic */}
@@ -294,12 +294,12 @@ const SlideOverForm: React.FC<SlideOverFormProps> = ({
                      <div className="space-y-3">
                          <div>
                             <label className="block text-xs font-semibold text-gray-500 mb-1">Username <span className="text-red-500">*</span></label>
-                            <input type="text" className={inputClass('username')} value={formStudent.username} onChange={e => setFormStudent({...formStudent, username: e.target.value})} />
+                            <input type="text" autoComplete="off" className={`${inputClass('username')} ${editingStudent ? 'opacity-60 cursor-not-allowed' : ''}`} value={formStudent.username} onChange={e => setFormStudent({...formStudent, username: e.target.value})} disabled={!!editingStudent} />
                             {renderError('username')}
                          </div>
                          <div>
                             <label className="block text-xs font-semibold text-gray-500 mb-1">Password {editingStudent ? '(Leave blank to keep unchanged)' : <span className="text-red-500">*</span>}</label>
-                            <input type="password" placeholder={editingStudent ? "Unchanged" : "••••••"} className={inputClass('password')} value={formStudent.password} onChange={e => setFormStudent({...formStudent, password: e.target.value})} />
+                            <input type="password" autoComplete="new-password" placeholder={editingStudent ? "Unchanged" : "••••••"} className={inputClass('password')} value={formStudent.password} onChange={e => setFormStudent({...formStudent, password: e.target.value})} />
                             {renderError('password')}
                          </div>
                      </div>
@@ -474,7 +474,7 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
         return;
     }
     setEditingStudent(student);
-    setFormStudent({ ...student });
+    setFormStudent({ ...student, password: '' });
     setFormErrors({});
     setIsFormOpen(true);
   };
@@ -513,8 +513,9 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
       const studentsData = response.data.data ? response.data.data : response.data;
       const mapped = studentsData.map((s: any) => ({
         ...s,
-        name: s.user?.name || 'Unknown',
-        email: s.user?.email || '',
+        name: s.user?.name || s.name || 'Unknown',
+        email: s.user?.email || s.email || '',
+        username: s.user?.username || s.username || '',
       }));
       setStudents(mapped);
       
@@ -669,7 +670,11 @@ export const Students: React.FC<StudentsProps> = ({ currentUser }) => {
     try {
         setIsSubmitting(true);
         if (editingStudent) {
-            const response = await api.patch(`/students/${editingStudent.id}`, studentPayload);
+            // Only send fields that UpdateStudentDto accepts
+            const { id, username, password, user, avatarUrl, class: _cls, academicHistory, grades, attendance, tuitions, ...updatePayload } = studentPayload as any;
+            // Only include password if user explicitly typed one
+            const patchData = password ? { ...updatePayload, password } : updatePayload;
+            const response = await api.patch(`/students/${editingStudent.id}`, patchData);
             // Re-fetch to guarantee data consistency
             await fetchStudents();
         } else {
