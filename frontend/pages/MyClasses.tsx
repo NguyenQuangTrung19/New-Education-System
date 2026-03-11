@@ -522,17 +522,21 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
       }
   };
 
-  const handleConfirmSecurity = () => {
-      if (securityPassword === 'password') {
-          // Only update verification time if it's grading, 
-          // or if we want feedback to also extend grading session (optional, but let's keep them somewhat linked)
+  const handleConfirmSecurity = async () => {
+      try {
+          await api.post('/auth/verify-password', { password: securityPassword });
+          
           setLastVerifiedTime(Date.now());
           
           // Execute pending action
           if (pendingAction === 'grades') commitGrades();
           if (pendingAction === 'feedback') executeFeedbackSubmission();
-      } else {
-          setSecurityError(t('myClasses.alerts.incorrectPassword'));
+      } catch (error: any) {
+          if (error.response?.status === 401) {
+              setSecurityError(t('myClasses.alerts.incorrectPassword') || 'Mật khẩu không chính xác');
+          } else {
+              setSecurityError('Lỗi kết nối hoặc xác thực thất bại');
+          }
       }
   };
 
@@ -1246,19 +1250,20 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
                         <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
                             <ShieldCheck className="w-8 h-8 text-indigo-600" />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900">Secure Submission</h3>
-                        <p className="text-gray-500 text-sm mt-2">Enter your password to commit these changes.</p>
+                        <h3 className="text-xl font-bold text-gray-900">Xác thực bảo mật</h3>
+                        <p className="text-gray-500 text-sm mt-2">Nhập mật khẩu của bạn để xác nhận hành động này.</p>
                     </div>
 
                     <div className="space-y-4">
                         <div>
                             <input 
                                 type="password" 
-                                placeholder="Enter password" 
+                                placeholder="Nhập mật khẩu" 
                                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                                 value={securityPassword}
                                 onChange={(e) => setSecurityPassword(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleConfirmSecurity()}
+                                autoComplete="new-password"
                             />
                             {securityError && (
                                 <div className="flex items-center text-red-500 text-xs mt-2 font-medium">
@@ -1268,11 +1273,10 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
                         </div>
                         
                         <div className="flex gap-2">
-                            <button onClick={() => setIsSecurityModalOpen(false)} className="flex-1 py-3 text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors font-bold text-sm">Cancel</button>
-                            <button onClick={handleConfirmSecurity} className="flex-1 py-3 text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-500/30 transition-all font-bold text-sm">Submit</button>
+                            <button onClick={() => setIsSecurityModalOpen(false)} className="flex-1 py-3 text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors font-bold text-sm">Hủy</button>
+                            <button onClick={handleConfirmSecurity} className="flex-1 py-3 text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-500/30 transition-all font-bold text-sm">Xác nhận</button>
                         </div>
                     </div>
-                    <p className="text-center text-xs text-gray-400 mt-4">Demo Password: "password"</p>
                 </div>
             </div>
         )}
