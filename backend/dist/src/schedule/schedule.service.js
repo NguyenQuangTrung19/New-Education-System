@@ -130,6 +130,33 @@ let ScheduleService = class ScheduleService {
             where: { id },
         });
     }
+    async copyWeek(sourceWeekStartDate, targetWeekStartDate, query = {}) {
+        const targetDate = new Date(targetWeekStartDate);
+        targetDate.setUTCHours(0, 0, 0, 0);
+        const sourceItems = await this.findByWeek(sourceWeekStartDate, query);
+        const deleteWhere = { weekStartDate: targetDate };
+        if (query.classId)
+            deleteWhere.classId = query.classId;
+        if (query.teacherId)
+            deleteWhere.teacherId = query.teacherId;
+        await this.prisma.scheduleItem.deleteMany({ where: deleteWhere });
+        const newItemsData = sourceItems.map(item => ({
+            day: item.day,
+            period: item.period,
+            session: item.session,
+            room: item.room,
+            subjectId: item.subjectId,
+            classId: item.classId,
+            teacherId: item.teacherId,
+            weekStartDate: targetDate,
+        }));
+        if (newItemsData.length > 0) {
+            await this.prisma.scheduleItem.createMany({
+                data: newItemsData,
+            });
+        }
+        return { success: true, count: newItemsData.length };
+    }
 };
 exports.ScheduleService = ScheduleService;
 exports.ScheduleService = ScheduleService = __decorate([

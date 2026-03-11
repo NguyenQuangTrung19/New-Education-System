@@ -331,4 +331,11 @@ export declare class ScheduleService {
         session: string;
         weekStartDate: Date | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
+    copyWeek(sourceWeekStartDate: string, targetWeekStartDate: string, query?: {
+        classId?: string;
+        teacherId?: string;
+    }): Promise<{
+        success: boolean;
+        count: number;
+    }>;
 }

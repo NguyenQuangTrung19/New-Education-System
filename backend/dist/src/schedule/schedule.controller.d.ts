@@ -76,6 +76,15 @@ export declare class ScheduleController {
         session: string;
         weekStartDate: Date | null;
     }[]>;
+    copyWeek(body: {
+        sourceWeekStartDate: string;
+        targetWeekStartDate: string;
+        classId?: string;
+        teacherId?: string;
+    }): Promise<{
+        success: boolean;
+        count: number;
+    }>;
     findAll(query: any): import(".prisma/client").Prisma.PrismaPromise<({
         teacher: ({
             user: {

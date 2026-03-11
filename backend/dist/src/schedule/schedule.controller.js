@@ -32,6 +32,12 @@ let ScheduleController = class ScheduleController {
     findByWeek(weekStartDate, query) {
         return this.scheduleService.findByWeek(weekStartDate, query);
     }
+    copyWeek(body) {
+        return this.scheduleService.copyWeek(body.sourceWeekStartDate, body.targetWeekStartDate, {
+            classId: body.classId,
+            teacherId: body.teacherId
+        });
+    }
     findAll(query) {
         return this.scheduleService.findAll(query);
     }
@@ -65,6 +71,15 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], ScheduleController.prototype, "findByWeek", null);
+__decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN, client_1.UserRole.TEACHER),
+    (0, common_1.Post)('copy-week'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], ScheduleController.prototype, "copyWeek", null);
 __decorate([
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN, client_1.UserRole.TEACHER, client_1.UserRole.STUDENT),

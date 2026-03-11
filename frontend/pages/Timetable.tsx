@@ -82,6 +82,9 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
   // Modals
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlotInfo | null>(null);
   const [editingSlot, setEditingSlot] = useState<EditingSlotInfo | null>(null);
+  const [isCopyWeekModalOpen, setIsCopyWeekModalOpen] = useState(false);
+  const [copyTargetWeekStart, setCopyTargetWeekStart] = useState<Date>(new Date());
+  const [copyScope, setCopyScope] = useState<'current' | 'all'>('current');
 
   // Drag-and-drop state
   const [draggedItem, setDraggedItem] = useState<{
@@ -181,6 +184,13 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
     fetchSchedule();
   }, [currentWeekStart, selectedClassId, selectedTeacherId, isAdmin]);
 
+  useEffect(() => {
+    // Only safely call addDays here since it gets defined above
+    const result = new Date(currentWeekStart);
+    result.setDate(result.getDate() + 7);
+    setCopyTargetWeekStart(result);
+  }, [currentWeekStart]);
+
   // Initialization Logic
   useEffect(() => {
     if (classesList.length > 0 && teachersList.length > 0) {
@@ -234,6 +244,42 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
 
   const jumpToToday = () => {
       setCurrentWeekStart(getStartOfWeek(new Date()));
+  };
+
+  const handleConfirmCopyWeek = async () => {
+      const sourceIso = new Date(currentWeekStart.getTime() - currentWeekStart.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+      const targetIso = new Date(copyTargetWeekStart.getTime() - copyTargetWeekStart.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+      
+      if (sourceIso === targetIso) {
+          showToast('error', 'Không thể sao chép vào cùng một tuần.');
+          return;
+      }
+      
+      const payload: any = {
+          sourceWeekStartDate: sourceIso,
+          targetWeekStartDate: targetIso
+      };
+
+      if (copyScope === 'current') {
+          if (viewMode === 'class') payload.classId = selectedClassId;
+          if (viewMode === 'teacher') payload.teacherId = selectedTeacherId;
+      }
+
+      let scopeText = copyScope === 'all' ? 'toàn trường' : (viewMode === 'class' ? `lớp ${getClassName(selectedClassId)}` : `giáo viên ${getTeacherName(selectedTeacherId)}`);
+      
+      const confirmMsg = `Bạn có chắc chắn muốn sao chép thời khóa biểu của ${scopeText} từ tuần ${formatDate(currentWeekStart)} sang tuần ${formatDate(copyTargetWeekStart)}? Các thay đổi (nếu có) ở tuần đích sẽ bị GHI ĐÈ.`;
+      const isConfirmed = await confirm({ title: 'Xác nhận sao chép tuần', message: confirmMsg, isDanger: true });
+      if (!isConfirmed) return;
+
+      try {
+          await api.post('/schedule/copy-week', payload);
+          showToast('success', 'Đã sao chép thời khóa biểu thành công.');
+          setIsCopyWeekModalOpen(false);
+          setCurrentWeekStart(copyTargetWeekStart);
+      } catch (err) {
+          console.error("Copy week failed", err);
+          showToast('error', 'Có lỗi xảy ra khi sao chép thời khóa biểu.');
+      }
   };
 
   const handleSaveSlot = async (e: React.FormEvent, formData: Partial<ScheduleItem>) => {
@@ -538,7 +584,7 @@ const handleExportExcel = async () => {
     setDraggedItem(null);
   };
 
-  const handleDragAction = async (action: 'copy' | 'swap' | 'replace' | 'cancel') => {
+  const handleDragAction = async (action: 'copy' | 'move' | 'swap' | 'replace' | 'cancel') => {
     if (!dragActionModal || action === 'cancel') {
       setDragActionModal(null);
       return;
@@ -562,6 +608,18 @@ const handleExportExcel = async () => {
         const { data } = await api.post('/schedule', newItemPayload);
         setSchedule(prev => [...prev, data]);
         showToast('success', 'Đã sao chép tiết học thành công.');
+
+      } else if (action === 'move') {
+        const isoString = new Date(currentWeekStart.getTime() - currentWeekStart.getTimezoneOffset() * 60000).toISOString();
+        const sourceUpdate = { day: targetDay, period: targetPeriod, session: targetSession, weekStartDate: isoString };
+
+        const { data: sourceRes } = await api.patch(`/schedule/${source.id}`, sourceUpdate);
+
+        setSchedule(prev => prev.map(s => s.id === source.id ? { ...s, ...sourceRes } : s));
+        if (sourceRes._copyOnWrite) {
+             fetchSchedule(); // Refresh fully to get new IDs
+        }
+        showToast('success', 'Đã di chuyển tiết học thành công.');
 
       } else if (action === 'swap' && targetEntry) {
         // Swap: update both source and target positions
@@ -657,18 +715,32 @@ const handleExportExcel = async () => {
             {/* Action Buttons */}
             <div className="space-y-2 pt-2">
               {isTargetEmpty ? (
-                <button
-                  onClick={() => handleDragAction('copy')}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 hover:border-indigo-200 text-indigo-700 font-semibold text-sm transition-all group"
-                >
-                  <div className="p-2 bg-white rounded-lg shadow-sm border border-indigo-100 group-hover:shadow-md transition-shadow">
-                    <Copy className="h-4 w-4" />
-                  </div>
-                  <div className="text-left">
-                    <div>Sao chép</div>
-                    <div className="text-xs font-normal text-indigo-500">Nhân bản tiết học sang ô đích</div>
-                  </div>
-                </button>
+                <>
+                  <button
+                    onClick={() => handleDragAction('copy')}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 hover:border-indigo-200 text-indigo-700 font-semibold text-sm transition-all group"
+                  >
+                    <div className="p-2 bg-white rounded-lg shadow-sm border border-indigo-100 group-hover:shadow-md transition-shadow">
+                      <Copy className="h-4 w-4" />
+                    </div>
+                    <div className="text-left">
+                      <div>Sao chép</div>
+                      <div className="text-xs font-normal text-indigo-500">Nhân bản tiết học sang ô đích</div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => handleDragAction('move')}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-100 hover:border-amber-200 text-amber-700 font-semibold text-sm transition-all group"
+                  >
+                    <div className="p-2 bg-white rounded-lg shadow-sm border border-amber-100 group-hover:shadow-md transition-shadow">
+                      <ArrowLeftRight className="h-4 w-4" />
+                    </div>
+                    <div className="text-left">
+                      <div>Di chuyển</div>
+                      <div className="text-xs font-normal text-amber-500">Chuyển tiết nguồn sang ô đích</div>
+                    </div>
+                  </button>
+                </>
               ) : (
                 <>
                   <button
@@ -706,6 +778,73 @@ const handleExportExcel = async () => {
               </button>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  };
+
+  const CopyWeekModal = () => {
+    if (!isCopyWeekModalOpen) return null;
+    return (
+      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setIsCopyWeekModalOpen(false)} />
+        <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-scale-in">
+             <div className="bg-indigo-600 p-4 flex justify-between items-center text-white shadow-sm">
+                <h3 className="font-bold text-lg tracking-tight">Sao chép thời khóa biểu</h3>
+                <button onClick={() => setIsCopyWeekModalOpen(false)} className="hover:bg-indigo-500 rounded-full p-1 transition-colors"><X className="h-5 w-5" /></button>
+             </div>
+             <div className="p-6 space-y-5">
+                <div className="bg-amber-50 rounded-lg p-3 text-sm text-amber-800 border border-amber-200">
+                    Sắp xếp thời khóa biểu của tuần hiện tại sẽ được áp dụng cho tuần đích. (Thực chất các tiết học nguồn sẽ được sao chép sang tuần đích).
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 items-center">
+                    <div>
+                        <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Tuần nguồn</label>
+                        <div className="px-3 py-2 bg-gray-100 rounded-lg text-gray-700 font-medium">
+                            {formatDate(currentWeekStart)} - {formatDate(addDays(currentWeekStart, 4))}
+                        </div>
+                    </div>
+                    <div>
+                        <ArrowLeftRight className="h-5 w-5 text-gray-400 mx-auto" />
+                    </div>
+                    <div className="col-span-2">
+                        <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Tuần đích</label>
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => setCopyTargetWeekStart(addDays(copyTargetWeekStart, -7))} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg"><ChevronLeft className="h-4 w-4" /></button>
+                            <div className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-center font-medium text-indigo-700">
+                                {formatDate(copyTargetWeekStart)} - {formatDate(addDays(copyTargetWeekStart, 4))}
+                            </div>
+                            <button onClick={() => setCopyTargetWeekStart(addDays(copyTargetWeekStart, 7))} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg"><ChevronRight className="h-4 w-4" /></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Phạm vi sao chép</label>
+                    <div className="space-y-2">
+                        <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg border border-gray-100 hover:bg-gray-50">
+                            <input type="radio" checked={copyScope === 'current'} onChange={() => setCopyScope('current')} className="text-indigo-600 focus:ring-indigo-500" />
+                            <span className="text-sm font-medium text-gray-700">Chỉ sao chép cho {viewMode === 'class' ? `Lớp ${getClassName(selectedClassId)}` : `Giáo viên ${getTeacherName(selectedTeacherId)}`}</span>
+                        </label>
+                        {isAdmin && (
+                            <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg border border-gray-100 hover:bg-gray-50">
+                                <input type="radio" checked={copyScope === 'all'} onChange={() => setCopyScope('all')} className="text-indigo-600 focus:ring-indigo-500" />
+                                <span className="text-sm font-medium text-gray-700">Sao chép cho toàn trường</span>
+                            </label>
+                        )}
+                    </div>
+                </div>
+
+                <div className="pt-4 flex gap-2 border-t border-gray-100">
+                     <button onClick={() => setIsCopyWeekModalOpen(false)} className="flex-1 bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-lg text-sm font-bold transition-colors">
+                        Hủy bỏ
+                     </button>
+                     <button onClick={handleConfirmCopyWeek} className="flex-1 bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-lg shadow-indigo-500/30 flex justify-center items-center">
+                        <Copy className="h-4 w-4 mr-2" /> Sao chép
+                     </button>
+                </div>
+             </div>
         </div>
       </div>
     );
@@ -1174,6 +1313,15 @@ const handleExportExcel = async () => {
            <div className="flex gap-2">
                {!isStudent && (
                  <button 
+                   onClick={() => setIsCopyWeekModalOpen(true)} 
+                   className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-sm flex items-center border bg-white hover:bg-indigo-50 text-indigo-700 border-indigo-200"
+                 >
+                   <Copy className="h-3.5 w-3.5 mr-1.5" />
+                   Sao chép tuần
+                 </button>
+               )}
+               {!isStudent && (
+                 <button 
                    onClick={() => setIsEditing(!isEditing)} 
                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-sm flex items-center border ${
                       isEditing 
@@ -1212,6 +1360,7 @@ const handleExportExcel = async () => {
       {selectedSlot && <ScheduleDetailModal info={selectedSlot} onClose={() => setSelectedSlot(null)} />}
       {editingSlot && <EditSlotModal info={editingSlot} onClose={() => setEditingSlot(null)} />}
       <DragActionModal />
+      <CopyWeekModal />
     </div>
   );
 };

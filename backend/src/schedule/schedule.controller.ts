@@ -37,6 +37,16 @@ export class ScheduleController {
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  @Post('copy-week')
+  copyWeek(@Body() body: { sourceWeekStartDate: string, targetWeekStartDate: string, classId?: string, teacherId?: string }) {
+    return this.scheduleService.copyWeek(body.sourceWeekStartDate, body.targetWeekStartDate, {
+      classId: body.classId,
+      teacherId: body.teacherId
+    });
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
   @Get()
   findAll(@Query() query: any) {

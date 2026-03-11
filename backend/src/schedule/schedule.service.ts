@@ -163,4 +163,39 @@ export class ScheduleService {
       where: { id },
     });
   }
+
+  async copyWeek(sourceWeekStartDate: string, targetWeekStartDate: string, query: { classId?: string, teacherId?: string } = {}) {
+    const targetDate = new Date(targetWeekStartDate);
+    targetDate.setUTCHours(0, 0, 0, 0);
+
+    // 1. Get the exact schedule of the source week
+    const sourceItems = await this.findByWeek(sourceWeekStartDate, query);
+
+    // 2. Clear existing overrides in the target week (for the specific filter)
+    const deleteWhere: any = { weekStartDate: targetDate };
+    if (query.classId) deleteWhere.classId = query.classId;
+    if (query.teacherId) deleteWhere.teacherId = query.teacherId;
+    
+    await this.prisma.scheduleItem.deleteMany({ where: deleteWhere });
+
+    // 3. Create new overrides for the target week based on the source items
+    const newItemsData = sourceItems.map(item => ({
+      day: item.day,
+      period: item.period,
+      session: item.session,
+      room: item.room,
+      subjectId: item.subjectId,
+      classId: item.classId,
+      teacherId: item.teacherId,
+      weekStartDate: targetDate, // Override for target week
+    }));
+
+    if (newItemsData.length > 0) {
+      await this.prisma.scheduleItem.createMany({
+        data: newItemsData,
+      });
+    }
+
+    return { success: true, count: newItemsData.length };
+  }
 }
