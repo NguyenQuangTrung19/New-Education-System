@@ -27,6 +27,7 @@ const imports_module_1 = require("./imports/imports.module");
 const timetable_module_1 = require("./timetable/timetable.module");
 const teaching_assignments_module_1 = require("./teaching-assignments/teaching-assignments.module");
 const grades_module_1 = require("./grades/grades.module");
+const lesson_feedback_module_1 = require("./lesson-feedback/lesson-feedback.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -54,6 +55,7 @@ exports.AppModule = AppModule = __decorate([
             timetable_module_1.TimetableModule,
             teaching_assignments_module_1.TeachingAssignmentsModule,
             grades_module_1.GradesModule,
+            lesson_feedback_module_1.LessonFeedbackModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [

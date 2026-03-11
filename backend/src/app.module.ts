@@ -19,6 +19,7 @@ import { ImportsModule } from './imports/imports.module';
 import { TimetableModule } from './timetable/timetable.module';
 import { TeachingAssignmentsModule } from './teaching-assignments/teaching-assignments.module';
 import { GradesModule } from './grades/grades.module';
+import { LessonFeedbackModule } from './lesson-feedback/lesson-feedback.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { GradesModule } from './grades/grades.module';
     TimetableModule,
     TeachingAssignmentsModule,
     GradesModule,
+    LessonFeedbackModule,
   ],
   controllers: [AppController],
   providers: [

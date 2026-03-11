@@ -187,6 +187,8 @@ model ScheduleItem {
   teacherId String?
   teacher   Teacher? @relation(fields: [teacherId], references: [id])
 
+  feedbacks LessonFeedback[]
+
   @@index([weekStartDate, classId])
   @@index([weekStartDate, teacherId])
 }
@@ -312,4 +314,17 @@ model AssignmentSubmission {
   score        Float?
   feedback     String?
   status       AssignmentStatus @default(pending)
+}
+
+model LessonFeedback {
+  id          String       @id @default(uuid())
+  scheduleId  String
+  schedule    ScheduleItem @relation(fields: [scheduleId], references: [id])
+  date        String       // ISO Date YYYY-MM-DD
+  rating      String
+  comment     String
+  signature   String
+  timestamp   DateTime     @default(now())
+
+  @@unique([scheduleId, date])
 }

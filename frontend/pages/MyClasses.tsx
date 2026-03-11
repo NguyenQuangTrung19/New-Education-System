@@ -270,14 +270,38 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
       setStudentEvaluations(evals);
   }, [classStudents]);
 
+  const [teacherWeekSchedule, setTeacherWeekSchedule] = useState<any[]>([]);
+  const [teacherFeedbacks, setTeacherFeedbacks] = useState<any[]>([]);
+
+  const fetchDashboardData = async () => {
+      if (!currentUser.id) return;
+      try {
+          const isoWeekStart = new Date(currentWeekStart.getTime() - currentWeekStart.getTimezoneOffset() * 60000).toISOString();
+          const [scheduleRes, feedbackRes] = await Promise.all([
+              api.get(`/schedule/week?weekStartDate=${isoWeekStart}&teacherId=${currentUser.id}`), 
+              api.get(`/lesson-feedback?teacherId=${currentUser.id}`)
+          ]);
+          setTeacherWeekSchedule(scheduleRes.data || []);
+          setTeacherFeedbacks(feedbackRes.data || []);
+      } catch (err) {
+          console.error("Failed to fetch dashboard data", err);
+      }
+  };
+
+  useEffect(() => {
+      if (!selectedClassId && currentUser.id) {
+          fetchDashboardData();
+      }
+  }, [selectedClassId, currentWeekStart, currentUser.id]);
+
   // --- PENDING SIGNATURES LOGIC ---
   const pendingSignatures = useMemo(() => {
       const tasks: { classId: string; className: string; count: number }[] = [];
       const now = new Date();
-      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
       myClasses.forEach(cls => {
-          const classSchedule: any[] = [];
+          const classSchedule = teacherWeekSchedule.filter(s => s.classId === cls.id);
           let pendingCount = 0;
 
           // Check for current week (using dashboard state)
@@ -291,7 +315,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
               // Only count if lesson is in the past
               if (now > endTime) {
                   const isoDate = getISODate(lessonDate);
-                  const hasFeedback = feedbacks.some(f => f.scheduleId === lesson.id && f.date === isoDate);
+                  const hasFeedback = teacherFeedbacks.some(f => f.scheduleId === lesson.id && f.date === isoDate);
                   if (!hasFeedback) pendingCount++;
               }
           });
@@ -301,7 +325,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
           }
       });
       return tasks;
-  }, [myClasses, currentWeekStart, feedbacks, currentUser.id]);
+  }, [myClasses, currentWeekStart, teacherWeekSchedule, teacherFeedbacks]);
 
   const totalPending = pendingSignatures.reduce((sum, item) => sum + item.count, 0);
 
@@ -428,25 +452,44 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
       }
   };
 
-  const executeFeedbackSubmission = () => {
+  const executeFeedbackSubmission = async () => {
       if (!selectedScheduleItem) return;
+      
       const signature = `Signed by ${currentUser.name} at ${new Date().toLocaleTimeString()}`;
-      const newFeedback: LessonFeedback = {
+      const payload = {
           scheduleId: selectedScheduleItem.id,
           date: selectedScheduleItem.date,
           rating,
           comment,
-          signature,
-          timestamp: new Date().toISOString()
+          signature
       };
-      setFeedbacks(prev => {
-          const filtered = prev.filter(f => !(f.scheduleId === selectedScheduleItem.id && f.date === selectedScheduleItem.date));
-          return [...filtered, newFeedback];
-      });
-      setFeedbackModalOpen(false);
-      setPendingAction(null);
-      setIsSecurityModalOpen(false);
-      showToast('success', t('myClasses.alerts.feedbackSubmitted'));
+
+      try {
+          const existingFeedback = feedbacks.find(f => f.scheduleId === selectedScheduleItem.id && f.date === selectedScheduleItem.date);
+          let savedFeedback;
+
+          if (existingFeedback && existingFeedback.id) {
+              // Update existing
+              const { data } = await api.patch(`/lesson-feedback/${existingFeedback.id}`, payload);
+              savedFeedback = data;
+          } else {
+              // Create new
+              const { data } = await api.post('/lesson-feedback', payload);
+              savedFeedback = data;
+          }
+
+          setFeedbacks(prev => {
+              const filtered = prev.filter(f => !(f.scheduleId === selectedScheduleItem.id && f.date === selectedScheduleItem.date));
+              return [...filtered, savedFeedback];
+          });
+          setFeedbackModalOpen(false);
+          setPendingAction(null);
+          setIsSecurityModalOpen(false);
+          showToast('success', t('myClasses.alerts.feedbackSubmitted'));
+      } catch (err) {
+          console.error("Failed to submit feedback", err);
+          setSecurityError("Failed to submit feedback to server.");
+      }
   };
 
   // The Action Trigger (Checks session)
@@ -547,13 +590,40 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
       return startOfTodayWeek.getTime() === currentWeekStart.getTime();
   }, [currentWeekStart]);
 
+  const [scheduleItems, setScheduleItems] = useState<any[]>([]);
+
+  const fetchWeekScheduleAndFeedbacks = async () => {
+      if (!selectedClassId) return;
+      try {
+          // Adjust timezone for weekStartDate
+          const isoWeekStart = new Date(currentWeekStart.getTime() - currentWeekStart.getTimezoneOffset() * 60000).toISOString();
+          const [scheduleRes, feedbackRes] = await Promise.all([
+              api.get(`/schedule/week?weekStartDate=${isoWeekStart}&classId=${selectedClassId}&teacherId=${currentUser.id}`), // Ensuring we only get this teacher's classes for the journal
+              api.get(`/lesson-feedback?classId=${selectedClassId}`)
+          ]);
+          
+          setScheduleItems(scheduleRes.data || []);
+          setFeedbacks(feedbackRes.data || []);
+      } catch (err) {
+          console.error("Failed to fetch schedule and feedbacks", err);
+      }
+  };
+
+  useEffect(() => {
+      if (activeView === 'journal') {
+          fetchWeekScheduleAndFeedbacks();
+      }
+  }, [selectedClassId, currentWeekStart, activeView]);
+
   const weekLessons = useMemo(() => {
       if (!selectedClassId) return [];
       const dayMap: Record<string, number> = { 'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3, 'Friday': 4 };
       const currentTime = new Date();
-      const templateLessons = [];
       
-      return templateLessons.map(lesson => {
+      // Filter schedule items to only show the ones assigned to the current teacher
+      const myScheduleItems = scheduleItems.filter(s => s.teacherId === currentUser.id);
+      
+      return myScheduleItems.map(lesson => {
           const dayOffset = dayMap[lesson.day];
           if (dayOffset === undefined) return null;
           
@@ -578,7 +648,7 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
               isPending
           };
       }).filter(Boolean).sort((a, b) => (a!.specificDate.getTime() - b!.specificDate.getTime()) || (a!.period - b!.period));
-  }, [selectedClassId, currentUser.id, currentWeekStart, feedbacks, attendanceRecords]);
+  }, [selectedClassId, currentUser.id, currentWeekStart, feedbacks, attendanceRecords, scheduleItems]);
 
   const weekStats = useMemo(() => {
       const total = weekLessons.length;
