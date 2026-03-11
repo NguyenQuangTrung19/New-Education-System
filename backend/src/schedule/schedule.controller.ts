@@ -28,6 +28,14 @@ export class ScheduleController {
     return this.scheduleService.create(createScheduleDto);
   }
 
+  // New endpoint: get merged schedule for a specific week
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
+  @Get('week')
+  findByWeek(@Query('weekStartDate') weekStartDate: string, @Query() query: any) {
+    return this.scheduleService.findByWeek(weekStartDate, query);
+  }
+
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
   @Get()

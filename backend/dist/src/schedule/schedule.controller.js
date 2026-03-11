@@ -29,6 +29,9 @@ let ScheduleController = class ScheduleController {
     create(createScheduleDto) {
         return this.scheduleService.create(createScheduleDto);
     }
+    findByWeek(weekStartDate, query) {
+        return this.scheduleService.findByWeek(weekStartDate, query);
+    }
     findAll(query) {
         return this.scheduleService.findAll(query);
     }
@@ -52,6 +55,16 @@ __decorate([
     __metadata("design:paramtypes", [create_schedule_dto_1.CreateScheduleDto]),
     __metadata("design:returntype", void 0)
 ], ScheduleController.prototype, "create", null);
+__decorate([
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN, client_1.UserRole.TEACHER, client_1.UserRole.STUDENT),
+    (0, common_1.Get)('week'),
+    __param(0, (0, common_1.Query)('weekStartDate')),
+    __param(1, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], ScheduleController.prototype, "findByWeek", null);
 __decorate([
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN, client_1.UserRole.TEACHER, client_1.UserRole.STUDENT),

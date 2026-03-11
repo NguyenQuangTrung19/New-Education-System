@@ -154,6 +154,8 @@ export interface ScheduleItem {
   classId: string;
   room: string;
   teacherId?: string;
+  weekStartDate?: string; // ISO date string, null = base template
+  isBase?: boolean;       // flag from API
 }
 
 export interface TeachingAssignment {

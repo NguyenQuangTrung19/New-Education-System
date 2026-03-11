@@ -167,7 +167,10 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
   // Fetch Schedule
   const fetchSchedule = async () => {
     try {
-        const { data } = await api.get('/schedule'); // Fetch all for now due to complex filter logic on client vs server
+        const isoString = new Date(currentWeekStart.getTime() - currentWeekStart.getTimezoneOffset() * 60000)
+                            .toISOString().split('T')[0];
+        
+        const { data } = await api.get(`/schedule/week?weekStartDate=${isoString}`); 
         setSchedule(data);
     } catch (error) {
         console.error("Failed to fetch schedule", error);
@@ -276,13 +279,26 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
     try {
         if (editingSlot?.item) {
           // Update existing
-          const { data } = await api.patch(`/schedule/${editingSlot.item.id}`, formData);
-          const updatedSchedule = schedule.map(s => 
-            s.id === editingSlot.item!.id 
-              ? { ...s, ...data } 
-              : s
-          );
-          setSchedule(updatedSchedule);
+          const updatePayload = {
+            ...formData,
+            weekStartDate: new Date(currentWeekStart.getTime() - currentWeekStart.getTimezoneOffset() * 60000).toISOString()
+          };
+          const { data } = await api.patch(`/schedule/${editingSlot.item.id}`, updatePayload);
+          
+          if (data._copyOnWrite) {
+             // It was a copy-on-write, so we add the new item and optionally remove the old one from local state
+             const updatedSchedule = schedule.filter(s => 
+               !(s.day === data.day && s.period === data.period && s.session === data.session && s.classId === data.classId)
+             );
+             setSchedule([...updatedSchedule, data]);
+          } else {
+            const updatedSchedule = schedule.map(s => 
+              s.id === editingSlot.item!.id 
+                ? { ...s, ...data } 
+                : s
+            );
+            setSchedule(updatedSchedule);
+          }
         } else {
           // Create new
           const newItemPayload = {
@@ -293,6 +309,7 @@ export const Timetable: React.FC<TimetableProps> = ({ currentUser, onNavigate })
             subjectId: formData.subjectId,
             teacherId: targetTeacherId,
             room: formData.room || '', // Default room if not provided or handle in backend
+            weekStartDate: new Date(currentWeekStart.getTime() - currentWeekStart.getTimezoneOffset() * 60000).toISOString()
           };
           const { data } = await api.post('/schedule', newItemPayload);
           setSchedule([...schedule, data]);
@@ -540,6 +557,7 @@ const handleExportExcel = async () => {
           subjectId: source.subjectId,
           teacherId: source.teacherId || '',
           room: source.room || '',
+          weekStartDate: new Date(currentWeekStart.getTime() - currentWeekStart.getTimezoneOffset() * 60000).toISOString()
         };
         const { data } = await api.post('/schedule', newItemPayload);
         setSchedule(prev => [...prev, data]);
@@ -547,8 +565,9 @@ const handleExportExcel = async () => {
 
       } else if (action === 'swap' && targetEntry) {
         // Swap: update both source and target positions
-        const sourceUpdate = { day: targetDay, period: targetPeriod, session: targetSession };
-        const targetUpdate = { day: source.day, period: source.period, session: source.session };
+        const isoString = new Date(currentWeekStart.getTime() - currentWeekStart.getTimezoneOffset() * 60000).toISOString();
+        const sourceUpdate = { day: targetDay, period: targetPeriod, session: targetSession, weekStartDate: isoString };
+        const targetUpdate = { day: source.day, period: source.period, session: source.session, weekStartDate: isoString };
 
         const [sourceRes, targetRes] = await Promise.all([
           api.patch(`/schedule/${source.id}`, sourceUpdate),
@@ -556,15 +575,21 @@ const handleExportExcel = async () => {
         ]);
 
         setSchedule(prev => prev.map(s => {
-          if (s.id === source.id) return { ...s, ...sourceRes.data };
-          if (s.id === targetEntry.id) return { ...s, ...targetRes.data };
-          return s;
+          let updated = s;
+          if (s.id === source.id) updated = { ...s, ...sourceRes.data };
+          if (s.id === targetEntry.id) updated = { ...s, ...targetRes.data };
+          return updated;
         }));
+        // Note: For full correctness with copy-on-write, a re-fetch is safer if IDs changed, but mapping is fine for simple view.
+        if (sourceRes.data._copyOnWrite || targetRes.data._copyOnWrite) {
+             fetchSchedule(); // Refresh fully to get new IDs
+        }
         showToast('success', 'Đã hoán đổi 2 tiết học thành công.');
 
       } else if (action === 'replace' && targetEntry) {
         // Replace: move source to target position, delete old target
-        const sourceUpdate = { day: targetDay, period: targetPeriod, session: targetSession };
+        const isoString = new Date(currentWeekStart.getTime() - currentWeekStart.getTimezoneOffset() * 60000).toISOString();
+        const sourceUpdate = { day: targetDay, period: targetPeriod, session: targetSession, weekStartDate: isoString };
 
         const [sourceRes] = await Promise.all([
           api.patch(`/schedule/${source.id}`, sourceUpdate),
@@ -575,6 +600,9 @@ const handleExportExcel = async () => {
           .filter(s => s.id !== targetEntry.id)
           .map(s => s.id === source.id ? { ...s, ...sourceRes.data } : s)
         );
+        if (sourceRes.data._copyOnWrite) {
+             fetchSchedule(); // Refresh fully to get new IDs
+        }
         showToast('success', 'Đã thay thế tiết học thành công.');
       }
     } catch (err) {

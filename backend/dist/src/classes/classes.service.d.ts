@@ -165,6 +165,7 @@ export declare class ClassesService {
             subjectId: string;
             period: number;
             session: string;
+            weekStartDate: Date | null;
         })[];
         teachingAssignments: ({
             teacher: {

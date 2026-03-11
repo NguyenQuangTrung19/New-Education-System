@@ -6,4 +6,5 @@ export declare class CreateScheduleDto {
     subjectId: string;
     classId: string;
     teacherId?: string;
+    weekStartDate?: Date;
 }

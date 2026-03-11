@@ -157,6 +157,7 @@ export declare class ClassesController {
             subjectId: string;
             period: number;
             session: string;
+            weekStartDate: Date | null;
         })[];
         teachingAssignments: ({
             teacher: {

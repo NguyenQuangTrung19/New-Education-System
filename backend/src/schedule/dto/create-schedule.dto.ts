@@ -1,4 +1,5 @@
-import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString, IsDate, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateScheduleDto {
   @IsString()
@@ -28,4 +29,9 @@ export class CreateScheduleDto {
   @IsString()
   @IsOptional()
   teacherId?: string;
+
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  weekStartDate?: Date;
 }

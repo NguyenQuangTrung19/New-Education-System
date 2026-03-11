@@ -171,11 +171,12 @@ model Subject {
 }
 
 model ScheduleItem {
-  id        String   @id @default(uuid())
-  day       String
-  period    Int
-  session   String
-  room      String?
+  id            String    @id @default(uuid())
+  day           String
+  period        Int
+  session       String
+  room          String?
+  weekStartDate DateTime? // null = base template, non-null = week-specific override
   
   subjectId String
   subject   Subject @relation(fields: [subjectId], references: [id])
@@ -185,6 +186,9 @@ model ScheduleItem {
   
   teacherId String?
   teacher   Teacher? @relation(fields: [teacherId], references: [id])
+
+  @@index([weekStartDate, classId])
+  @@index([weekStartDate, teacherId])
 }
 
 model TeachingAssignment {
