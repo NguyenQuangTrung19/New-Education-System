@@ -94,11 +94,14 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
   const [currentAttendanceSession, setCurrentAttendanceSession] = useState<{scheduleId: string, date: string} | null>(null);
   const [tempAttendance, setTempAttendance] = useState<AttendanceRecord[]>([]);
 
-  // Feedback Modal State
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [selectedScheduleItem, setSelectedScheduleItem] = useState<{id: string, date: string, day: string, period: number} | null>(null);
   const [rating, setRating] = useState<'A'|'B'|'C'|'D'|'E'|'F'>('B');
   const [comment, setComment] = useState('');
+
+  // Detail Modal State
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedDetailLesson, setSelectedDetailLesson] = useState<any>(null);
 
   // Evaluation State
   const [studentEvaluations, setStudentEvaluations] = useState<Record<string, string>>({});
@@ -657,6 +660,18 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
       return { total, evaluated, pending };
   }, [weekLessons]);
 
+  const groupedLessons = useMemo(() => {
+      const groups: Record<string, any[]> = {};
+      weekLessons.forEach((l: any) => {
+          if (!groups[l.isoDate]) groups[l.isoDate] = [];
+          groups[l.isoDate].push(l);
+      });
+      return Object.keys(groups).sort().map(date => ({
+          date,
+          lessons: groups[date]
+      }));
+  }, [weekLessons]);
+
   const handleOpenFeedback = (lesson: any) => {
       if (!lesson.isPast) return;
       setSelectedScheduleItem({
@@ -996,10 +1011,10 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
                         <div className="flex items-center bg-gray-50 rounded-lg p-1 border border-gray-200">
                             <button onClick={() => handleWeekChange('prev')} className="p-2 hover:bg-white hover:shadow-sm rounded-md text-gray-600 transition"><ChevronLeft className="h-5 w-5" /></button>
                             <div className="px-4 text-center min-w-[200px]">
-                                <div className="text-[10px] text-gray-400 uppercase font-bold mb-0.5">Teaching Week</div>
+                                <div className="text-[10px] text-gray-400 uppercase font-bold mb-0.5">Tuần học</div>
                                 <div className="text-sm font-bold text-gray-900 flex items-center justify-center gap-2">
                                     {formatDate(currentWeekStart)} - {formatDate(addDays(currentWeekStart, 4))}
-                                    {isCurrentWeek && <span className="bg-indigo-100 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded uppercase">Current</span>}
+                                    {isCurrentWeek && <span className="bg-indigo-100 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded uppercase">Tuần này</span>}
                                 </div>
                             </div>
                             <button onClick={() => handleWeekChange('next')} className="p-2 hover:bg-white hover:shadow-sm rounded-md text-gray-600 transition"><ChevronRight className="h-5 w-5" /></button>
@@ -1007,139 +1022,108 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
 
                         {!isCurrentWeek && (
                             <button onClick={jumpToToday} className="text-xs font-bold text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">
-                                Jump to Today
+                                Đến hôm nay
                             </button>
                         )}
 
                         <div className="flex gap-4 text-sm bg-white border border-gray-100 px-4 py-2 rounded-xl shadow-sm md:ml-auto">
                             <div className="flex flex-col items-center px-2">
-                                <span className="text-[10px] text-gray-400 uppercase font-bold">Done</span>
+                                <span className="text-[10px] text-gray-400 uppercase font-bold">Đã xong</span>
                                 <span className="font-bold text-emerald-600">{weekStats.evaluated}</span>
                             </div>
                             <div className="w-px bg-gray-100"></div>
                             <div className="flex flex-col items-center px-2">
-                                <span className="text-[10px] text-gray-400 uppercase font-bold">Pending</span>
+                                <span className="text-[10px] text-gray-400 uppercase font-bold">Chờ thực hiện</span>
                                 <span className="font-bold text-rose-600">{weekStats.pending}</span>
                             </div>
                         </div>
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {weekLessons.map((lesson: any) => (
-                                <div 
-                                    key={`${lesson.id}-${lesson.isoDate}`} 
-                                    className={`relative flex flex-col rounded-2xl border transition-all duration-200 group ${
-                                        lesson.feedback 
-                                            ? 'bg-white border-gray-200 shadow-sm hover:shadow-md' 
-                                            : lesson.isPending 
-                                                ? 'bg-white border-rose-200 shadow-md ring-1 ring-rose-100' 
-                                                : 'bg-gray-50 border-gray-200 opacity-80'
-                                    }`}
-                                >
-                                    {/* Header */}
-                                    <div className="p-5 border-b border-gray-100 flex justify-between items-start">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`h-12 w-12 rounded-xl flex flex-col items-center justify-center border font-bold ${
-                                                lesson.feedback ? 'bg-indigo-50 border-indigo-100 text-indigo-700' :
-                                                lesson.isPending ? 'bg-rose-50 border-rose-100 text-rose-700' :
-                                                'bg-gray-100 border-gray-200 text-gray-400'
-                                            }`}>
-                                                <span className="text-[10px] uppercase">{formatDate(lesson.specificDate).split(' ')[0]}</span>
-                                                <span className="text-lg">{formatDate(lesson.specificDate).split(' ')[1]}</span>
-                                            </div>
-                                            <div>
-                                                <div className="text-xs font-bold text-gray-400 uppercase">Period {lesson.period}</div>
-                                                <div className="font-bold text-gray-900">{lesson.session}</div>
-                                            </div>
-                                        </div>
-                                        {lesson.feedback ? (
-                                            <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-                                                <CheckCircle className="h-5 w-5" />
-                                            </div>
-                                        ) : lesson.isPending ? (
-                                            <div className="h-8 w-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 animate-pulse">
-                                                <AlertTriangle className="h-5 w-5" />
-                                            </div>
-                                        ) : (
-                                            <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
-                                                <Lock className="h-4 w-4" />
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Body */}
-                                    <div className="p-5 flex-1 space-y-4">
-                                        <div className="flex items-center text-sm text-gray-600">
-                                            <MapPin className="h-4 w-4 mr-2 text-gray-400" /> Room: <span className="font-medium ml-1 text-gray-900">{lesson.room}</span>
-                                        </div>
-                                        
-                                        {/* Attendance Status Bar */}
-                                        <div>
-                                            <div className="flex justify-between items-end mb-1">
-                                                <span className="text-xs font-bold text-gray-400 uppercase">Attendance</span>
-                                                {lesson.attendanceTaken ? (
-                                                    <span className="text-xs font-bold text-indigo-600">{lesson.absentCount} Absent</span>
-                                                ) : (
-                                                    <span className="text-xs text-gray-400 italic">Not taken</span>
-                                                )}
-                                            </div>
-                                            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                                                {lesson.attendanceTaken ? (
-                                                    <div className={`h-full rounded-full ${lesson.absentCount > 0 ? 'bg-amber-400' : 'bg-emerald-400'}`} style={{width: '100%'}}></div>
-                                                ) : (
-                                                    <div className="h-full w-full bg-gray-200"></div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {lesson.feedback && (
-                                            <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                                <div className="flex justify-between items-center mb-1">
-                                                    <span className="text-xs font-bold text-gray-500 uppercase">Rating</span>
-                                                    <span className={`text-lg font-bold ${
-                                                        lesson.feedback.rating === 'A' ? 'text-emerald-600' :
-                                                        lesson.feedback.rating === 'B' ? 'text-blue-600' : 'text-gray-600'
-                                                    }`}>{lesson.feedback.rating}</span>
+                        <div className="space-y-6">
+                            {groupedLessons.map(group => (
+                                <div key={group.date} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                     <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 font-bold text-gray-800 flex items-center">
+                                         <Calendar className="w-5 h-5 mr-2 text-indigo-500" /> Ngày {group.date.split('-').reverse().join('-')}
+                                     </div>
+                                     <div className="divide-y divide-gray-100">
+                                         {group.lessons.map(lesson => (
+                                            <div key={lesson.id} className="p-4 flex flex-col md:flex-row items-center gap-4 hover:bg-gray-50/80 transition-colors">
+                                                <div className="flex-shrink-0 w-24 text-center bg-indigo-50/50 py-2 rounded-lg border border-indigo-50">
+                                                    <div className="font-bold text-lg text-indigo-700">Tiết {lesson.period}</div>
+                                                    <div className="text-xs text-indigo-400 font-semibold uppercase">{lesson.session === 'Morning' ? 'Sáng' : 'Chiều'}</div>
                                                 </div>
-                                                <p className="text-xs text-gray-500 line-clamp-2 italic">"{lesson.feedback.comment}"</p>
-                                            </div>
-                                        )}
-                                    </div>
+                                                
+                                                <div className="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+                                                    <div className="bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
+                                                        <div className="text-[10px] text-gray-400 mb-0.5 uppercase font-bold">Lớp / Phòng</div>
+                                                        <div className="font-bold text-gray-800 text-sm flex items-center">
+                                                            <MapPin className="w-3 h-3 mr-1 text-gray-400" /> {lesson.room || 'Chưa xếp phòng'}
+                                                        </div>
+                                                    </div>
+                                                    <div className="bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
+                                                        <div className="text-[10px] text-gray-400 mb-0.5 uppercase font-bold">Học sinh vắng</div>
+                                                        <div className={`font-bold text-sm ${lesson.absentCount > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                                                            {lesson.attendanceTaken ? `${lesson.absentCount} học sinh` : <span className="text-gray-400 font-normal italic">Chưa điểm danh</span>}
+                                                        </div>
+                                                    </div>
+                                                    <div className="bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
+                                                        <div className="text-[10px] text-gray-400 mb-0.5 uppercase font-bold">Đánh giá</div>
+                                                        <div className="font-bold text-sm text-gray-800">
+                                                            {lesson.feedback ? <span className="text-emerald-600 inline-flex items-center"><Star className="w-3 h-3 mr-1 fill-emerald-100 text-emerald-500" /> Loại {lesson.feedback.rating}</span> : <span className="text-gray-400 font-normal italic">Chưa đánh giá</span>}
+                                                        </div>
+                                                    </div>
+                                                    <div className="bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
+                                                        <div className="text-[10px] text-gray-400 mb-0.5 uppercase font-bold">Chữ ký</div>
+                                                        <div className="font-bold text-sm text-gray-800">
+                                                            {lesson.feedback ? <span className="text-emerald-600 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Đã ký</span> : <span className="text-gray-400 font-normal italic">Chưa ký</span>}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0 items-stretch shrink-0">
+                                                    <button 
+                                                        onClick={() => { setSelectedDetailLesson(lesson); setDetailModalOpen(true); }}
+                                                        className="px-4 py-2 bg-indigo-50 text-indigo-700 font-bold rounded-xl hover:bg-indigo-100 hover:text-indigo-800 transition-colors flex items-center whitespace-nowrap text-sm border border-indigo-100 shadow-sm group"
+                                                    >
+                                                        <ClipboardList className="w-4 h-4 mr-2 text-indigo-400 group-hover:text-indigo-600 transition-colors" /> Xem 
+                                                    </button>
+                                                    
+                                                    <div className="w-px bg-gray-200 hidden md:block mx-1"></div>
 
-                                    {/* Footer Actions */}
-                                    <div className="p-4 border-t border-gray-100 bg-gray-50/50 rounded-b-2xl flex gap-2">
-                                        <button 
-                                            onClick={() => openAttendanceModal(lesson)}
-                                            disabled={!lesson.isPast}
-                                            className={`flex-1 py-2 rounded-lg text-xs font-bold flex items-center justify-center transition-all ${
-                                                !lesson.isPast 
-                                                ? 'text-gray-300 cursor-not-allowed' 
-                                                : 'bg-white border border-gray-200 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 shadow-sm'
-                                            }`}
-                                        >
-                                            <UserCheck className="h-3 w-3 mr-1.5" /> Attendance
-                                        </button>
-                                        <button 
-                                            onClick={() => handleOpenFeedback(lesson)}
-                                            disabled={!lesson.isPast}
-                                            className={`flex-1 py-2 rounded-lg text-xs font-bold flex items-center justify-center transition-all ${
-                                                !lesson.isPast 
-                                                ? 'text-gray-300 cursor-not-allowed'
-                                                : lesson.isPending
-                                                    ? 'bg-rose-600 text-white hover:bg-rose-700 shadow-md shadow-rose-500/20'
-                                                    : 'bg-white border border-gray-200 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 shadow-sm'
-                                            }`}
-                                        >
-                                            <FileSignature className="h-3 w-3 mr-1.5" /> {lesson.feedback ? 'Edit Eval' : 'Evaluate'}
-                                        </button>
-                                    </div>
+                                                    <button 
+                                                        onClick={() => openAttendanceModal(lesson)}
+                                                        disabled={!lesson.isPast}
+                                                        className="px-3 py-2 bg-white text-gray-700 font-bold rounded-xl border border-gray-200 hover:bg-gray-50 flex items-center justify-center transition-colors shadow-sm disabled:text-gray-300 disabled:cursor-not-allowed group w-12 hidden lg:flex"
+                                                        title="Điểm danh"
+                                                    >
+                                                        <UserCheck className="w-4 h-4 text-gray-400 group-hover:text-gray-600 disabled:text-gray-200" />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleOpenFeedback(lesson)}
+                                                        disabled={!lesson.isPast}
+                                                        className={`px-4 py-2 font-bold rounded-xl border transition-all flex items-center justify-center whitespace-nowrap text-sm min-w-[120px] ${
+                                                            !lesson.isPast 
+                                                            ? 'text-gray-300 bg-gray-50 border-gray-200 cursor-not-allowed'
+                                                            : lesson.isPending
+                                                                ? 'bg-rose-600 text-white hover:bg-rose-700 border-rose-600 shadow-md shadow-rose-500/20 active:scale-[0.98]'
+                                                                : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 shadow-sm'
+                                                        }`}
+                                                    >
+                                                        <FileSignature className={`w-4 h-4 mr-2 ${lesson.isPending ? 'text-white' : 'text-gray-400'}`} /> {lesson.feedback ? 'Sửa đánh giá' : 'Đánh giá'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                         ))}
+                                     </div>
                                 </div>
                             ))}
-                            {weekLessons.length === 0 && (
-                                <div className="col-span-full py-20 flex flex-col items-center justify-center text-gray-400">
-                                    <Calendar className="h-12 w-12 mb-3 text-gray-200" />
-                                    <p>No lessons found for this week.</p>
+                            {groupedLessons.length === 0 && (
+                                <div className="py-20 flex flex-col items-center justify-center text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200">
+                                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                                        <Calendar className="h-8 w-8 text-gray-300" />
+                                    </div>
+                                    <p className="font-medium text-gray-500">Chưa có tiết dạy nào trong tuần này.</p>
                                 </div>
                             )}
                         </div>
@@ -1383,24 +1367,24 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
             <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
                 <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 animate-scale-in">
                     <div className="flex justify-between items-start mb-1">
-                        <h3 className="text-xl font-bold text-gray-900">{t('myClasses.evaluate')}</h3>
+                        <h3 className="text-xl font-bold text-gray-900">{t('myClasses.evaluate') || 'Đánh giá tiết học'}</h3>
                         <button onClick={() => setFeedbackModalOpen(false)} className="p-1 hover:bg-gray-100 rounded-full"><Plus className="h-5 w-5 rotate-45 text-gray-500"/></button>
                     </div>
                     
                     <div className="bg-gray-50 p-3 rounded-lg border border-gray-100 mb-6 flex justify-between items-center">
                         <div className="text-sm">
                             <p className="font-bold text-gray-900">{selectedScheduleItem.day}</p>
-                            <p className="text-gray-500">{selectedScheduleItem.date}</p>
+                            <p className="text-gray-500">{selectedScheduleItem.date.split('-').reverse().join('-')}</p>
                         </div>
                         <div className="text-right">
-                             <span className="text-xs font-bold text-gray-400 uppercase">Period</span>
+                             <span className="text-xs font-bold text-gray-400 uppercase">Tiết</span>
                              <p className="font-mono font-bold text-gray-800">{selectedScheduleItem.period}</p>
                         </div>
                     </div>
 
                     <div className="space-y-5">
                         <div>
-                            <label className="block text-xs font-bold text-gray-700 uppercase mb-3">{t('myClasses.rating')}</label>
+                            <label className="block text-xs font-bold text-gray-700 uppercase mb-3">{t('myClasses.rating') || 'Xếp loại'}</label>
                             <div className="flex justify-between gap-2">
                                 {['A', 'B', 'C', 'D', 'E', 'F'].map((r) => (
                                     <button 
@@ -1419,10 +1403,10 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold text-gray-700 uppercase mb-2">{t('myClasses.comment')}</label>
+                            <label className="block text-xs font-bold text-gray-700 uppercase mb-2">{t('myClasses.comment') || 'Nhận xét'}</label>
                             <textarea 
                                 className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm min-h-[100px] resize-none"
-                                placeholder="Enter session details, student behavior, or lesson progress..."
+                                placeholder="Nhập nhận xét về tiết dạy, tiến độ bài học, hành vi học sinh..."
                                 value={comment}
                                 onChange={(e) => setComment(e.target.value)}
                             />
@@ -1433,17 +1417,132 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
                                 <FileSignature className="h-20 w-20 text-indigo-600" />
                             </div>
                             <p className="text-xs text-indigo-800 font-bold uppercase flex items-center justify-center gap-2">
-                                <FileSignature className="h-4 w-4" /> {t('myClasses.sign')}
+                                <FileSignature className="h-4 w-4" /> {t('myClasses.sign') || 'Chữ ký số'}
                             </p>
                             <p className="text-[10px] text-indigo-500 mt-1 max-w-[200px] mx-auto">
-                                Digitally signing as <span className="font-bold">{currentUser.name}</span>.<br/>Timestamp: {new Date().toLocaleTimeString()}
+                                Ký với tên <span className="font-bold">{currentUser.name}</span>.<br/>Lúc: {new Date().toLocaleTimeString('vi-VN')}
                             </p>
                         </div>
 
                         <div className="flex gap-3 mt-2">
-                            <button onClick={() => setFeedbackModalOpen(false)} className="flex-1 py-3 text-gray-600 font-medium bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">{t('common.cancel')}</button>
-                            <button onClick={() => handleActionRequest('feedback')} className="flex-1 py-3 text-white font-bold bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-500/30 transition-all transform active:scale-[0.98]">{t('myClasses.signBtn')}</button>
+                            <button onClick={() => setFeedbackModalOpen(false)} className="flex-1 py-3 text-gray-600 font-medium bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">{t('common.cancel') || 'Hủy'}</button>
+                            <button onClick={() => handleActionRequest('feedback')} className="flex-1 py-3 text-white font-bold bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-500/30 transition-all transform active:scale-[0.98]">{t('myClasses.signBtn') || 'Lưu & Ký'}</button>
                         </div>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* Lesson Detail Modal */}
+        {detailModalOpen && selectedDetailLesson && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 animate-scale-in flex flex-col max-h-[90vh]">
+                    <div className="flex justify-between items-start mb-4 border-b border-gray-100 pb-4">
+                        <div>
+                            <h3 className="text-xl font-bold text-gray-900">Chi tiết tiết học</h3>
+                            <p className="text-sm text-gray-500">Ngày {selectedDetailLesson.specificDate.toLocaleDateString('vi-VN')} - Tiết {selectedDetailLesson.period} ({selectedDetailLesson.session === 'Morning' ? 'Sáng' : 'Chiều'})</p>
+                        </div>
+                        <button onClick={() => setDetailModalOpen(false)} className="p-1 hover:bg-gray-100 rounded-full"><X className="h-5 w-5 text-gray-500"/></button>
+                    </div>
+                    
+                    <div className="overflow-y-auto pr-2 custom-scrollbar">
+                        <div className="space-y-6">
+                            {/* General Info */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 shadow-sm">
+                                    <div className="text-xs text-gray-500 uppercase font-bold mb-1">Lớp</div>
+                                    <div className="font-bold text-gray-900 text-lg">{selectedClass?.name || 'N/A'}</div>
+                                </div>
+                                <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 shadow-sm">
+                                    <div className="text-xs text-gray-500 uppercase font-bold mb-1">Phòng học</div>
+                                    <div className="font-bold text-gray-900 text-lg flex items-center">
+                                        <MapPin className="w-5 h-5 mr-1 text-gray-400" /> {selectedDetailLesson.room || 'Chưa xếp giờ'}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Attendance Info */}
+                            <div>
+                                <h4 className="font-bold text-gray-800 text-sm mb-3 flex items-center"><Users className="w-4 h-4 mr-2 text-indigo-500" /> Điểm danh</h4>
+                                {selectedDetailLesson.attendanceTaken ? (
+                                    <div className="bg-white border text-sm border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                                        <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between font-bold text-gray-600 text-xs uppercase tracking-wider">
+                                            <span>Trạng thái</span>
+                                            <span>Số lượng</span>
+                                        </div>
+                                        <div className="px-4 py-3 border-b border-gray-50 flex justify-between items-center transition-colors">
+                                            <span className="text-emerald-700 font-bold flex items-center"><CheckCircle className="w-4 h-4 mr-2 text-emerald-500" /> Có mặt</span>
+                                            <span className="font-bold bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">{classStudents.length - selectedDetailLesson.absentCount}</span>
+                                        </div>
+                                        <div className="px-4 py-3 flex justify-between items-center bg-rose-50/50">
+                                            <span className="text-rose-700 font-bold flex items-center"><AlertCircle className="w-4 h-4 mr-2 text-rose-500" /> Vắng mặt</span>
+                                            <span className="font-bold bg-rose-100 text-rose-800 px-3 py-1 rounded-full">{selectedDetailLesson.absentCount}</span>
+                                        </div>
+                                        
+                                        {selectedDetailLesson.absentCount > 0 && (
+                                            <div className="px-4 py-3 bg-white border-t border-gray-100">
+                                                <div className="text-xs text-gray-500 font-bold mb-2 uppercase tracking-wide">Danh sách học sinh vắng:</div>
+                                                <ul className="list-disc pl-5 space-y-1.5 text-sm text-gray-700">
+                                                    {attendanceRecords
+                                                        .filter(r => r.scheduleId === selectedDetailLesson.id && r.date === selectedDetailLesson.isoDate && r.status === 'absent')
+                                                        .map(r => {
+                                                            const s = classStudents.find(stu => stu.id === r.studentId);
+                                                            return <li key={r.studentId} className="font-semibold text-rose-600">{s?.name || r.studentId}</li>
+                                                        })
+                                                    }
+                                                    {/* In case we do not have accurate students due to mock differences, just show text if list is empty */}
+                                                    {attendanceRecords.filter(r => r.scheduleId === selectedDetailLesson.id && r.date === selectedDetailLesson.isoDate && r.status === 'absent').length === 0 && (
+                                                        <li className="font-medium text-rose-500 italic">Không tải được tên học sinh từ danh sách tạm.</li>
+                                                    )}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="bg-amber-50 text-amber-800 p-4 rounded-xl text-sm border border-amber-200 flex items-center font-medium shadow-sm">
+                                        <AlertTriangle className="w-5 h-5 mr-3 text-amber-500" /> Tiết học này chưa được điểm danh.
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Evaluation Info */}
+                            <div>
+                                <h4 className="font-bold text-gray-800 text-sm mb-3 flex items-center"><Star className="w-4 h-4 mr-2 text-amber-500" /> Đánh giá giờ học</h4>
+                                {selectedDetailLesson.feedback ? (
+                                    <div className="bg-white border text-sm border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                                        <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                                            <span className="font-bold text-gray-600 text-xs uppercase tracking-wider">Xếp loại:</span>
+                                            <span className="bg-emerald-100 text-emerald-800 px-4 py-1.5 rounded-full font-bold text-lg border border-emerald-200 shadow-sm">{selectedDetailLesson.feedback.rating}</span>
+                                        </div>
+                                        <div className="p-4">
+                                            <span className="font-bold text-gray-600 text-xs uppercase tracking-wider mb-2 block">Nhận xét:</span>
+                                            <div className="bg-gray-50 p-4 rounded-xl whitespace-pre-wrap text-gray-800 leading-relaxed border border-gray-100 text-sm">
+                                                {selectedDetailLesson.feedback.comment || 'Không có nhận xét chi tiết.'}
+                                            </div>
+                                        </div>
+                                        <div className="border-t border-dashed border-gray-200 p-4 flex items-center justify-between text-gray-500 text-xs bg-gray-50/30">
+                                            <div className="flex items-center">
+                                                <FileSignature className="w-4 h-4 mr-1.5 text-indigo-500" /> 
+                                                <span className="font-bold text-indigo-800">{selectedDetailLesson.feedback.signature}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="bg-gray-50 text-gray-600 p-4 rounded-xl text-sm border border-gray-200 flex items-center font-medium shadow-sm">
+                                        <AlertCircle className="w-5 h-5 mr-3 text-gray-400" /> Chưa có đánh giá nào cho tiết học này.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="mt-6 pt-4 border-t border-gray-100 flex justify-end">
+                        <button 
+                            onClick={() => setDetailModalOpen(false)}
+                            className="px-6 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors"
+                        >
+                            Đóng
+                        </button>
                     </div>
                 </div>
             </div>
