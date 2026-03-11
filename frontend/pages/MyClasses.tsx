@@ -1323,25 +1323,13 @@ export const MyClasses: React.FC<MyClassesProps> = ({ currentUser, initialClassI
                                                 onClick={() => updateTempAttendance(student.id, 'present')}
                                                 className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${status === 'present' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
                                             >
-                                                P
+                                                C
                                             </button>
                                             <button 
                                                 onClick={() => updateTempAttendance(student.id, 'absent')}
                                                 className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${status === 'absent' ? 'bg-white text-red-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
                                             >
-                                                A
-                                            </button>
-                                            <button 
-                                                onClick={() => updateTempAttendance(student.id, 'late')}
-                                                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${status === 'late' ? 'bg-white text-amber-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
-                                            >
-                                                L
-                                            </button>
-                                            <button 
-                                                onClick={() => updateTempAttendance(student.id, 'excused')}
-                                                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${status === 'excused' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
-                                            >
-                                                E
+                                                V
                                             </button>
                                         </div>
                                     </div>
