@@ -1,4 +1,4 @@
-from PIL import Image, ImageChops
+from PIL import Image, ImageChops  # type: ignore
 
 def trim(im):
     im = im.convert("RGBA")
