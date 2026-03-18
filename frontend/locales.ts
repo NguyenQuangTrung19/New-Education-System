@@ -45,7 +45,7 @@ export const translations = {
     'welcome.features.scheduleDesc': 'Personalized timetable.',
     'welcome.features.community': 'Community',
     'welcome.features.communityDesc': 'Connect teachers and students.',
-    'welcome.copyright': '© 2024 THCS Phước Tân. Powered by EduSphere Ecosystem.',
+    'welcome.copyright': '© 2026 THCS Phước Tân. Powered by EduSphere Ecosystem.',
 
     // Login Page
     'login.title': 'Gateway to Knowledge',
@@ -483,7 +483,7 @@ export const translations = {
     'welcome.features.scheduleDesc': 'Thời khóa biểu cá nhân hóa.',
     'welcome.features.community': 'Cộng đồng',
     'welcome.features.communityDesc': 'Kết nối giáo viên và học sinh.',
-    'welcome.copyright': '© 2024 THCS Phước Tân. Powered by EduSphere Ecosystem.',
+    'welcome.copyright': '© 2026 THCS Phước Tân. Powered by EduSphere Ecosystem.',
 
     // Login Page
     'login.title': 'Cổng Tri Thức',

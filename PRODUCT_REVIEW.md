@@ -500,6 +500,6 @@ The backend is organized into **15 modular NestJS modules**:
 
 **Built with ❤️ for Vietnamese education**
 
-*© 2024 EduSphere Ecosystem — Powered by modern web technologies*
+*© 2026 EduSphere Ecosystem — Powered by modern web technologies*
 
 </div>

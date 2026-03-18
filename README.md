@@ -281,6 +281,6 @@ Project Link: [https://github.com/your-username/NewEduSystem](https://github.com
 
 **Built with ❤️ for Vietnamese education**
 
-*© 2024 EduSphere Ecosystem*
+*© 2026 EduSphere Ecosystem*
 
 </div>

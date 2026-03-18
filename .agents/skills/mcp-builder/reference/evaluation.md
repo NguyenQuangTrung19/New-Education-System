@@ -224,7 +224,7 @@ Each QA pair consists of a question and an answer. The output should be an XML f
 ```xml
 <evaluation>
    <qa_pair>
-      <question>Find the project created in Q2 2024 with the highest number of completed tasks. What is the project name?</question>
+      <question>Find the project created in Q2 2026 with the highest number of completed tasks. What is the project name?</question>
       <answer>Website Redesign</answer>
    </qa_pair>
    <qa_pair>
@@ -280,7 +280,7 @@ This question is good because:
 **Example 3: Complex aggregation requiring multiple steps (Issue Tracker MCP)**
 ```xml
 <qa_pair>
-   <question>Among all bugs reported in January 2024 that were marked as critical priority, which assignee resolved the highest percentage of their assigned bugs within 48 hours? Provide the assignee's username.</question>
+   <question>Among all bugs reported in January 2026 that were marked as critical priority, which assignee resolved the highest percentage of their assigned bugs within 48 hours? Provide the assignee's username.</question>
    <answer>alex_eng</answer>
 </qa_pair>
 ```
@@ -405,7 +405,7 @@ Evaluation files use XML format with `<qa_pair>` elements:
 ```xml
 <evaluation>
    <qa_pair>
-      <question>Find the project created in Q2 2024 with the highest number of completed tasks. What is the project name?</question>
+      <question>Find the project created in Q2 2026 with the highest number of completed tasks. What is the project name?</question>
       <answer>Website Redesign</answer>
    </qa_pair>
    <qa_pair>
